@@ -16,7 +16,7 @@ that interact with it:
 - *monolith-extract*: the script that grabs data from all defined sources and pour
   them in the SQL Database.
 
-- *monilith-load*: the script that indexes the Database content into Elastic Search
+- *monilith-index*: the script that indexes the Database content into Elastic Search
 
 
 A typical setup is to run *monolith-aggregate* then *monilith-index* once
@@ -68,14 +68,18 @@ of the section and the variables defined in **monolith** to perform the work.
 *monolith-extract* invokes in parallel every callable, which also receives
 an open sql connector to the storage.
 
+*monolith-extract* can run against all sources, or a specific list of sources.
+This let us configure several crons if we need to extract data from sources
+at specific paces/times.
 
-monilith-load
-:::::::::::::
 
-*monilith-load* loops on all the section starting by *target:* and
+monilith-index
+::::::::::::::
+
+*monilith-index* loops on all the section starting by *target:* and
 works like *monolith-extract*.
 
-*monilith-load* has a couple of extra options:
+*monilith-index* has a couple of extra options:
 
 - date ranges: filters what entries from the Database should actually
   be loaded.
