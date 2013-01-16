@@ -21,5 +21,5 @@ build: $(PYTHON)
 clean:
 	rm -rf $(BUILD_DIRS)
 
-test:
+test: build
 	$(BIN)/nosetests -d -v --with-coverage --cover-package aggregator aggregator
