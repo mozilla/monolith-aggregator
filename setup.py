@@ -11,13 +11,11 @@ with open(os.path.join(here, 'README.rst')) as f:
 requires = ['SQLAlchemy', ]
 test_requires = requires + ['unittest2', 'nose', 'coverage']
 
+
 setup(name='monolith-aggregator',
       version=__version__,
       description='The monolith aggregator',
       long_description=README,
-      classifiers=[
-        "Programming Language :: Python",
-        ],
       classifiers=[
           "Programming Language :: Python",
           "Programming Language :: Python :: 2",
@@ -31,7 +29,7 @@ setup(name='monolith-aggregator',
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
-      tests_require=requires + ['unittest2',],
+      tests_require=test_requires,
       test_suite="aggregator",
       entry_points="""
       [console_scripts]
