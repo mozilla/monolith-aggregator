@@ -54,16 +54,16 @@ class Database(object):
 
         # store in db
         # XXX try..except etc
-        self.engine.execute(PUT_QUERY, date=date, category=category, 
+        self.engine.execute(PUT_QUERY, date=date, category=category,
                             value=json_dumps(data))
 
 
     def get(self, category=None, start_date=None, end_date=None):
         if all_((category, start_date, end_date), None):
-            raise ValueError("You need to filter something")                         
+            raise ValueError("You need to filter something")
 
         query = self.session.query(Record)
-        
+
         if category is not None:
             query = query.filter(Record.category == category)
 
