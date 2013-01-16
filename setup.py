@@ -7,7 +7,7 @@ with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
 
 requires = ['sqlalchemy', 'bson']
-test_requires = requires + ['unittest2', ]
+test_requires = requires + ['unittest2', 'nose']
 
 setup(
     name='monolith-aggregator',
