@@ -1,6 +1,7 @@
 from unittest2 import TestCase
 
-from aggregator.utils import all_
+from aggregator.util import all_
+
 
 class TestUtils(TestCase):
 
