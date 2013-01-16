@@ -31,6 +31,7 @@ setup(name='monolith-aggregator',
       install_requires=requires,
       tests_require=test_requires,
       test_suite="aggregator",
+      extras_require={'test': test_requires},
       entry_points="""
       [console_scripts]
       monolith-extract = aggregator.extract:main
