@@ -6,7 +6,7 @@ from sqlalchemy import Integer, String, Binary, DateTime, Column
 from sqlalchemy import create_engine
 from sqlalchemy.orm import create_session
 
-from utils import json_dumps, all_
+from aggregator.util import json_dumps, all_
 
 
 _Model = declarative_base()
