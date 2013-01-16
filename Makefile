@@ -1,12 +1,27 @@
-.PHONY: test
+HERE = $(shell pwd)
+BIN = $(HERE)/bin
+PYTHON = $(BIN)/python
 
-ifndef VTENV_OPTS
-VTENV_OPTS = "--no-site-packages"
-endif
+PIP_DOWNLOAD_CACHE ?= $(HERE)/.pip_cache
+INSTALL = $(BIN)/pip install
+INSTALL += --download-cache $(PIP_DOWNLOAD_CACHE) --use-mirrors
+VTENV_OPTS ?= "--no-site-packages --distribute"
 
-bin/python:
+BUILD_DIRS = bin build include lib lib64 man share
+
+.PHONY: all build clean test
+
+all: build
+
+$(PYTHON):
 	virtualenv $(VTENV_OPTS) .
-	bin/python setup.py develop
 
-test: bin/python 
-	bin/python setup.py test
+build: $(PYTHON)
+	$(PYTHON) setup.py develop
+	$(INSTALL) monolith-aggregator[test]
+
+clean:
+	rm -rf $(BUILD_DIRS)
+
+test:
+	$(BIN)/nosetests -d -v --with-coverage --cover-package aggregator aggregator

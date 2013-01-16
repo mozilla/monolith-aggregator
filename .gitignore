@@ -15,7 +15,8 @@ lib
 lib64
 sdist
 
-# Installer logs
+# Installer
+.pip_cache
 pip-log.txt
 
 # Unit test / coverage reports
