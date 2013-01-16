@@ -72,7 +72,9 @@ Open questions
 - How do we keep counters tracking events `since the beginning of time`, like
   all downloads that ever happen for an app. Especially if we only keep
   detailed download events for the past X months. Do we need to store those
-  separately for performance reasons?
+  separately for performance reasons? Or cache them at a different layer?
+- The suggested structure is optimized for looking at data by time. We might
+  need to have a separate structure to optimize lookups by addon/app.
 
 Articles / videos
 :::::::::::::::::
