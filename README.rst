@@ -27,10 +27,11 @@ existing data in MySQL.
 The database
 ::::::::::::
 
-Describe the database here.
+The database stores directly json objects. It has the following fields:
 
-XXX
-
+- type (the name of the index in elastic search)
+- data (the json object)
+- date (a sql date type)
 
 monolith-extract
 ::::::::::::::::
