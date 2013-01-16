@@ -54,9 +54,9 @@ manageable size (for example for the JVM / memory requirements) per server. And
 at the same time minimize the number of indexes involved in each query, to
 avoid the associated overhead. In addition it's easy to drop out or replace old
 data, as its just disabling an index, but there's no need to rewrite/update any
-data. All but the current index can also be highly compacted / optimized, as
-they'll never change and backup tools likely appreciate a large amount of
-static data as well.
+data. All but the current index can also be highly compacted / optimized
+(down to one lucene segment), as they'll never change and backup tools likely
+appreciate a large amount of static data as well.
 
 elasticsearch.yml
 :::::::::::::::::
