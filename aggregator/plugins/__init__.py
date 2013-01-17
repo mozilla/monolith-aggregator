@@ -1,6 +1,6 @@
 
 
-def put_elasticsearch(**options):
+def put_elasticsearch(data, **options):
     pass
 
 

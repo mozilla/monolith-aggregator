@@ -2,12 +2,33 @@ import logging
 import argparse
 from ConfigParser import ConfigParser
 
+import gevent
+from gevent.queue import JoinableQueue
+from gevent.pool import Group
+
 from aggregator import __version__
 from aggregator.util import resolve_name
 from aggregator.db import Database
 
 
 logger = logging.getLogger('aggregator')
+
+
+
+def _get_data(queue, callable, options):
+    queue.put(callable(**options))
+
+
+def _push_to_target(queue, targets):
+    data = queue.get()
+    greenlets = Group()
+    try:
+        for callable, options in targets.items():
+            greenlets.spawn(callable, data, **options)
+
+        greenlets.join()
+    finally:
+        queue.task_done()
 
 
 def extract(config):
@@ -37,9 +58,21 @@ def extract(config):
             del options['use']
             targets[callable] = options
 
-    # run the extraction
-    # XXX
 
+    queue = JoinableQueue()
+
+    # run the extraction
+    num_sources = len(sources)
+
+    # each callable will push its result in the queue
+    for callable, options in sources.items():
+        gevent.spawn(_get_data, queue, callable, options)
+
+    # looking at the queue
+    processed = 0
+    while processed < num_sources:
+        _push_to_target(queue, targets)
+        processed += 1
 
 
 def main():

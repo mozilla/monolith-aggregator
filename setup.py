@@ -11,7 +11,9 @@ with open(os.path.join(here, 'README.rst')) as f:
 requires = [
     'pyes',
     'SQLAlchemy',
+    'gevent'
 ]
+
 test_requires = requires + [
     'coverage',
     'nose',
