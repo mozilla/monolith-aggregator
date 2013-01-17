@@ -8,7 +8,7 @@ _databases = {}
 
 
 def put_sql(data, **options):
-    """ElasticSearch
+    """SQL
     """
     dbname = options['database']
     if dbname not in _databases:
