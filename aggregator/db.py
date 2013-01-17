@@ -31,10 +31,13 @@ values
 
 
 def get_engine(sqluri, pool_size=100, pool_recycle=60, pool_timeout=30):
-    return create_engine(sqluri,
-                         pool_size=pool_size,
-                         pool_recycle=pool_recycle,
-                         pool_timeout=pool_timeout)
+    extras = {}
+    if not sqluri.startswith('sqlite'):
+        extras['pool_size'] = pool_size
+        extras['pool_timeout'] = pool_timeout
+        extras['pool_recycle'] = pool_recycle
+
+    return create_engine(sqluri, **extras)
 
 
 class Database(object):

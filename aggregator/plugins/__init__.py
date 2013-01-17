@@ -1,24 +1,25 @@
+from functools import wraps
 
 
-def put_elasticsearch(data, **options):
-    """ElasticSearch
-    """
-    pass
+class Plugin(object):
+    def __init__(self, **options):
+        self.options = options
+
+    def __call__(self, *args, **options):
+        raise NotImplementerError
 
 
-def get_ganalytics(**options):
-    """Google Analytics
-    """
-    return []
+class _FuncPlugin(object):
+
+    def __init__(self, **options):
+        self.options = options
+
+    def __call__(self, *args, **options):
+        return self.func(*args, **options)
 
 
-def get_generic_rest(**options):
-    """Solitude
-    """
-    return []
+def plugin(func):
+    def __func(self, *args, **kw):
+        return func(*args, **kw)
 
-
-def get_market_place(**options):
-    """MarketPlace
-    """
-    return []
+    return type(func.__name__.upper(), (_FuncPlugin,), {'func': __func})

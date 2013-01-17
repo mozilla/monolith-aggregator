@@ -34,8 +34,8 @@ def _push_to_target(queue, targets):
 
     greenlets = Group()
     try:
-        for callable, options in targets.items():
-            greenlets.spawn(_put_data, callable, data, **options)
+        for plugin, options in targets.values():
+            greenlets.spawn(_put_data, plugin, data, **options)
         greenlets.join()
     finally:
         queue.task_done()
@@ -56,15 +56,15 @@ def extract(config):
     for section in parser.sections():
         if section.startswith('source:'):
             options = dict(parser.items(section))
-            callable = resolve_name(options['use'])
+            plugin = resolve_name(options['use'])
             del options['use']
-            sources[callable] = options
+            sources[plugin] = plugin(**options), options
 
         elif section.startswith('target:'):
             options = dict(parser.items(section))
-            callable = resolve_name(options['use'])
+            plugin = resolve_name(options['use'])
             del options['use']
-            targets[callable] = options
+            targets[plugin] = plugin(**options), options
 
     queue = JoinableQueue()
 
@@ -72,8 +72,8 @@ def extract(config):
     num_sources = len(sources)
 
     # each callable will push its result in the queue
-    for callable, options in sources.items():
-        gevent.spawn(_get_data, queue, callable, options)
+    for plugin, options in sources.values():
+        gevent.spawn(_get_data, queue, plugin, options)
 
     # looking at the queue
     processed = 0

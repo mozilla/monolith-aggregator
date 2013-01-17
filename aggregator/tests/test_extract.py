@@ -1,44 +1,49 @@
 import os
 from unittest2 import TestCase
+
+
 from aggregator.extract import extract
+from aggregator.plugins import plugin
+from aggregator.db import Database
+
+
+class SQLInjecter(object):
+    """SQL"""
+
+    def __init__(self, database, **options):
+        self.db = Database(sqluri=database)
+
+    def __call__(self, data, **options):
+        self.db.put(category='', **data)
 
 
 _res = []
-_databases = {}
 
 
-def put_sql(data, **options):
-    """SQL
-    """
-    dbname = options['database']
-    if dbname not in _databases:
-        db = Database(dbname)
-        _databases[dbname] = db
-
-    db = _databases[dbname]
-    db.put(category='', **data)
-
-
-def put_elasticsearch(data, **options):
+@plugin
+def put_es(data, **options):
     """ElasticSearch
     """
     _res.append(data)
 
 
-def get_ganalytics(**options):
+@plugin
+def get_ga(**options):
     """Google Analytics
     """
     for i in range(10):
         yield {'from': 'Google Analytics'}
 
 
-def get_generic_rest(**options):
+@plugin
+def get_rest(**options):
     """Solitude
     """
     for i in range(100):
         yield {'from': 'Solitude'}
 
 
+@plugin
 def get_market_place(**options):
     """MarketPlace
     """
