@@ -4,6 +4,20 @@ from aggregator.extract import extract
 
 
 _res = []
+_databases = {}
+
+
+def put_sql(data, **options):
+    """ElasticSearch
+    """
+    dbname = options['database']
+    if dbname not in _databases:
+        db = Database(dbname)
+        _databases[dbname] = db
+
+    db = _databases[dbname]
+    db.put(category='', **data)
+
 
 def put_elasticsearch(data, **options):
     """ElasticSearch
