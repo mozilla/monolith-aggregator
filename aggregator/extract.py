@@ -7,7 +7,7 @@ from gevent.queue import JoinableQueue
 from gevent.pool import Group
 
 from aggregator import __version__
-from aggregator.util import resolve_name
+from aggregator.util import resolve_name, configure_logger, LOG_LEVELS
 from aggregator.db import Database
 
 
@@ -16,7 +16,13 @@ logger = logging.getLogger('aggregator')
 
 
 def _get_data(queue, callable, options):
+    logger.info('Getting from %s' % callable.__doc__)
     queue.put(callable(**options))
+
+
+def _put_data(callable, data, **options):
+    logger.info('Pushing to %s' % callable.__doc__)
+    return callable(data, **options)
 
 
 def _push_to_target(queue, targets):
@@ -24,8 +30,7 @@ def _push_to_target(queue, targets):
     greenlets = Group()
     try:
         for callable, options in targets.items():
-            greenlets.spawn(callable, data, **options)
-
+            greenlets.spawn(_put_data, callable, data, **options)
         greenlets.join()
     finally:
         queue.task_done()
@@ -81,6 +86,12 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
     parser.add_argument('config', help='Configuration file.',)
+    parser.add_argument('--log-level', dest='loglevel', default='info',
+                        choices=LOG_LEVELS.keys() + [key.upper() for key in
+                                                     LOG_LEVELS.keys()],
+                        help="log level")
+    parser.add_argument('--log-output', dest='logoutput', default='-',
+                        help="log output")
 
     args = parser.parse_args()
 
@@ -88,6 +99,7 @@ def main():
         print(__version__)
         sys.exit(0)
 
+    configure_logger(logger, args.loglevel, args.logoutput)
     extract(args.config)
 
 
