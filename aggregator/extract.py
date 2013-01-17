@@ -61,12 +61,14 @@ def extract(config):
         if section.startswith('source:'):
             options = dict(parser.items(section))
             callable = resolve_name(options['use'])
+            options['db'] = db
             del options['use']
             sources[callable] = options
 
         elif section.startswith('target:'):
             options = dict(parser.items(section))
             callable = resolve_name(options['use'])
+            options['db'] = db
             del options['use']
             targets[callable] = options
 
