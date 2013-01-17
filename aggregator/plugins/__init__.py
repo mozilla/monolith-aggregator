@@ -9,16 +9,16 @@ def put_elasticsearch(data, **options):
 def get_ganalytics(**options):
     """Google Analytics
     """
-    pass
+    return []
 
 
 def get_generic_rest(**options):
     """Solitude
     """
-    pass
+    return []
 
 
 def get_market_place(**options):
     """MarketPlace
     """
-    pass
+    return []

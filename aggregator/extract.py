@@ -17,7 +17,9 @@ logger = logging.getLogger('aggregator')
 
 def _get_data(queue, callable, options):
     logger.info('Getting from %s' % callable.__doc__)
-    queue.put(callable(**options))
+    for item in callable(**options):
+        queue.put(item)
+    queue.put('END')
 
 
 def _put_data(callable, data, **options):
@@ -27,6 +29,9 @@ def _put_data(callable, data, **options):
 
 def _push_to_target(queue, targets):
     data = queue.get()
+    if data == 'END':
+        return False
+
     greenlets = Group()
     try:
         for callable, options in targets.items():
@@ -34,6 +39,8 @@ def _push_to_target(queue, targets):
         greenlets.join()
     finally:
         queue.task_done()
+
+    return True
 
 
 def extract(config):
@@ -75,8 +82,8 @@ def extract(config):
     # looking at the queue
     processed = 0
     while processed < num_sources:
-        _push_to_target(queue, targets)
-        processed += 1
+        if not _push_to_target(queue, targets):
+            processed += 1
 
 
 def main():
