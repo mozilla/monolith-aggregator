@@ -7,7 +7,7 @@ VTENV_OPTS ?= --distribute
 
 BUILD_DIRS = bin build include lib lib64 man share
 
-.PHONY: all build clean test
+.PHONY: all clean test
 
 all: build
 
