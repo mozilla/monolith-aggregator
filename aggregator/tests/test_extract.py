@@ -1,7 +1,5 @@
 import os
 from unittest2 import TestCase
-from ConfigParser import ConfigParser
-
 from aggregator.extract import extract
 
 
@@ -12,4 +10,3 @@ class TestExtract(TestCase):
 
     def test_extract(self):
         extract(self.config)
-

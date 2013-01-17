@@ -1,6 +1,7 @@
 import logging
 import argparse
 from ConfigParser import ConfigParser
+import sys
 
 import gevent
 from gevent.queue import JoinableQueue
@@ -12,7 +13,6 @@ from aggregator.db import Database
 
 
 logger = logging.getLogger('aggregator')
-
 
 
 def _get_data(queue, callable, options):
@@ -62,7 +62,6 @@ def extract(config):
             callable = resolve_name(options['use'])
             del options['use']
             targets[callable] = options
-
 
     queue = JoinableQueue()
 

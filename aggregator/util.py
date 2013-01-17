@@ -3,6 +3,7 @@ from time import mktime
 import datetime
 import sys
 import logging
+import fcntl
 
 
 try:
@@ -158,6 +159,12 @@ LOG_LEVELS = {
 
 LOG_FMT = r"%(asctime)s [%(process)d] [%(levelname)s] %(message)s"
 LOG_DATE_FMT = r"%Y-%m-%d %H:%M:%S"
+
+
+def close_on_exec(fd):
+    flags = fcntl.fcntl(fd, fcntl.F_GETFD)
+    flags |= fcntl.FD_CLOEXEC
+    fcntl.fcntl(fd, fcntl.F_SETFD, flags)
 
 
 def configure_logger(logger, level='INFO', output="-"):

@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from sqlalchemy.pool import QueuePool
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Integer, String, Binary, DateTime, Column
 from sqlalchemy import create_engine
@@ -56,7 +55,6 @@ class Database(object):
         # XXX try..except etc
         self.engine.execute(PUT_QUERY, date=date, category=category,
                             value=json_dumps(data))
-
 
     def get(self, category=None, start_date=None, end_date=None):
         if all_((category, start_date, end_date), None):
