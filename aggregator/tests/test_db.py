@@ -1,6 +1,7 @@
 import os
 import datetime
 from time import mktime
+import tempfile
 
 from sqlalchemy import create_engine
 from unittest2 import TestCase
@@ -9,9 +10,10 @@ from aggregator.db import Database, Record
 
 
 class TestDatabase(TestCase):
-    
+
     def setUp(self):
-        self.filename = '/tmp/monolith'
+        fd, self.filename = tempfile.mkstemp()
+        os.close(fd)
         self.sqluri = 'sqlite:///%s' % self.filename
         self.engine = create_engine(self.sqluri)
         self.db = Database(self.engine)
@@ -32,7 +34,7 @@ class TestDatabase(TestCase):
     def test_record_creation_defaults_to_now(self):
         before = datetime.datetime.now()
 
-        self.db.put(category='foo', key='value', another_key='value2') 
+        self.db.put(category='foo', key='value', another_key='value2')
         query = self.db.session.query(Record)
         results = query.all()
         self.assertTrue(before <= results[0].date <= datetime.datetime.now())
@@ -70,7 +72,7 @@ class TestDatabase(TestCase):
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday).all()
         self.assertEquals(len(results), 2)
-    
+
     def test_filter_category(self):
         self.db.put(category='foo', key='value')
         self.db.put(category='foobar', key='value')
