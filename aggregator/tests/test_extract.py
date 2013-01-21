@@ -1,6 +1,8 @@
 import os
-from unittest2 import TestCase
+import random
 
+from unittest2 import TestCase
+from sqlalchemy import create_engine
 
 from aggregator.extract import extract
 from aggregator.plugins import plugin
@@ -51,13 +53,32 @@ def get_market_place(**options):
         yield {'from': 'Marketplace'}
 
 
+DB_FILE = os.path.join(os.path.dirname(__file__), 'source.db')
+DB = 'sqlite:///' + DB_FILE
+
+
 class TestExtract(TestCase):
 
     def setUp(self):
         self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
         _res[:] = []
 
+        # let's create a DB for the tests
+        engine = create_engine(DB)
+        try:
+            engine.execute('create table downloads (count INTEGER)')
+            for i in range(100):
+                v = random.randint(0, 1000)
+                engine.execute('insert into downloads (count) values (%d)' % v)
+        except Exception:
+            self.tearDown()
+            raise
+
+    def tearDown(self):
+        if os.path.exists(DB_FILE):
+            os.remove(DB_FILE)
 
     def test_extract(self):
+
         extract(self.config)
-        self.assertEqual(len(_res), 112)
+        self.assertEqual(len(_res), 212)

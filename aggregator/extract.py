@@ -1,3 +1,4 @@
+import os
 import logging
 import argparse
 from ConfigParser import ConfigParser
@@ -16,14 +17,14 @@ logger = logging.getLogger('aggregator')
 
 
 def _get_data(queue, callable, options):
-    logger.info('Getting from %s' % callable.__doc__)
+    #logger.debug('Getting from %s' % callable.__doc__)
     for item in callable(**options):
         queue.put(item)
     queue.put('END')
 
 
 def _put_data(callable, data, **options):
-    logger.info('Pushing to %s' % callable.__doc__)
+    #logger.debug('Pushing to %s' % callable.__doc__)
     return callable(data, **options)
 
 
@@ -46,7 +47,7 @@ def _push_to_target(queue, targets):
 def extract(config):
     """Reads the configuration file and does the job.
     """
-    parser = ConfigParser()
+    parser = ConfigParser(defaults={'here': os.path.dirname(config)})
     parser.read(config)
 
     # parsing the sources and targets

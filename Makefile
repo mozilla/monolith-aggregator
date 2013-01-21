@@ -23,7 +23,7 @@ clean:
 	rm -rf $(BUILD_DIRS)
 
 test: build
-	$(BIN)/nosetests -d -v --with-coverage --cover-package aggregator aggregator
+	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
 
 elasticsearch:
 	curl --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
