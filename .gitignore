@@ -9,6 +9,7 @@
 bin
 dist
 build
+elasticsearch
 include
 man
 lib

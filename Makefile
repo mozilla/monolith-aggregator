@@ -4,8 +4,9 @@ PYTHON = $(BIN)/python
 
 INSTALL = $(BIN)/pip install
 VTENV_OPTS ?= --distribute
+ES_VERSION ?= 0.20.2
 
-BUILD_DIRS = bin build include lib lib64 man share
+BUILD_DIRS = bin build elasticsearch include lib lib64 man share
 
 .PHONY: all clean test
 
@@ -23,3 +24,10 @@ clean:
 
 test: build
 	$(BIN)/nosetests -d -v --with-coverage --cover-package aggregator aggregator
+
+elasticsearch:
+	curl --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
+	mv elasticsearch-$(ES_VERSION) elasticsearch
+	chmod a+x elasticsearch/bin/elasticsearch
+	mv elasticsearch/config/elasticsearch.yml elasticsearch/config/elasticsearch.in.yml
+	cp elasticsearch.yml elasticsearch/config/elasticsearch.yml
