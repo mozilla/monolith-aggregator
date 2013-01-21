@@ -26,7 +26,7 @@ test: build
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
 
 elasticsearch:
-	curl --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
+	curl -C - --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
 	mv elasticsearch-$(ES_VERSION) elasticsearch
 	chmod a+x elasticsearch/bin/elasticsearch
 	mv elasticsearch/config/elasticsearch.yml elasticsearch/config/elasticsearch.in.yml
