@@ -10,8 +10,10 @@ class ESTestHarness(object):
 
     @classmethod
     def setup_es(cls):
+
         cls.process = subprocess.Popen(
             args=["elasticsearch/bin/elasticsearch", "-f"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         cls._running = True
         atexit.register(lambda harness: harness.teardown_es(), cls)
