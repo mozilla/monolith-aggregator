@@ -22,7 +22,7 @@ build: $(PYTHON)
 clean:
 	rm -rf $(BUILD_DIRS)
 
-test: build
+test: build elasticsearch
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
 
 elasticsearch:
