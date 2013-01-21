@@ -41,7 +41,7 @@ class ESTestHarness(object):
             cls.process.wait()
 
 
-class TestES(TestCase, ESTestHarness):
+class TestESWrite(TestCase, ESTestHarness):
 
     @classmethod
     def setUpClass(cls):
@@ -51,6 +51,19 @@ class TestES(TestCase, ESTestHarness):
     def tearDownClass(cls):
         cls.teardown_es()
 
-    def test_nothing(self):
-        self.es_client.get_indices()
-        self.assertTrue(True)
+    def _make_one(self):
+        from aggregator.plugins import es
+        options = {'url': 'http://localhost:9210'}
+        return es.ESWrite(**options)
+
+    def test_constructor(self):
+        plugin = self._make_one()
+        self.assertEqual(len(plugin.client.servers), 1)
+
+    def test_call(self):
+        plugin = self._make_one()
+        data = {'foo': 'bar'}
+        result = plugin(data)
+        id_ = result['_id']
+        res = self.es_client.get('monolith_2013-01', 'downloads', id_)
+        self.assertEqual(res, data)
