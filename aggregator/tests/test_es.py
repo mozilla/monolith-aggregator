@@ -8,43 +8,48 @@ from unittest2 import TestCase
 
 class ESTestHarness(object):
 
-    def setup_es(self):
-        self.process = subprocess.Popen(
+    @classmethod
+    def setup_es(cls):
+        cls.process = subprocess.Popen(
             args=["elasticsearch/bin/elasticsearch", "-f"],
         )
-        self._running = True
-        atexit.register(lambda harness: harness.teardown_es(), self)
-        self.es_client = ES('localhost:9210')
-        self.wait_until_ready()
+        cls._running = True
+        atexit.register(lambda harness: harness.teardown_es(), cls)
+        cls.es_client = ES('localhost:9210')
+        cls.wait_until_ready()
 
-    def wait_until_ready(self):
+    @classmethod
+    def wait_until_ready(cls):
         now = time.time()
         while time.time() - now < 60:
             try:
-                health = self.es_client.cluster_health()
+                health = cls.es_client.cluster_health()
                 if (health['status'] == 'green' and
                    health['cluster_name'] == 'monolith'):
                     break
             except Exception:
                 pass
         else:
-            del self.es_client
+            del cls.es_client
             raise OSError("Couldn't start elasticsearch")
 
-    def teardown_es(self):
-        if self._running:
-            self.process.terminate()
-            self._running = False
-            self.process.wait()
+    @classmethod
+    def teardown_es(cls):
+        if cls._running:
+            cls.process.terminate()
+            cls._running = False
+            cls.process.wait()
 
 
 class TestES(TestCase, ESTestHarness):
 
-    def setUp(self):
-        self.setup_es()
+    @classmethod
+    def setUpClass(cls):
+        cls.setup_es()
 
-    def tearDown(self):
-        self.teardown_es()
+    @classmethod
+    def tearDownClass(cls):
+        cls.teardown_es()
 
     def test_nothing(self):
         self.es_client.get_indices()
