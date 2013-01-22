@@ -11,12 +11,15 @@ from pyes import ES
 from unittest2 import TestCase
 
 ES_PROCESS = None
+# find the top-level repo path and our elasticsearch install in it
 HERE = os.path.abspath(os.path.dirname(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
 ES_DIR = os.path.join(ROOT_DIR, 'elasticsearch')
 
 
 def get_global_es():
+    """Get or start a new isolated ElasticSearch process.
+    """
     global ES_PROCESS
     if ES_PROCESS is None:
         ES_PROCESS = ESProcess()
@@ -26,6 +29,11 @@ def get_global_es():
 
 
 class ESProcess(object):
+    """Start a new ElasticSearch process, isolated in a temporary
+    directory. By default it's configured to listen on localhost and
+    a random port between 9201 and 9298. The internal cluster transport
+    port is the port number plus 1.
+    """
 
     def __init__(self, host='localhost', port_base=9200):
         self.host = host
@@ -37,6 +45,8 @@ class ESProcess(object):
         self.client = None
 
     def start(self):
+        """Start a new ES process and wait until it's ready.
+        """
         self.working_path = tempfile.mkdtemp()
         bin_path = os.path.join(self.working_path, "bin")
         config_path = os.path.join(self.working_path, "config")
@@ -45,6 +55,7 @@ class ESProcess(object):
         log_conf_path = os.path.join(config_path, "logging.yml")
         data_path = os.path.join(self.working_path, "data")
 
+        # create temporary directory structure
         if not os.path.exists(bin_path):
             os.mkdir(bin_path)
         if not os.path.exists(config_path):
@@ -59,6 +70,7 @@ class ESProcess(object):
         shutil.copy(os.path.join(es_bin_dir, 'elasticsearch'), bin_path)
         shutil.copy(os.path.join(es_bin_dir, 'elasticsearch.in.sh'), bin_path)
 
+        # write configuration file
         with open(conf_path, "w") as config:
             config.write("""
 cluster.name: test
@@ -76,6 +88,7 @@ path.logs: {log_path}
 """.format(port=self.port, tport=self.port + 1, work_path=self.working_path,
            config_path=config_path, data_path=data_path, log_path=log_path))
 
+        # write log file
         with open(log_conf_path, "w") as config:
             config.write("""
 rootLogger: INFO, console, file
@@ -99,9 +112,13 @@ appender:
       conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
 """)
 
+        # setup environment, copy from base process
         environ = os.environ.copy()
+        # configure explicit ES_INCLUDE, to prevent fallback to
+        # system-wide locations like /usr/share, /usr/local/, ...
         environ['ES_INCLUDE'] = os.path.join(bin_path, 'elasticsearch.in.sh')
         lib_dir = os.path.join(ES_DIR, 'lib')
+        # let the process find our jar files first
         environ['ES_CLASSPATH'] = ('{dir}/elasticsearch-*:{dir}/*:'
             '{dir}/sigar/*:$ES_CLASSPATH'.format(dir=lib_dir))
 
@@ -116,6 +133,8 @@ appender:
         self.wait_until_ready()
 
     def stop(self):
+        """Stop the ES process and removes the temporary directory.
+        """
         self.process.terminate()
         self.running = False
         self.process.wait()
@@ -125,12 +144,14 @@ appender:
         now = time.time()
         while time.time() - now < 60:
             try:
+                # check to see if our process is ready
                 health = self.client.cluster_health()
                 if (health['status'] == 'green' and
                    health['cluster_name'] == 'test'):
                     break
             except Exception:
-                time.sleep(0.2)
+                # wait a bit before re-trying
+                time.sleep(0.5)
         else:
             self.client = None
             raise OSError("Couldn't start elasticsearch")
@@ -138,6 +159,8 @@ appender:
     def reset(self):
         if self.client is None:
             return
+        # cleanup all indices after each test run
+        # TODO: we don't yet do settings cleanup
         for index in self.client.get_indices():
             self.client.delete_index(index)
 
