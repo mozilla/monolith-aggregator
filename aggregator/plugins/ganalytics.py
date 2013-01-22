@@ -13,6 +13,10 @@ def _ga(name):
     return 'ga:' + name
 
 
+def _gatable(option):
+    return [_ga(item) for item in option.split(',')]
+
+
 class GoogleAnalytics(Plugin):
     def __init__(self, **options):
         self.options = options
@@ -22,11 +26,9 @@ class GoogleAnalytics(Plugin):
         self.client.client_login(login, password, source=SOURCE_APP_NAME,
                                  service=self.client.auth_service)
         self.table_id = _ga(options['table_id'])
-        self.metrics = [_ga(metric) for metric in
-                        options['metrics'].split(',')]
+        self.metrics = _gatable(options['metrics'])
         self.qmetrics = ','.join(self.metrics)
-        self.dimensions = [_ga(dimension) for dimension
-                           in options['dimensions'].split(',')]
+        self.dimensions = _gatable(options['dimensions'])
         self.qdimensions = ','.join(self.dimensions)
 
     def __call__(self, start_date, end_date, **options):
