@@ -184,11 +184,14 @@ def word2daterange(datestr):
     today = date.today()
 
     if datestr == 'today':
-        return today
+        return today, today
     elif datestr == 'yesterday':
-        return today - timedelta(days=1)
+        yesterday = today - timedelta(days=1)
+        return yesterday, yesterday
     elif datestr == 'last-week':
-        return today - timedelta(days=today.weekday()-7)
+        first_day = today - timedelta(days=today.weekday()-7)
+        last_day = first_day + timedelta(days=7)
+        return first_day, last_day
     elif datestr == 'last-month':
         # getting the first day of previous month
         current_month = today.month

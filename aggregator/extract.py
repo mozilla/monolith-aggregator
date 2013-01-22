@@ -98,7 +98,7 @@ def main():
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
 
-    date_group = argparse.add_mutually_exclusive_group()
+    date_group = parser.add_mutually_exclusive_group()
     date_group.add_argument('--date', default=None, choices=_DATES,
                             help='Date')
     date_group.add_argument('--start-date', default=None, type=_mkdate,
