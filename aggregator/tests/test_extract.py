@@ -1,10 +1,12 @@
+import sys
 import os
 import random
+import copy
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
 
-from aggregator.extract import extract
+from aggregator.extract import extract, main
 from aggregator.plugins import plugin
 from aggregator.util import word2daterange
 
@@ -87,3 +89,14 @@ class TestExtract(TestCase):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
         self.assertEqual(len(_res), 207)
+
+    def test_main(self):
+        old = copy.copy(sys.argv)
+        sys.argv[:] = ['python', '--date', 'last-month', self.config]
+        try:
+            main()
+        finally:
+            sys.argv[:] = old
+
+        self.assertEqual(len(_res), 207)
+
