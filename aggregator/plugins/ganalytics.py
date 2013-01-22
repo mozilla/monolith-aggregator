@@ -25,8 +25,9 @@ class GoogleAnalytics(Plugin):
         self.metrics = [_ga(metric) for metric in
                         options['metrics'].split(',')]
         self.qmetrics = ','.join(self.metrics)
-        self.dimensions = ','.join([_ga(dimension) for dimension
-                                    in options['dimensions'].split(',')])
+        self.dimensions = [_ga(dimension) for dimension
+                           in options['dimensions'].split(',')]
+        self.qdimensions = ','.join(self.dimensions)
 
     def __call__(self, start_date, end_date, **options):
         query = DataFeedQuery({'ids': self.table_id,
@@ -34,12 +35,17 @@ class GoogleAnalytics(Plugin):
                                'end-date': end_date.isoformat(),
                                'dimensions': 'ga:date',
                                'metrics': self.qmetrics,
-                               'dimensions': self.dimensions})
+                               'dimensions': self.qdimensions})
 
         feed = self.client.GetDataFeed(query)
 
         for entry in feed.entry:
             data = {}
-            for met in self.metrics:
-                data[met] = float(entry.get_metric(met).value)
+            for dimension in self.dimensions:
+                data[dimension] = entry.get_dimension(dimension).value
+
+            for metric in self.metrics:
+                data[metric] = float(entry.get_metric(metric).value)
+
+            # XXX more stuff in that mapping ?
             yield data
