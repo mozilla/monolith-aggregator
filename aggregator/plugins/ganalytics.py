@@ -1,9 +1,16 @@
 from aggregator.plugins import Plugin
-from monolith import __version__
+from aggregator import __version__
 from gdata.analytics.client import AnalyticsClient, DataFeedQuery
 
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
+
+
+def _ga(name):
+    name = name.strip()
+    if name.startswith('ga:'):
+        return name
+    return 'ga:' + name
 
 
 class GoogleAnalytics(Plugin):
@@ -14,12 +21,11 @@ class GoogleAnalytics(Plugin):
         password = options['password']
         self.client.client_login(login, password, source=SOURCE_APP_NAME,
                                  service=self.client.auth_service)
-        self.table_id = 'ga:%s' % options['table_id']
-        self.metrics = ['ga:%s' % metric.strip()
-                        for metric in options['metrics'].split(',')]
+        self.table_id = _ga(options['table_id'])
+        self.metrics = [_ga(metric) for metric in
+                        options['metrics'].split(',')]
         self.qmetrics = ','.join(self.metrics)
-        self.dimensions = ','.join(['ga:%s' % dimension.strip()
-                                    for dimension
+        self.dimensions = ','.join([_ga(dimension) for dimension
                                     in options['dimensions'].split(',')])
 
     def __call__(self, start_date, end_date, **options):
@@ -35,5 +41,5 @@ class GoogleAnalytics(Plugin):
         for entry in feed.entry:
             data = {}
             for met in self.metrics:
-                data[met] = float(entry.get_object(met).value)
+                data[met] = float(entry.get_metric(met).value)
             yield data
