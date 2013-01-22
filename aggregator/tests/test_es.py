@@ -29,7 +29,7 @@ class ESProcess(object):
 
     def __init__(self, host='localhost', port_base=9200):
         self.host = host
-        self.port = port_base + random.randint(1, 99)
+        self.port = port_base + random.randint(1, 98)
         self.address = 'http://%s:%s' % (self.host, self.port)
         self.working_path = None
         self.process = None
