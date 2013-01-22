@@ -5,12 +5,12 @@ from googleanalytics import Connection
 class GoogleAnalytics(Plugin):
     def __init__(self, **options):
         self.options = options
-        self.connection = Connection(option['login'], option['password'])
-        self.account = self.connection.get_account(option['account'])
+        self.connection = Connection(options['login'], options['password'])
+        self.account = self.connection.get_account(options['account'])
         self.metrics = [metric.strip()
-                        for metric in option['metrics'].split(',')]
+                        for metric in options['metrics'].split(',')]
         self.dimensions = [dimension.strip()
-                           for dimension in option['dimensions'].split(',')]
+                           for dimension in options['dimensions'].split(',')]
 
     def __call__(self, start_date, end_date, **options):
         data = self.account.get_data(start_date, end_date, metrics=self.metrics,
