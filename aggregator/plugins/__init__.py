@@ -1,4 +1,3 @@
-from functools import wraps
 
 
 class Plugin(object):
@@ -6,7 +5,7 @@ class Plugin(object):
         self.options = options
 
     def __call__(self, *args, **options):
-        raise NotImplementerError
+        raise NotImplementedError
 
 
 class _FuncPlugin(object):

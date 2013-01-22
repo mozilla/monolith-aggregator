@@ -3,23 +3,22 @@ import logging
 import argparse
 from ConfigParser import ConfigParser
 import sys
-import datetime
+from datetime import datetime
 
 import gevent
 from gevent.queue import JoinableQueue
 from gevent.pool import Group
 
 from aggregator import __version__
-from aggregator.util import resolve_name, configure_logger, LOG_LEVELS
-from aggregator.db import Database
+from aggregator.util import (resolve_name, configure_logger, LOG_LEVELS,
+                             word2daterange)
 
 
 logger = logging.getLogger('aggregator')
 
 
 def _mkdate(datestring):
-    # XXX we should accept stuff like "today" etc here
-    return datetime.datetime.strptime(datestring, '%Y-%m-%d').date()
+    return datetime.strptime(datestring, '%Y-%m-%d').date()
 
 
 def _get_data(queue, callable, start_date, end_date, options):
@@ -89,13 +88,21 @@ def extract(config, start_date, end_date):
             processed += 1
 
 
+_DATES = ['today', 'yesterday', 'last-week', 'last-month',
+          'last-year']
+
+
 def main():
     parser = argparse.ArgumentParser(description='Monolith Aggregator')
 
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
-    parser.add_argument('--start-date', default=None, type=_mkdate,
-                        help='Start date.')
+
+    date_group = argparse.add_mutually_exclusive_group()
+    date_group.add_argument('--date', default=None, choices=_DATES,
+                            help='Date')
+    date_group.add_argument('--start-date', default=None, type=_mkdate,
+                            help='Start date.')
     parser.add_argument('--end-date', default=None, type=_mkdate,
                         help='End date.')
     parser.add_argument('config', help='Configuration file.',)
@@ -112,8 +119,13 @@ def main():
         print(__version__)
         sys.exit(0)
 
+    if args.date is not None:
+        start, end = word2daterange(args.date)
+    else:
+        start, end = args.start_date, args.end_date
+
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, args.start_date, args.end_date)
+    extract(args.config, start, end)
 
 
 if __name__ == '__main__':

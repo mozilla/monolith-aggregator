@@ -1,10 +1,10 @@
 import json
 from time import mktime
-import datetime
 import sys
 import logging
 import fcntl
-
+from datetime import date, datetime, timedelta
+from calendar import monthrange
 
 try:
     from importlib import import_module         # NOQA
@@ -136,7 +136,7 @@ class JSONEncoder(json.JSONEncoder):
     """A JSON encoder takking care of dates"""
 
     def default(self, obj):
-        if isinstance(obj, datetime.datetime):
+        if isinstance(obj, datetime):
             return int(mktime(obj.timetuple()))
 
         return json.JSONEncoder.default(self, obj)
@@ -178,3 +178,32 @@ def configure_logger(logger, level='INFO', output="-"):
     fmt = logging.Formatter(LOG_FMT, LOG_DATE_FMT)
     h.setFormatter(fmt)
     logger.addHandler(h)
+
+
+def word2daterange(datestr):
+    today = date.today()
+
+    if datestr == 'today':
+        return today
+    elif datestr == 'yesterday':
+        return today - timedelta(days=1)
+    elif datestr == 'last-week':
+        return today - timedelta(days=today.weekday()-7)
+    elif datestr == 'last-month':
+        # getting the first day of previous month
+        current_month = today.month
+        if current_month == 1:
+            month = 12
+            year = today.year - 1
+        else:
+            month = current_month - 1
+            year = today.year
+
+        last_day_of_month = monthrange(year, month)[1]
+        return date(year, month, 1), date(year, month, last_day_of_month)
+    elif datestr == 'last-year':
+        year = today.year - 1
+        last_day_of_month = monthrange(year, 12)[1]
+        return date(year, 1, 1), date(year, 12, last_day_of_month)
+
+    raise NotImplementedError(datestr)

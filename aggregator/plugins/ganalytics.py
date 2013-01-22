@@ -13,7 +13,8 @@ class GoogleAnalytics(Plugin):
                            for dimension in options['dimensions'].split(',')]
 
     def __call__(self, start_date, end_date, **options):
-        data = self.account.get_data(start_date, end_date, metrics=self.metrics,
+        data = self.account.get_data(start_date, end_date,
+                                     metrics=self.metrics,
                                      dimensions=self.dimensions)
         for elmt in data:
             yield dict(elmt)
