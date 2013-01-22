@@ -1,15 +1,16 @@
 import os
 import random
-import datetime
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
 
 from aggregator.extract import extract
 from aggregator.plugins import plugin
+from aggregator.util import word2daterange
 
 
 _res = []
+_FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
 
 
 @plugin
@@ -64,11 +65,25 @@ class TestExtract(TestCase):
             self.tearDown()
             raise
 
+        # patching gdata
+        def _nothing(*args, **kw):
+            pass
+
+        def _data(*args, **kw):
+            from gdata.analytics.data import DataFeed
+            from atom.core import parse
+            with open(_FEED) as f:
+                return parse(f.read(), DataFeed)
+
+        from gdata.analytics.client import AnalyticsClient
+        AnalyticsClient.client_login = _nothing
+        AnalyticsClient.GetDataFeed = _data
+
     def tearDown(self):
         if os.path.exists(DB_FILE):
             os.remove(DB_FILE)
 
     def test_extract(self):
-
-        extract(self.config, datetime.datetime.now(), None)
-        self.assertEqual(len(_res), 212)
+        start, end = word2daterange('last-month')
+        extract(self.config, start, end)
+        self.assertEqual(len(_res), 207)
