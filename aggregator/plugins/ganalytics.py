@@ -1,20 +1,39 @@
 from aggregator.plugins import Plugin
-from googleanalytics import Connection
+from monolith import __version__
+from gdata.analytics.client import AnalyticsClient, DataFeedQuery
+
+
+SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
 
 
 class GoogleAnalytics(Plugin):
     def __init__(self, **options):
         self.options = options
-        self.connection = Connection(options['login'], options['password'])
-        self.account = self.connection.get_account(options['account'])
-        self.metrics = [metric.strip()
+        self.client = AnalyticsClient(source=SOURCE_APP_NAME)
+        login = options['login']
+        password = options['password']
+        self.client.client_login(login, password, source=SOURCE_APP_NAME,
+                                 service=client.auth_service)
+        self.table_id = 'ga:%s' % options['table_id']
+        self.metrics = ['ga:%s' % metric.strip()
                         for metric in options['metrics'].split(',')]
-        self.dimensions = [dimension.strip()
-                           for dimension in options['dimensions'].split(',')]
+        self.qmetrics = ','join(self.metrics)
+        self.dimensions = ','join(['ga:%s' % dimension.strip()
+                                   for dimension
+                                   in options['dimensions'].split(',')])
 
     def __call__(self, start_date, end_date, **options):
-        data = self.account.get_data(start_date, end_date,
-                                     metrics=self.metrics,
-                                     dimensions=self.dimensions)
-        for elmt in data:
-            yield dict(elmt)
+        query = DataFeedQuery({'ids': table_id,
+                               'start-date': start_date.isoformat(),
+                               'end-date': end_date.isoformat(),
+                               'dimensions': 'ga:date',
+                               'metrics': self.qmetrics,
+                               'dimensions': self.dimensions})
+
+        feed = client.GetDataFeed(query)
+
+        for entry in feed.entry:
+            data = {}
+            for met in self.metrics:
+                data[met] = float(entry.get_object(met).value)
+            yield data

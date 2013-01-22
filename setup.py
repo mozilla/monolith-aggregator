@@ -12,7 +12,7 @@ requires = [
     'pyes',
     'SQLAlchemy',
     'gevent',
-    'python-googleanalytics'
+    'gdata'
 ]
 
 test_requires = requires + [
