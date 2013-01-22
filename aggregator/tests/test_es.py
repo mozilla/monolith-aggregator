@@ -1,11 +1,19 @@
 import atexit
+import os
+import os.path
+import random
+import shutil
 import subprocess
+import tempfile
 import time
 
 from pyes import ES
 from unittest2 import TestCase
 
 ES_PROCESS = None
+HERE = os.path.abspath(os.path.dirname(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
+ES_DIR = os.path.join(ROOT_DIR, 'elasticsearch')
 
 
 def get_global_es():
@@ -19,24 +27,99 @@ def get_global_es():
 
 class ESProcess(object):
 
-    def __init__(self):
+    def __init__(self, host='localhost', port_base=9200):
+        self.host = host
+        self.port = port_base + random.randint(1, 99)
+        self.address = 'http://%s:%s' % (self.host, self.port)
+        self.working_path = None
         self.process = None
-        self.running = None
+        self.running = False
         self.client = None
 
     def start(self):
+        self.working_path = tempfile.mkdtemp()
+        bin_path = os.path.join(self.working_path, "bin")
+        config_path = os.path.join(self.working_path, "config")
+        conf_path = os.path.join(config_path, "elasticsearch.yml")
+        log_path = os.path.join(self.working_path, "logs")
+        log_conf_path = os.path.join(config_path, "logging.yml")
+        data_path = os.path.join(self.working_path, "data")
+
+        if not os.path.exists(bin_path):
+            os.mkdir(bin_path)
+        if not os.path.exists(config_path):
+            os.mkdir(config_path)
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+        if not os.path.exists(data_path):
+            os.mkdir(data_path)
+
+        # copy ES startup scripts
+        es_bin_dir = os.path.join(ES_DIR, 'bin')
+        shutil.copy(os.path.join(es_bin_dir, 'elasticsearch'), bin_path)
+        shutil.copy(os.path.join(es_bin_dir, 'elasticsearch.in.sh'), bin_path)
+
+        with open(conf_path, "w") as config:
+            config.write("""
+cluster.name: test
+node.name: "test_1"
+index.number_of_shards: 1
+index.number_of_replicas: 0
+http.port: {port}
+transport.tcp.port: {tport}
+discovery.zen.ping.multicast.enabled: false
+path.conf: {config_path}
+path.work: {work_path}
+path.plugins: {work_path}
+path.data: {data_path}
+path.logs: {log_path}
+""".format(port=self.port, tport=self.port + 1, work_path=self.working_path,
+           config_path=config_path, data_path=data_path, log_path=log_path))
+
+        with open(log_conf_path, "w") as config:
+            config.write("""
+rootLogger: INFO, console, file
+
+logger:
+  action: DEBUG
+
+appender:
+  console:
+    type: console
+    layout:
+      type: consolePattern
+      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
+
+  file:
+    type: dailyRollingFile
+    file: ${path.logs}/${cluster.name}.log
+    datePattern: "'.'yyyy-MM-dd"
+    layout:
+      type: pattern
+      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
+""")
+
+        environ = os.environ.copy()
+        environ['ES_INCLUDE'] = os.path.join(bin_path, 'elasticsearch.in.sh')
+        lib_dir = os.path.join(ES_DIR, 'lib')
+        environ['ES_CLASSPATH'] = ('{dir}/elasticsearch-*:{dir}/*:'
+            '{dir}/sigar/*:$ES_CLASSPATH'.format(dir=lib_dir))
+
         self.process = subprocess.Popen(
-            args=["elasticsearch/bin/elasticsearch", "-f"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            args=[bin_path + "/elasticsearch", "-f",
+                  "-Des.config=" + conf_path],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env=environ
         )
         self.running = True
-        self.client = ES('localhost:9210')
+        self.client = ES(self.address)
         self.wait_until_ready()
 
     def stop(self):
         self.process.terminate()
         self.running = False
         self.process.wait()
+        shutil.rmtree(self.working_path, ignore_errors=True)
 
     def wait_until_ready(self):
         now = time.time()
@@ -44,10 +127,10 @@ class ESProcess(object):
             try:
                 health = self.client.cluster_health()
                 if (health['status'] == 'green' and
-                   health['cluster_name'] == 'monolith'):
+                   health['cluster_name'] == 'test'):
                     break
             except Exception:
-                pass
+                time.sleep(0.2)
         else:
             self.client = None
             raise OSError("Couldn't start elasticsearch")
@@ -78,7 +161,7 @@ class TestESWrite(TestCase, ESTestHarness):
 
     def _make_one(self):
         from aggregator.plugins import es
-        options = {'url': 'http://localhost:9210'}
+        options = {'url': self.es_process.address}
         return es.ESWrite(**options)
 
     def test_constructor(self):
