@@ -181,6 +181,16 @@ def configure_logger(logger, level='INFO', output="-"):
 
 
 def word2daterange(datestr):
+    """Returns a range of dates (tuple of two dates) given a "word".
+
+    Implemented words:
+
+    - today
+    - yesterday
+    - last-week
+    - last-month
+    - last-year
+    """
     today = date.today()
 
     if datestr == 'today':
