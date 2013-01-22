@@ -1,5 +1,6 @@
 import os
 import random
+import datetime
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
@@ -30,7 +31,7 @@ def put_es(data, **options):
 
 
 @plugin
-def get_ga(**options):
+def get_ga(start_date, end_date, **options):
     """Google Analytics
     """
     for i in range(10):
@@ -38,7 +39,7 @@ def get_ga(**options):
 
 
 @plugin
-def get_rest(**options):
+def get_rest(start_date, end_date, **options):
     """Solitude
     """
     for i in range(100):
@@ -46,7 +47,7 @@ def get_rest(**options):
 
 
 @plugin
-def get_market_place(**options):
+def get_market_place(start_date, end_date, **options):
     """MarketPlace
     """
     for i in range(2):
@@ -80,5 +81,5 @@ class TestExtract(TestCase):
 
     def test_extract(self):
 
-        extract(self.config)
+        extract(self.config, datetime.datetime.now(), None)
         self.assertEqual(len(_res), 212)

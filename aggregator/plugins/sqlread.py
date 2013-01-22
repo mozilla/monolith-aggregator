@@ -14,9 +14,9 @@ class SQLRead(Plugin):
             extras['pool_recycle'] = int(options.get('pool_recycle', 60))
 
         self.engine = create_engine(self.sqluri, **extras)
-        # XXX date range ?
         self.query = options['query']
 
-    def __call__(self, *args, **options):
+    def __call__(self, start_date, end_date, *args, **options):
+        # XXX date range ?
         # doing the query
         return self.engine.execute(self.query)

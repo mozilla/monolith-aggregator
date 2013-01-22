@@ -3,6 +3,7 @@ import logging
 import argparse
 from ConfigParser import ConfigParser
 import sys
+import datetime
 
 import gevent
 from gevent.queue import JoinableQueue
@@ -16,9 +17,14 @@ from aggregator.db import Database
 logger = logging.getLogger('aggregator')
 
 
-def _get_data(queue, callable, options):
+def _mkdate(datestring):
+    # XXX we should accept stuff like "today" etc here
+    return datetime.datetime.strptime(datestring, '%Y-%m-%d').date()
+
+
+def _get_data(queue, callable, start_date, end_date, options):
     #logger.debug('Getting from %s' % callable.__doc__)
-    for item in callable(**options):
+    for item in callable(start_date, end_date, **options):
         queue.put(item)
     queue.put('END')
 
@@ -44,7 +50,7 @@ def _push_to_target(queue, targets):
     return True
 
 
-def extract(config):
+def extract(config, start_date, end_date):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
@@ -74,7 +80,7 @@ def extract(config):
 
     # each callable will push its result in the queue
     for plugin, options in sources.values():
-        gevent.spawn(_get_data, queue, plugin, options)
+        gevent.spawn(_get_data, queue, plugin, start_date, end_date, options)
 
     # looking at the queue
     processed = 0
@@ -88,6 +94,10 @@ def main():
 
     parser.add_argument('--version', action='store_true', default=False,
                         help='Displays version and exits.')
+    parser.add_argument('--start-date', default=None, type=_mkdate,
+                        help='Start date.')
+    parser.add_argument('--end-date', default=None, type=_mkdate,
+                        help='End date.')
     parser.add_argument('config', help='Configuration file.',)
     parser.add_argument('--log-level', dest='loglevel', default='info',
                         choices=LOG_LEVELS.keys() + [key.upper() for key in
@@ -103,7 +113,7 @@ def main():
         sys.exit(0)
 
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config)
+    extract(args.config, args.start_date, args.end_date)
 
 
 if __name__ == '__main__':
