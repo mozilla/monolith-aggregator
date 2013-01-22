@@ -13,24 +13,24 @@ class GoogleAnalytics(Plugin):
         login = options['login']
         password = options['password']
         self.client.client_login(login, password, source=SOURCE_APP_NAME,
-                                 service=client.auth_service)
+                                 service=self.client.auth_service)
         self.table_id = 'ga:%s' % options['table_id']
         self.metrics = ['ga:%s' % metric.strip()
                         for metric in options['metrics'].split(',')]
-        self.qmetrics = ','join(self.metrics)
-        self.dimensions = ','join(['ga:%s' % dimension.strip()
-                                   for dimension
-                                   in options['dimensions'].split(',')])
+        self.qmetrics = ','.join(self.metrics)
+        self.dimensions = ','.join(['ga:%s' % dimension.strip()
+                                    for dimension
+                                    in options['dimensions'].split(',')])
 
     def __call__(self, start_date, end_date, **options):
-        query = DataFeedQuery({'ids': table_id,
+        query = DataFeedQuery({'ids': self.table_id,
                                'start-date': start_date.isoformat(),
                                'end-date': end_date.isoformat(),
                                'dimensions': 'ga:date',
                                'metrics': self.qmetrics,
                                'dimensions': self.dimensions})
 
-        feed = client.GetDataFeed(query)
+        feed = self.client.GetDataFeed(query)
 
         for entry in feed.entry:
             data = {}
