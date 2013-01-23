@@ -155,7 +155,6 @@ appender:
         if self.client is None:
             return
         # cleanup all indices after each test run
-        # TODO: we don't yet do settings cleanup
         self.client.delete_all_indexes()
 
 
