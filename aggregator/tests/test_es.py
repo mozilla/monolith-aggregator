@@ -167,6 +167,39 @@ class ESTestHarness(object):
         self.es_process.reset()
 
 
+class TestESSetup(TestCase, ESTestHarness):
+
+    def setUp(self):
+        self.setup_es()
+
+    def tearDown(self):
+        self.teardown_es()
+
+    def _make_one(self):
+        from aggregator.plugins import es
+        client = ElasticSearch(self.es_process.address)
+        return es.ESSetup(client)
+
+    def test_create_index(self):
+        setup = self._make_one()
+        client = setup.client
+        setup.create_index('foo_2011-11')
+        self.assertEqual(
+            client.status('foo_2011-11')['_shards']['successful'], 1)
+
+    def test_optimize(self):
+        setup = self._make_one()
+        client = setup.client
+        setup.create_index('foo_2011-11')
+        client.index('foo_2011-11', 'test', {'foo': 1})
+        res = client.index('foo_2011-11', 'test', {'foo': 2})
+        client.delete('foo_2011-11', 'test', res['_id'])
+        setup.optimize('foo_2011-11')
+        res = client.status('foo_2011-11')['indices']['foo_2011-11']
+        # the deleted doc was merged away
+        self.assertEqual(res['docs']['deleted_docs'], 0)
+
+
 class TestESWrite(TestCase, ESTestHarness):
 
     def setUp(self):

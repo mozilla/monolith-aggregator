@@ -9,12 +9,20 @@ class ESSetup(object):
         self.client = client
 
     def create_index(self, name):
+        """Create an index with our custom settings.
+        """
         settings = {
             'number_of_shards': 1,
             'number_of_replicas': 1,
-            'refresh_interval': '60s',
+            'refresh_interval': '10s',
         }
-        self.client.create_index(name, settings=settings)
+        return self.client.create_index(name, settings=settings)
+
+    def optimize(self, name):
+        """Fully optimize an index down to one segment.
+        """
+        return self.client.optimize(
+            name, max_num_segments=1, wait_for_merge=True)
 
 
 class ESWrite(Plugin):
