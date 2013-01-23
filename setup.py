@@ -9,7 +9,7 @@ with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
 
 requires = [
-    'pyes',
+    'pyelasticsearch>=0.3',
     'SQLAlchemy',
     'gevent',
     'gdata'

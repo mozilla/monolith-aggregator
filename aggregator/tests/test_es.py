@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import time
 
-from pyes import ES
+from pyelasticsearch import ElasticSearch
 from unittest2 import TestCase
 
 ES_PROCESS = None
@@ -124,7 +124,7 @@ appender:
             env=environ
         )
         self.running = True
-        self.client = ES(self.address)
+        self.client = ElasticSearch(self.address)
         self.wait_until_ready()
 
     def stop(self):
@@ -140,7 +140,7 @@ appender:
         while time.time() - now < 60:
             try:
                 # check to see if our process is ready
-                health = self.client.cluster_health()
+                health = self.client.health()
                 if (health['status'] == 'green' and
                    health['cluster_name'] == 'test'):
                     break
@@ -156,8 +156,7 @@ appender:
             return
         # cleanup all indices after each test run
         # TODO: we don't yet do settings cleanup
-        for index in self.client.get_indices():
-            self.client.delete_index(index)
+        self.client.delete_all_indexes()
 
 
 class ESTestHarness(object):
@@ -184,12 +183,14 @@ class TestESWrite(TestCase, ESTestHarness):
 
     def test_constructor(self):
         plugin = self._make_one()
-        self.assertEqual(len(plugin.client.servers), 1)
+        self.assertEqual(len(plugin.client.servers.live), 1)
 
     def test_call(self):
         plugin = self._make_one()
+        es_client = self.es_process.client
         data = {'foo': 'bar'}
         result = plugin(data)
         id_ = result['_id']
-        res = self.es_process.client.get('monolith_2013-01', 'downloads', id_)
-        self.assertEqual(res, data)
+        es_client.refresh('monolith_2013-01')
+        res = es_client.get('monolith_2013-01', 'downloads', id_)
+        self.assertEqual(res['_source'], data)
