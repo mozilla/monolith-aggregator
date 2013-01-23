@@ -56,14 +56,9 @@ class ESProcess(object):
         data_path = os.path.join(self.working_path, "data")
 
         # create temporary directory structure
-        if not os.path.exists(bin_path):
-            os.mkdir(bin_path)
-        if not os.path.exists(config_path):
-            os.mkdir(config_path)
-        if not os.path.exists(log_path):
-            os.mkdir(log_path)
-        if not os.path.exists(data_path):
-            os.mkdir(data_path)
+        for path in (bin_path, config_path, log_path, data_path):
+            if not os.path.exists(path):
+                os.mkdir(path)
 
         # copy ES startup scripts
         es_bin_dir = os.path.join(ES_DIR, 'bin')
