@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import copy
+import datetime
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
@@ -49,6 +50,16 @@ def get_market_place(start_date, end_date, **options):
 DB_FILE = os.path.join(os.path.dirname(__file__), 'source.db')
 DB = 'sqlite:///' + DB_FILE
 
+CREATE = """\
+create table downloads
+    (count INTEGER, start DATE, end DATE)
+"""
+
+INSERT = """\
+insert into downloads (count, start, end)
+values (:count, :start, :end)
+"""
+
 
 class TestExtract(TestCase):
 
@@ -58,11 +69,14 @@ class TestExtract(TestCase):
 
         # let's create a DB for the tests
         engine = create_engine(DB)
+        today = datetime.date.today().isoformat()
+        start, end = word2daterange('last-month')
+
         try:
-            engine.execute('create table downloads (count INTEGER)')
+            engine.execute(CREATE)
             for i in range(100):
                 v = random.randint(0, 1000)
-                engine.execute('insert into downloads (count) values (%d)' % v)
+                engine.execute(INSERT, count=v, start=start, end=end)
         except Exception:
             self.tearDown()
             raise
