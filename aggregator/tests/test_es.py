@@ -316,9 +316,17 @@ class TestESWrite(TestCase, ESTestHarness):
     def test_call(self):
         plugin = self._make_one()
         es_client = self.es_process.client
-        data = {'foo': 'bar'}
+        data = {
+            'category': 'downloads',
+            'date': datetime.datetime(2012, 7, 4),
+            'foo': 'bar',
+            'baz': 2,
+        }
         result = plugin(data)
         id_ = result['_id']
-        es_client.refresh('monolith_2013-01')
-        res = es_client.get('monolith_2013-01', 'downloads', id_)
-        self.assertEqual(res['_source'], data)
+        es_client.refresh()
+        res = es_client.get('monolith_2012-07', 'downloads', id_)
+        source = res['_source']
+        for field in ('category', 'foo', 'baz'):
+            self.assertEqual(source[field], data[field])
+        self.assertEqual(source['date'], '2012-07-04T00:00:00')

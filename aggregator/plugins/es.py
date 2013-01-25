@@ -1,3 +1,5 @@
+import datetime
+
 from pyelasticsearch import ElasticSearch
 
 from aggregator.plugins import Plugin
@@ -100,6 +102,11 @@ class ESWrite(Plugin):
         self.setup = ESSetup(self.client)
         self.setup.configure_templates()
 
+    def _index_name(self, date):
+        return 'monolith_%.4d-%.2d' % (date.year, date.month)
+
     def __call__(self, data, **options):
+        category = data.get('category', 'unknown')
+        date = data.get('date', datetime.date.today())
         return self.client.index(
-            'monolith_2013-01', 'downloads', data)
+            self._index_name(date), category, data)
