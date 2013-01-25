@@ -57,7 +57,6 @@ class ESSetup(object):
                 'mappings': {
                     '_default_': {
                         '_all': {'enabled': False},
-                        '_source': {'compress': True},
                     },
                     'dynamic_templates': {
                         'string_template': {
