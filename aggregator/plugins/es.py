@@ -3,6 +3,21 @@ from pyelasticsearch import ElasticSearch
 from aggregator.plugins import Plugin
 
 
+class ExtendedClient(ElasticSearch):
+    """Wrapper around pyelasticsearch's client to add some missing
+    API's. These should be merged upstream.
+    """
+
+    def create_template(self, name, settings):
+        return self.send_request('PUT', ['_template', name], settings)
+
+    def delete_template(self, name):
+        return self.send_request('DELETE', ['_template', name])
+
+    def get_template(self, name):
+        return self.send_request('GET', ['_template', name])
+
+
 class ESSetup(object):
 
     def __init__(self, client):
@@ -47,7 +62,7 @@ class ESWrite(Plugin):
     def __init__(self, **options):
         self.options = options
         self.url = options['url']
-        self.client = ElasticSearch(self.url)
+        self.client = ExtendedClient(self.url)
         self.setup = ESSetup(self.client)
 
     def __call__(self, data, **options):

@@ -7,7 +7,6 @@ import subprocess
 import tempfile
 import time
 
-from pyelasticsearch import ElasticSearch
 from unittest2 import TestCase
 
 ES_PROCESS = None
@@ -124,7 +123,8 @@ appender:
             env=environ
         )
         self.running = True
-        self.client = ElasticSearch(self.address)
+        from aggregator.plugins.es import ExtendedClient
+        self.client = ExtendedClient(self.address)
         self.wait_until_ready()
 
     def stop(self):
@@ -167,6 +167,56 @@ class ESTestHarness(object):
         self.es_process.reset()
 
 
+class TestExtendedClient(TestCase, ESTestHarness):
+
+    def setUp(self):
+        self.setup_es()
+        self.added_templates = set()
+
+    def tearDown(self):
+        for t in self.added_templates:
+            try:
+                self.es_process.client.delete_template(t)
+            except Exception:
+                pass
+        self.teardown_es()
+
+    def _make_one(self):
+        from aggregator.plugins import es
+        return es.ExtendedClient(self.es_process.address)
+
+    def test_create_template(self):
+        client = self._make_one()
+        client.create_template('template1', {
+            'template': 'test_index_*',
+            'settings': {
+                'number_of_shards': 3,
+            },
+        })
+        self.added_templates.add('template1')
+        # make sure an index matching the pattern gets the shard setting
+        client.create_index('test_index_1')
+        self.assertEqual(client.status('test_index_1')['_shards']['total'], 3)
+
+    def test_delete_template(self):
+        client = self._make_one()
+        client.create_template('template2', {
+            'template': 'test_index',
+        })
+        self.added_templates.add('template2')
+        client.delete_template('template2')
+        self.assertFalse(client.get_template('template2'))
+
+    def test_get_template(self):
+        client = self._make_one()
+        client.create_template('template3', {
+            'template': 'test_index',
+        })
+        self.added_templates.add('template3')
+        res = client.get_template('template3')
+        self.assertEqual(res['template3']['template'], 'test_index')
+
+
 class TestESSetup(TestCase, ESTestHarness):
 
     def setUp(self):
@@ -177,7 +227,7 @@ class TestESSetup(TestCase, ESTestHarness):
 
     def _make_one(self):
         from aggregator.plugins import es
-        client = ElasticSearch(self.es_process.address)
+        client = es.ExtendedClient(self.es_process.address)
         return es.ESSetup(client)
 
     def test_create_index(self):
