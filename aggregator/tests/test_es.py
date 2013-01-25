@@ -162,23 +162,31 @@ class ESTestHarness(object):
 
     def setup_es(self):
         self.es_process = get_global_es()
+        self._prior_templates = self._get_template_names()
 
     def teardown_es(self):
+        self._delete_extra_templates()
         self.es_process.reset()
+
+    def _delete_extra_templates(self):
+        current_templates = self._get_template_names()
+        for t in current_templates - self._prior_templates:
+            self.es_process.client.delete_template(t)
+
+    def _get_template_names(self):
+        res = self.es_process.client.send_request(
+            'GET', ['_cluster', 'state'], query_params={
+                'filter_routing_table': 'true',
+                'filter_nodes': 'true'})
+        return set(res['metadata']['templates'].keys())
 
 
 class TestExtendedClient(TestCase, ESTestHarness):
 
     def setUp(self):
         self.setup_es()
-        self.added_templates = set()
 
     def tearDown(self):
-        for t in self.added_templates:
-            try:
-                self.es_process.client.delete_template(t)
-            except Exception:
-                pass
         self.teardown_es()
 
     def _make_one(self):
@@ -193,7 +201,6 @@ class TestExtendedClient(TestCase, ESTestHarness):
                 'number_of_shards': 3,
             },
         })
-        self.added_templates.add('template1')
         # make sure an index matching the pattern gets the shard setting
         client.create_index('test_index_1')
         self.assertEqual(client.status('test_index_1')['_shards']['total'], 3)
@@ -203,7 +210,6 @@ class TestExtendedClient(TestCase, ESTestHarness):
         client.create_template('template2', {
             'template': 'test_index',
         })
-        self.added_templates.add('template2')
         client.delete_template('template2')
         self.assertFalse(client.get_template('template2'))
 
@@ -212,7 +218,6 @@ class TestExtendedClient(TestCase, ESTestHarness):
         client.create_template('template3', {
             'template': 'test_index',
         })
-        self.added_templates.add('template3')
         res = client.get_template('template3')
         self.assertEqual(res['template3']['template'], 'test_index')
 
