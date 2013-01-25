@@ -101,6 +101,5 @@ class ESWrite(Plugin):
         self.setup.configure_templates()
 
     def __call__(self, data, **options):
-        self.setup.create_index('monolith_2013-01')
         return self.client.index(
             'monolith_2013-01', 'downloads', data)
