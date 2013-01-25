@@ -35,7 +35,7 @@ class ESSetup(object):
         """
         return self.client.create_index(name, settings=self._settings)
 
-    def optimize(self, name):
+    def optimize_index(self, name):
         """Fully optimize an index down to one segment.
         """
         return self.client.optimize(

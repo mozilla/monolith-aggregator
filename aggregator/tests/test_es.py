@@ -202,14 +202,14 @@ class TestESSetup(TestCase, ESTestHarness):
         self.assertEqual(set([f['term'] for f in facet1['terms']]),
             set(['Foo bar', 'foo baz']))
 
-    def test_optimize(self):
+    def test_optimize_index(self):
         setup = self._make_one()
         client = setup.client
         setup.create_index('foo_2011-11')
         client.index('foo_2011-11', 'test', {'foo': 1})
         res = client.index('foo_2011-11', 'test', {'foo': 2})
         client.delete('foo_2011-11', 'test', res['_id'])
-        setup.optimize('foo_2011-11')
+        setup.optimize_index('foo_2011-11')
         res = client.status('foo_2011-11')['indices']['foo_2011-11']
         # the deleted doc was merged away
         self.assertEqual(res['docs']['deleted_docs'], 0)
