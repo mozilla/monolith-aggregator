@@ -1,4 +1,5 @@
 import atexit
+import datetime
 import os
 import os.path
 import random
@@ -245,14 +246,20 @@ class TestESSetup(TestCase, ESTestHarness):
             client.status('monolith_2013-01')['_shards']['total'], 2)
         for i in range(1, 32):
             client.index('monolith_2013-01', 'downloads', {
-                'category': 'daily', 'date': '2013-01-%.2d' % i, 'count': i % 5
+                'category': 'daily',
+                'date': datetime.datetime(2013, 01, i),
+                'count': i % 5,
             })
         client.refresh()
         # integers should stay as ints, and not be converted to strings
         res = client.search(
-            {'facets': {'facet1': {'terms': {'field': 'count'}}}})
+            {'facets': {'facet1': {'terms': {'field': 'count'}}},
+             'sort': [{"date": {"order": "asc"}}]})
         for ft in [t['term'] for t in res['facets']['facet1']['terms']]:
             self.assertTrue(isinstance(ft, int))
+        # and dates should be in their typical ES format
+        first = res['hits']['hits'][0]['_source']['date']
+        self.assertEqual(first, '2013-01-01T00:00:00')
 
     def test_create_index(self):
         setup = self._make_one()
