@@ -108,4 +108,6 @@ class ESWrite(Plugin):
         category = data.get('category', 'unknown')
         date = data.get('date', datetime.date.today())
         return self.client.index(
-            self._index_name(date), category, data)
+            self._index_name(date), category, data,
+            replication='async',
+        )
