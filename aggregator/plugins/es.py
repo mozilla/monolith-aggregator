@@ -23,6 +23,12 @@ class ESSetup(object):
                     }
                 },
             },
+            'store': {
+                'compress': {
+                    'stored': 'true',
+                    'tv': 'true',
+                }
+            }
         }
         return self.client.create_index(name, settings=settings)
 
