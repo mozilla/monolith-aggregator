@@ -74,7 +74,6 @@ class ESSetup(object):
                         },
                         'date': {
                             'type': 'date',
-                            'index': 'not_analyzed',
                         },
                     }
                 }
