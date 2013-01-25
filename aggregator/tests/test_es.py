@@ -235,6 +235,15 @@ class TestESSetup(TestCase, ESTestHarness):
         client = es.ExtendedClient(self.es_process.address)
         return es.ESSetup(client)
 
+    def test_configure_templates(self):
+        setup = self._make_one()
+        client = setup.client
+        setup.configure_templates()
+        # directly use the client, which should pick up the template settings
+        client.create_index('monolith_2013-01')
+        self.assertEqual(
+            client.status('monolith_2013-01')['_shards']['total'], 2)
+
     def test_create_index(self):
         setup = self._make_one()
         client = setup.client

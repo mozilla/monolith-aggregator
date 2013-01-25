@@ -45,6 +45,15 @@ class ESSetup(object):
             }
         }
 
+    def configure_templates(self):
+        res = self.client.get_template('time_1')
+        if not res:
+            # TODO: update/merge template settings
+            self.client.create_template('monolith_1', {
+                'template': 'monolith_*',
+                'settings': self._settings,
+            })
+
     def create_index(self, name):
         """Create an index with our custom settings.
         """
@@ -64,6 +73,7 @@ class ESWrite(Plugin):
         self.url = options['url']
         self.client = ExtendedClient(self.url)
         self.setup = ESSetup(self.client)
+        self.setup.configure_templates()
 
     def __call__(self, data, **options):
         self.setup.create_index('monolith_2013-01')
