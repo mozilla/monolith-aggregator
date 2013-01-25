@@ -52,6 +52,32 @@ class ESSetup(object):
             self.client.create_template('monolith_1', {
                 'template': 'monolith_*',
                 'settings': self._settings,
+                'mappings': {
+                    '_default_': {
+                        '_all': {'enabled': False},
+                        '_source': {'compress': True},
+                    },
+                    # 'dynamic_templates': [{
+                    #     'string_template': {
+                    #         'match': '*',
+                    #         'mapping': {
+                    #             'type': 'string',
+                    #             'index': 'not_analyzed',
+                    #         },
+                    #         'match_mapping_type': 'string',
+                    #     },
+                    # }],
+                    'properties': {
+                        'category': {
+                            'type': 'string',
+                            'index': 'not_analyzed',
+                        },
+                        'date': {
+                            'type': 'date',
+                            'index': 'not_analyzed',
+                        },
+                    }
+                }
             })
 
     def create_index(self, name):
