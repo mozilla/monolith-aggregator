@@ -187,6 +187,21 @@ class TestESSetup(TestCase, ESTestHarness):
         self.assertEqual(
             client.status('foo_2011-11')['_shards']['successful'], 1)
 
+    def test_create_index_no_string_analysis(self):
+        setup = self._make_one()
+        client = setup.client
+        setup.create_index('foo_2011-11')
+        client.index('foo_2011-11', 'test', {'a': 'Foo bar', 'b': 1})
+        client.index('foo_2011-11', 'test', {'a': 'foo baz', 'b': 2})
+        client.refresh()
+        # make sure we get facets for the two exact strings we indexed
+        res = client.search(
+            {'query': {'match_all': {}},
+             'facets': {'facet1': {'terms': {'field': 'a'}}}})
+        facet1 = res['facets']['facet1']
+        self.assertEqual(set([f['term'] for f in facet1['terms']]),
+            set(['Foo bar', 'foo baz']))
+
     def test_optimize(self):
         setup = self._make_one()
         client = setup.client

@@ -15,6 +15,14 @@ class ESSetup(object):
             'number_of_shards': 1,
             'number_of_replicas': 1,
             'refresh_interval': '10s',
+            'analysis': {
+                'analyzer': {
+                    'default': {
+                        'type': 'custom',
+                        'tokenizer': 'keyword',
+                    }
+                },
+            },
         }
         return self.client.create_index(name, settings=settings)
 
