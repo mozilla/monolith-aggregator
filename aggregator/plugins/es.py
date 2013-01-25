@@ -8,10 +8,9 @@ class ESSetup(object):
     def __init__(self, client):
         self.client = client
 
-    def create_index(self, name):
-        """Create an index with our custom settings.
-        """
-        settings = {
+    @property
+    def _settings(self):
+        return {
             'number_of_shards': 1,
             'number_of_replicas': 1,
             'refresh_interval': '10s',
@@ -30,7 +29,11 @@ class ESSetup(object):
                 }
             }
         }
-        return self.client.create_index(name, settings=settings)
+
+    def create_index(self, name):
+        """Create an index with our custom settings.
+        """
+        return self.client.create_index(name, settings=self._settings)
 
     def optimize(self, name):
         """Fully optimize an index down to one segment.
