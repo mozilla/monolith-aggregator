@@ -57,16 +57,16 @@ class ESSetup(object):
                         '_all': {'enabled': False},
                         '_source': {'compress': True},
                     },
-                    # 'dynamic_templates': [{
-                    #     'string_template': {
-                    #         'match': '*',
-                    #         'mapping': {
-                    #             'type': 'string',
-                    #             'index': 'not_analyzed',
-                    #         },
-                    #         'match_mapping_type': 'string',
-                    #     },
-                    # }],
+                    'dynamic_templates': {
+                        'string_template': {
+                            'match': '*',
+                            'mapping': {
+                                'type': 'string',
+                                'index': 'not_analyzed',
+                            },
+                            'match_mapping_type': 'string',
+                        },
+                    },
                     'properties': {
                         'category': {
                             'type': 'string',
