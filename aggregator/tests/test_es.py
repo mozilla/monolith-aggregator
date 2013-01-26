@@ -227,6 +227,12 @@ class TestExtendedClient(TestCase, ESTestHarness):
         self.assertEqual(len(res), 3)
         self.assertEqual(set(res.keys()), set(['t1', 't2', 't3']))
 
+    def test_cluster_state(self):
+        client = self._make_one()
+        res = client.cluster_state(filter_routing_table=True)
+        self.assertTrue('nodes' in res)
+        self.assertFalse('routing_table' in res)
+
 
 class TestESSetup(TestCase, ESTestHarness):
 

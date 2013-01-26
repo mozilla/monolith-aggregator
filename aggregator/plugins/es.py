@@ -1,6 +1,7 @@
 import datetime
 
 from pyelasticsearch import ElasticSearch
+from pyelasticsearch.client import es_kwargs
 
 from aggregator.plugins import Plugin
 
@@ -10,23 +11,43 @@ class ExtendedClient(ElasticSearch):
     API's. These should be merged upstream.
     """
 
-    def create_template(self, name, settings):
-        return self.send_request('PUT', ['_template', name], settings)
+    @es_kwargs()
+    def create_template(self, name, settings, query_params=None):
+        return self.send_request('PUT', ['_template', name], settings,
+            query_params=query_params)
 
-    def delete_template(self, name):
-        return self.send_request('DELETE', ['_template', name])
+    @es_kwargs()
+    def delete_template(self, name, query_params=None):
+        return self.send_request('DELETE', ['_template', name],
+            query_params=query_params)
 
-    def get_template(self, name):
-        return self.send_request('GET', ['_template', name])
+    @es_kwargs()
+    def get_template(self, name, query_params=None):
+        return self.send_request('GET', ['_template', name],
+            query_params=query_params)
 
     def list_templates(self):
-        res = self.send_request(
-            'GET', ['_cluster', 'state'], query_params={
-                'filter_routing_table': True,
-                'filter_nodes': True,
-                'filter_blocks': True,
-            })
+        res = self.cluster_state(filter_routing_table=True,
+            filter_nodes=True, filter_blocks=True)
         return res['metadata']['templates']
+
+    @es_kwargs('filter_nodes', 'filter_routing_table', 'filter_metadata',
+               'filter_blocks', 'filter_indices')
+    def cluster_state(self, query_params=None):
+        """
+        The cluster state API allows to get a comprehensive state
+        information of the whole cluster.
+
+        :arg query_params: A map of querystring param names to values or
+            ``None``
+
+        See `ES's cluster-state API`_ for more detail.
+
+        .. _`ES's cluster-state API`:
+            http://www.elasticsearch.org/guide/reference/api/admin-cluster-state.html
+        """
+        return self.send_request(
+            'GET', ['_cluster', 'state'], query_params=query_params)
 
 
 class ESSetup(object):
