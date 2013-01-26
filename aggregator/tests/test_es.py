@@ -175,11 +175,7 @@ class ESTestHarness(object):
             self.es_process.client.delete_template(t)
 
     def _get_template_names(self):
-        res = self.es_process.client.send_request(
-            'GET', ['_cluster', 'state'], query_params={
-                'filter_routing_table': 'true',
-                'filter_nodes': 'true'})
-        return set(res['metadata']['templates'].keys())
+        return set(self.es_process.client.list_templates().keys())
 
 
 class TestExtendedClient(TestCase, ESTestHarness):
@@ -221,6 +217,15 @@ class TestExtendedClient(TestCase, ESTestHarness):
         })
         res = client.get_template('template3')
         self.assertEqual(res['template3']['template'], 'test_index')
+
+    def test_list_templates(self):
+        client = self._make_one()
+        client.create_template('t1', {'template': 'test1'})
+        client.create_template('t2', {'template': 'test2'})
+        client.create_template('t3', {'template': 'test3'})
+        res = client.list_templates()
+        self.assertEqual(len(res), 3)
+        self.assertEqual(set(res.keys()), set(['t1', 't2', 't3']))
 
 
 class TestESSetup(TestCase, ESTestHarness):

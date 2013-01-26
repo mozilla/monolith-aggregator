@@ -19,6 +19,15 @@ class ExtendedClient(ElasticSearch):
     def get_template(self, name):
         return self.send_request('GET', ['_template', name])
 
+    def list_templates(self):
+        res = self.send_request(
+            'GET', ['_cluster', 'state'], query_params={
+                'filter_routing_table': True,
+                'filter_nodes': True,
+                'filter_blocks': True,
+            })
+        return res['metadata']['templates']
+
 
 class ESSetup(object):
 
