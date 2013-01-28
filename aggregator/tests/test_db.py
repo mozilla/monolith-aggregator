@@ -73,6 +73,13 @@ class TestDatabase(TestCase):
                               end_date=self._yesterday).all()
         self.assertEquals(len(results), 2)
 
+    def test_put_item_with_date(self):
+        self.db.put(category='foo',
+                data=dict(category='foo', key='value',
+                          date=self._yesterday))
+        results = self.db.get(start_date=self._last_week).all()
+        self.assertEquals(len(results), 1)
+
     def test_filter_category(self):
         self.db.put(category='foo', key='value')
         self.db.put(category='foobar', key='value')
