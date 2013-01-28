@@ -10,8 +10,8 @@ class RandomGenerator(Plugin):
         self.options = options
 
     def __call__(self, start_date, end_date, *args, **options):
-        platforms = options.get('platforms')
-        addons = int(options.get('addons', 100))
+        platforms = self.options.get('platforms')
+        addons = int(self.options.get('addons', 100))
         if platforms is None:
             platforms = ('Mac OS X', 'Windows 8', 'Ubuntu')
         else:
