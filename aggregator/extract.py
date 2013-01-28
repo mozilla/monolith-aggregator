@@ -49,7 +49,8 @@ def _push_to_target(queue, targets):
     return True
 
 
-def extract(config, start_date, end_date):
+def extract(config, start_date, end_date, valid_sources=None,
+            valid_targets=None):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
@@ -61,16 +62,20 @@ def extract(config, start_date, end_date):
 
     for section in parser.sections():
         if section.startswith('source:'):
-            options = dict(parser.items(section))
-            plugin = resolve_name(options['use'])
-            del options['use']
-            sources[plugin] = plugin(**options), options
+            if valid_sources is None or section.endswith(valid_sources):
+                logger.info('loading %s' % section)
+                options = dict(parser.items(section))
+                plugin = resolve_name(options['use'])
+                del options['use']
+                sources[plugin] = plugin(**options), options
 
         elif section.startswith('target:'):
-            options = dict(parser.items(section))
-            plugin = resolve_name(options['use'])
-            del options['use']
-            targets[plugin] = plugin(**options), options
+            if valid_targets is None or section.endswith(valid_targets):
+                options = dict(parser.items(section))
+                logger.info('loading %s' % section)
+                plugin = resolve_name(options['use'])
+                del options['use']
+                targets[plugin] = plugin(**options), options
 
     queue = JoinableQueue()
 
@@ -112,6 +117,10 @@ def main():
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
+    parser.add_argument('--source', dest='source', default=None,
+                        help='A comma-separated list of sources')
+    parser.add_argument('--target', dest='target', default=None,
+                        help='A comma-separated list of targets')
 
     args = parser.parse_args()
 
@@ -124,8 +133,16 @@ def main():
     else:
         start, end = args.start_date, args.end_date
 
+    source = args.source
+    if args.source is not None:
+        source = tuple(args.source.split(','))
+
+    target = args.target
+    if args.target is not None:
+        target = tuple(args.target.split(','))
+
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, start, end)
+    extract(args.config, start, end, source, target)
 
 
 if __name__ == '__main__':
