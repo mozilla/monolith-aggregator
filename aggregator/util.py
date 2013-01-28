@@ -136,7 +136,7 @@ class JSONEncoder(json.JSONEncoder):
     """A JSON encoder takking care of dates"""
 
     def default(self, obj):
-        if isinstance(obj, datetime):
+        if isinstance(obj, (datetime, date)):
             return int(mktime(obj.timetuple()))
 
         return json.JSONEncoder.default(self, obj)
