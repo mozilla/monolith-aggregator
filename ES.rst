@@ -58,6 +58,10 @@ data. All but the current index can also be highly compacted / optimized
 (down to one lucene segment), as they'll never change and backup tools likely
 appreciate a large amount of static data as well.
 
+Note that you don't need to manually write to the different indexes yourself,
+Elastic Search will take care of this automatically, and write / read from the
+right shards / indexes.
+
 elasticsearch.yml
 :::::::::::::::::
 
