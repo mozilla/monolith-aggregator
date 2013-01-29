@@ -20,7 +20,8 @@ _FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
 def put_es(data, **options):
     """ElasticSearch
     """
-    _res.append(data)
+    for d in data:
+        _res.append(d)
 
 
 @plugin
