@@ -2,6 +2,7 @@ import os
 import logging
 import argparse
 from ConfigParser import ConfigParser
+from ConfigParser import NoOptionError
 import sys
 from datetime import datetime
 
@@ -68,7 +69,13 @@ def extract(config, start_date, end_date, valid_sources=None,
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
     parser.read(config)
 
-    batch_size = batch_size or int(parser.get('monolith', 'batch_size', 100))
+    if not batch_size:
+        try:
+            batch_size = parser.get('monolith', 'batch_size')
+        except NoOptionError:
+            batch_size = 100
+        else:
+            batch_size = int(batch_size)
     logger.debug('size of the batches: %s', batch_size)
 
     # parsing the sources and targets
