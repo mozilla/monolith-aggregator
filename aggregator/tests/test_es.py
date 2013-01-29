@@ -333,11 +333,10 @@ class TestESWrite(TestCase, ESTestHarness):
             'foo': 'bar',
             'baz': 2,
         }
-        result = plugin(data)
-        id_ = result['_id']
+        plugin([data])
         es_client.refresh()
-        res = es_client.get('monolith_2012-07', 'downloads', id_)
-        source = res['_source']
+        res = es_client.search({'query': {'match_all': {}}})
+        source = res['hits']['hits'][0]['_source']
         for field in ('category', 'foo', 'baz'):
             self.assertEqual(source[field], data[field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')
