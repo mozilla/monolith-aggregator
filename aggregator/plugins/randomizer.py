@@ -20,6 +20,7 @@ class RandomGenerator(Plugin):
         for addon in range(addons):
             for delta in range((end_date - start_date).days):
                 yield {'date': start_date + datetime.timedelta(days=delta),
+                       'category': 'downloads',
                        'os': random.choice(platforms),
                        'downloads_count': random.randint(1000, 1500),
                        'users_count': random.randint(10000, 15000),

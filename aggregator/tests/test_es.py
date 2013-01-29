@@ -337,6 +337,6 @@ class TestESWrite(TestCase, ESTestHarness):
         es_client.refresh()
         res = es_client.search({'query': {'match_all': {}}})
         source = res['hits']['hits'][0]['_source']
-        for field in ('category', 'foo', 'baz'):
+        for field in ('foo', 'baz'):
             self.assertEqual(source[field], data[field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')

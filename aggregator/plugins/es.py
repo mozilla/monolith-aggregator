@@ -174,14 +174,17 @@ class ESWrite(Plugin):
     def _index_name(self, date):
         return 'monolith_%.4d-%.2d' % (date.year, date.month)
 
-    def _insert(self, data):
-        category = data.get('category', 'unknown')
-        date = data.get('date', datetime.date.today())
-        return self.client.index(
-            self._index_name(date), category, data,
-            replication='async',
-        )
-
     def __call__(self, batch):
+        holder = {}
+        # sort data into index/type buckets
         for item in batch:
-            self._insert(item)
+            date = item.get('date', datetime.date.today())
+            index = self._index_name(date)
+            holder.setdefault(index, {})
+            category = item.pop('category', 'unknown')
+            holder[index].setdefault(category, [])
+            holder[index][category].append(item)
+        # submit one bulk request per index/type combination
+        for index, categories in holder.items():
+            for category, docs in categories.items():
+                self.client.bulk_index(index, category, docs)
