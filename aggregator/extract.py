@@ -81,6 +81,7 @@ def extract(config, start_date, end_date, valid_sources=None,
                 logger.debug('loading %s' % section)
                 options = dict(parser.items(section))
                 plugin = resolve_name(options['use'])
+                options['parser'] = parser
                 del options['use']
                 sources.append(plugin(**options))
 
@@ -89,6 +90,7 @@ def extract(config, start_date, end_date, valid_sources=None,
                 options = dict(parser.items(section))
                 logger.debug('loading %s' % section)
                 plugin = resolve_name(options['use'])
+                options['parser'] = parser
                 del options['use']
                 targets.append(plugin(**options))
 
