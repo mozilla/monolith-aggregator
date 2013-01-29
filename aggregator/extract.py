@@ -63,7 +63,7 @@ def extract(config, start_date, end_date, valid_sources=None,
     for section in parser.sections():
         if section.startswith('source:'):
             if valid_sources is None or section.endswith(valid_sources):
-                logger.info('loading %s' % section)
+                logger.debug('loading %s' % section)
                 options = dict(parser.items(section))
                 plugin = resolve_name(options['use'])
                 del options['use']
@@ -72,7 +72,7 @@ def extract(config, start_date, end_date, valid_sources=None,
         elif section.startswith('target:'):
             if valid_targets is None or section.endswith(valid_targets):
                 options = dict(parser.items(section))
-                logger.info('loading %s' % section)
+                logger.debug('loading %s' % section)
                 plugin = resolve_name(options['use'])
                 del options['use']
                 targets[plugin] = plugin(**options), options
