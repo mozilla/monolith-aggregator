@@ -4,6 +4,7 @@ from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
 from aggregator.plugins import Plugin
+import sys
 
 
 class ExtendedClient(ElasticSearch):
@@ -173,10 +174,14 @@ class ESWrite(Plugin):
     def _index_name(self, date):
         return 'monolith_%.4d-%.2d' % (date.year, date.month)
 
-    def __call__(self, data):
+    def _insert(self, data):
         category = data.get('category', 'unknown')
         date = data.get('date', datetime.date.today())
         return self.client.index(
             self._index_name(date), category, data,
             replication='async',
         )
+
+    def __call__(self, batch):
+        for item in batch:
+            self._insert(item)

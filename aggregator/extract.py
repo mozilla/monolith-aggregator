@@ -33,28 +33,43 @@ def _put_data(callable, data):
     return callable(data)
 
 
-def _push_to_target(queue, targets):
-    data = queue.get()
-    if data == 'END':
+def _push_to_target(queue, targets, batch_size):
+    """Get a batch of elements from the queue, and push it to the targets.
+
+    This function returns False if it proceeded all the elements in the queue,
+    and there isn't anything more to read.
+    """
+    batch = []
+    while len(batch) < batch_size:
+        item = queue.get()
+        if item == 'END':
+            break
+        batch.append(item)
+
+    if len(batch) != 0:
+        logger.debug('pushing %s items', len(batch))
+        greenlets = Group()
+        try:
+            for plugin in targets:
+                greenlets.spawn(_put_data, plugin, batch)
+            greenlets.join()
+        finally:
+            queue.task_done()
+
+    if item == 'END':
         return False
-
-    greenlets = Group()
-    try:
-        for plugin in targets:
-            greenlets.spawn(_put_data, plugin, data)
-        greenlets.join()
-    finally:
-        queue.task_done()
-
     return True
 
 
 def extract(config, start_date, end_date, valid_sources=None,
-            valid_targets=None):
+            valid_targets=None, batch_size=None):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
     parser.read(config)
+
+    batch_size = batch_size or int(parser.get('monolith', 'batch_size', 100))
+    logger.debug('size of the batches: %s', batch_size)
 
     # parsing the sources and targets
     sources = []
@@ -80,16 +95,14 @@ def extract(config, start_date, end_date, valid_sources=None,
     queue = JoinableQueue()
 
     # run the extraction
-    num_sources = len(sources)
-
     # each callable will push its result in the queue
     for plugin in sources:
         gevent.spawn(_get_data, queue, plugin, start_date, end_date)
 
     # looking at the queue
     processed = 0
-    while processed < num_sources:
-        if not _push_to_target(queue, targets):
+    while processed < len(sources):
+        if not _push_to_target(queue, targets, batch_size):
             processed += 1
 
 
@@ -121,6 +134,9 @@ def main():
                         help='A comma-separated list of sources')
     parser.add_argument('--target', dest='target', default=None,
                         help='A comma-separated list of targets')
+    parser.add_argument('--batch-size', dest='batch_size', default=None,
+                        type=int,
+                        help='The size of the batch when writing')
 
     args = parser.parse_args()
 
@@ -142,7 +158,7 @@ def main():
         target = tuple(args.target.split(','))
 
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, start, end, source, target)
+    extract(args.config, start, end, source, target, args.batch_size)
 
 
 if __name__ == '__main__':
