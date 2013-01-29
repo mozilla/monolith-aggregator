@@ -113,4 +113,3 @@ class TestExtract(TestCase):
             sys.argv[:] = old
 
         self.assertEqual(len(_res), 207)
-

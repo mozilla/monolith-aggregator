@@ -4,7 +4,7 @@ class Plugin(object):
     def __init__(self, **options):
         self.options = options
 
-    def __call__(self, *args, **options):
+    def __call__(self, *args):
         raise NotImplementedError
 
 
@@ -13,8 +13,8 @@ class _FuncPlugin(object):
     def __init__(self, **options):
         self.options = options
 
-    def __call__(self, *args, **options):
-        return self.func(*args, **options)
+    def __call__(self, *args):
+        return self.func(*args)
 
 
 def plugin(func):

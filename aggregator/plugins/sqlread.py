@@ -17,8 +17,8 @@ class SQLRead(Plugin):
         self.engine = create_engine(self.sqluri, **extras)
         self.query = options['query']
 
-    def __call__(self, start_date, end_date, *args, **options):
-        query_params = copy(options)
+    def __call__(self, start_date, end_date):
+        query_params = copy(self.options)
         query_params['start_date'] = start_date
         query_params['end_date'] = end_date
         return self.engine.execute(self.query, **query_params)

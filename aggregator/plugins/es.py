@@ -173,7 +173,7 @@ class ESWrite(Plugin):
     def _index_name(self, date):
         return 'monolith_%.4d-%.2d' % (date.year, date.month)
 
-    def __call__(self, data, **options):
+    def __call__(self, data):
         category = data.get('category', 'unknown')
         date = data.get('date', datetime.date.today())
         return self.client.index(

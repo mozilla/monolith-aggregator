@@ -31,7 +31,7 @@ class GoogleAnalytics(Plugin):
         self.dimensions = _gatable(options['dimensions'])
         self.qdimensions = ','.join(self.dimensions)
 
-    def __call__(self, start_date, end_date, **options):
+    def __call__(self, start_date, end_date):
         query = DataFeedQuery({'ids': self.table_id,
                                'start-date': start_date.isoformat(),
                                'end-date': end_date.isoformat(),

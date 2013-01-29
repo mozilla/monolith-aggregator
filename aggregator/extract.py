@@ -21,16 +21,16 @@ def _mkdate(datestring):
     return datetime.strptime(datestring, '%Y-%m-%d').date()
 
 
-def _get_data(queue, callable, start_date, end_date, options):
+def _get_data(queue, callable, start_date, end_date):
     #logger.debug('Getting from %s' % callable.__doc__)
-    for item in callable(start_date, end_date, **options):
+    for item in callable(start_date, end_date):
         queue.put(item)
     queue.put('END')
 
 
-def _put_data(callable, data, **options):
+def _put_data(callable, data):
     #logger.debug('Pushing to %s' % callable.__doc__)
-    return callable(data, **options)
+    return callable(data)
 
 
 def _push_to_target(queue, targets):
@@ -40,8 +40,8 @@ def _push_to_target(queue, targets):
 
     greenlets = Group()
     try:
-        for plugin, options in targets.values():
-            greenlets.spawn(_put_data, plugin, data, **options)
+        for plugin in targets:
+            greenlets.spawn(_put_data, plugin, data)
         greenlets.join()
     finally:
         queue.task_done()
@@ -57,8 +57,8 @@ def extract(config, start_date, end_date, valid_sources=None,
     parser.read(config)
 
     # parsing the sources and targets
-    sources = {}
-    targets = {}
+    sources = []
+    targets = []
 
     for section in parser.sections():
         if section.startswith('source:'):
@@ -67,7 +67,7 @@ def extract(config, start_date, end_date, valid_sources=None,
                 options = dict(parser.items(section))
                 plugin = resolve_name(options['use'])
                 del options['use']
-                sources[plugin] = plugin(**options), options
+                sources.append(plugin(**options))
 
         elif section.startswith('target:'):
             if valid_targets is None or section.endswith(valid_targets):
@@ -75,7 +75,7 @@ def extract(config, start_date, end_date, valid_sources=None,
                 logger.debug('loading %s' % section)
                 plugin = resolve_name(options['use'])
                 del options['use']
-                targets[plugin] = plugin(**options), options
+                targets.append(plugin(**options))
 
     queue = JoinableQueue()
 
@@ -83,8 +83,8 @@ def extract(config, start_date, end_date, valid_sources=None,
     num_sources = len(sources)
 
     # each callable will push its result in the queue
-    for plugin, options in sources.values():
-        gevent.spawn(_get_data, queue, plugin, start_date, end_date, options)
+    for plugin in sources:
+        gevent.spawn(_get_data, queue, plugin, start_date, end_date)
 
     # looking at the queue
     processed = 0
