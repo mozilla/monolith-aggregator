@@ -48,7 +48,7 @@ class Database(object):
         record.create(checkfirst=True)
         self.session = create_session(bind=self.engine)
 
-    def put(self, category, date=None, **data):
+    def put(self, category="unknown", date=None, **data):
         if date is None:
             date = datetime.now()
 

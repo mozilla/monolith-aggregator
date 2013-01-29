@@ -9,4 +9,4 @@ class SQLInjecter(object):
 
     def __call__(self, batch):
         for data in batch:
-            self.db.put(category='', **data)
+            self.db.put(**data)
