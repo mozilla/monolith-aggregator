@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Integer, String, Binary, DateTime, Column
 from sqlalchemy import create_engine
-from sqlalchemy.orm import create_session
+from sqlalchemy.orm import sessionmaker
 
 from aggregator.util import json_dumps, all_
 
@@ -46,10 +46,8 @@ class Database(object):
         self.engine = engine or get_engine(sqluri, **params)
         record.metadata.bind = self.engine
         record.create(checkfirst=True)
-        self.session = self._create_session()
-
-    def _create_session(self):
-        return create_session(bind=self.engine)
+        self.session_factory = sessionmaker(bind=self.engine)
+        self.session = self.session_factory()
 
     def put(self, category="unknown", date=None, **data):
         if date is None:
@@ -63,7 +61,7 @@ class Database(object):
                             value=json_dumps(data))
 
     def put_batch(self, batch):
-        session = self._create_session()
+        session = self.session_factory()
         now = datetime.now()
         for item in batch:
             if not isinstance(item, dict):

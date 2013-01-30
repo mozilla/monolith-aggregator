@@ -8,6 +8,4 @@ class SQLInjecter(object):
         self.db = Database(sqluri=options['database'])
 
     def __call__(self, batch):
-        for data in batch:
-            self.db.put(**data)
-        # self.db.put_batch(batch)
+        self.db.put_batch(batch)
