@@ -1,10 +1,10 @@
+from collections import defaultdict
 import datetime
 
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
 from aggregator.plugins import Plugin
-import sys
 
 
 class ExtendedClient(ElasticSearch):
@@ -192,13 +192,12 @@ class ESWrite(Plugin):
         )
 
     def __call__(self, batch):
-        holder = {}
+        holder = defaultdict(list)
         # sort data into index/type buckets
         for item in batch:
             date = item.get('date', datetime.date.today())
             index = self._index_name(date)
             category = item.pop('category', 'unknown')
-            holder.setdefault((index, category), [])
             holder[(index, category)].append(item)
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
