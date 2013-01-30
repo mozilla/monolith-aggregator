@@ -16,7 +16,7 @@ class FileReader(Plugin):
         self._baseurl = metrics_config['url']
         self._filename_format = options['filename_format']
         self._data_format = re.compile(options['data_format'])
-        self._type = options['type']
+        self._category = options['category']
 
     def __call__(self, start_date, end_date):
         date = start_date
@@ -24,14 +24,14 @@ class FileReader(Plugin):
             url = self._baseurl + date.strftime(self._filename_format)
             resp = requests.get(url, auth=self._auth)
             if resp.status_code == 200:
-                for item in self._parse_data(resp.content):
+                for item in self._parse_data(resp.content, date):
                     yield item
 
             date += datetime.timedelta(days=1)
 
-    def _parse_data(self, content):
+    def _parse_data(self, content, date):
         def _get_item(data):
-            item = {'type': self._type}
+            item = {'category': self._category, 'date': date}
             item.update(data.groupdict())
             return item
 
