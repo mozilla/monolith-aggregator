@@ -193,9 +193,10 @@ class ESWrite(Plugin):
 
     def __call__(self, batch):
         holder = defaultdict(list)
+        today = datetime.date.today()
         # sort data into index/type buckets
         for item in batch:
-            date = item.get('date', datetime.date.today())
+            date = item.get('date', today)
             index = self._index_name(date)
             category = item.pop('category', 'unknown')
             holder[(index, category)].append(item)
