@@ -197,11 +197,9 @@ class ESWrite(Plugin):
         for item in batch:
             date = item.get('date', datetime.date.today())
             index = self._index_name(date)
-            holder.setdefault(index, {})
             category = item.pop('category', 'unknown')
-            holder[index].setdefault(category, [])
-            holder[index][category].append(item)
+            holder.setdefault((index, category), [])
+            holder[(index, category)].append(item)
         # submit one bulk request per index/type combination
-        for index, categories in holder.items():
-            for category, docs in categories.items():
-                self._bulk_index(index, category, docs)
+        for key, docs in holder.items():
+            self._bulk_index(key[0], key[1], docs)
