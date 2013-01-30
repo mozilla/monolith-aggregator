@@ -64,7 +64,9 @@ class Database(object):
         session = self.session_factory()
         now = datetime.now()
         for item in batch:
-            if not isinstance(item, dict):
+            if isinstance(item, dict):
+                item = item.copy()
+            else:
                 item = dict(item)
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')

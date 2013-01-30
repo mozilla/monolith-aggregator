@@ -196,6 +196,7 @@ class ESWrite(Plugin):
         today = datetime.date.today()
         # sort data into index/type buckets
         for item in batch:
+            item = item.copy()
             date = item.get('date', today)
             index = self._index_name(date)
             category = item.pop('category', 'unknown')
