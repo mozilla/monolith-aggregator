@@ -174,6 +174,23 @@ class ESWrite(Plugin):
     def _index_name(self, date):
         return 'monolith_%.4d-%.2d' % (date.year, date.month)
 
+    def _bulk_index(self, index, doc_type, docs):
+        # an optimized version of the bulk_index, avoiding
+        # repetition of index and doc_type in each action line
+        _encode_json = self.client._encode_json
+        action_encoded = _encode_json({'index': {}})
+        body_bits = []
+        for doc in docs:
+            body_bits.extend([action_encoded, _encode_json(doc)])
+
+        # Need the trailing newline.
+        body = '\n'.join(body_bits) + '\n'
+        return self.client.send_request('POST',
+            [index, doc_type, '_bulk'],
+            body,
+            encode_body=False,
+        )
+
     def __call__(self, batch):
         holder = {}
         # sort data into index/type buckets
@@ -187,4 +204,4 @@ class ESWrite(Plugin):
         # submit one bulk request per index/type combination
         for index, categories in holder.items():
             for category, docs in categories.items():
-                self.client.bulk_index(index, category, docs)
+                self._bulk_index(index, category, docs)
