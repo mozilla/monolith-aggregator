@@ -46,7 +46,10 @@ class Database(object):
         self.engine = engine or get_engine(sqluri, **params)
         record.metadata.bind = self.engine
         record.create(checkfirst=True)
-        self.session = create_session(bind=self.engine)
+        self.session = self._create_session()
+
+    def _create_session(self):
+        return create_session(bind=self.engine)
 
     def put(self, category="unknown", date=None, **data):
         if date is None:
@@ -58,6 +61,18 @@ class Database(object):
         # XXX try..except etc
         self.engine.execute(PUT_QUERY, date=date, category=category,
                             value=json_dumps(data))
+
+    def put_batch(self, batch):
+        session = self._create_session()
+        now = datetime.now()
+        for item in batch:
+            if not isinstance(item, dict):
+                item = dict(item)
+            date = item.pop('date', now)
+            category = item.pop('category', 'unknown')
+            session.add(Record(date=date, category=category,
+                value=json_dumps(item)))
+        session.commit()
 
     def get(self, category=None, start_date=None, end_date=None):
         if all_((category, start_date, end_date), None):
