@@ -204,6 +204,7 @@ class ESWrite(Plugin):
 
     def __call__(self, batch):
         holder = defaultdict(list)
+        apps = defaultdict(lambda: dict(downloads=0, users=0))
         today = datetime.date.today()
         # sort data into index/type buckets
         for item in batch:
@@ -216,20 +217,22 @@ class ESWrite(Plugin):
             if ('app_uuid' in item and
                ('downloads_count' in item or 'users_count' in item)):
                 id_ = item['app_uuid']
-                try:
-                    res = self.client.get('totals', 'apps', id_)
-                except ElasticHttpNotFoundError:
-                    source = {'downloads': 0, 'users': 0}
-                    version = 0
-                else:
-                    source = res['_source']
-                    source.setdefault('downloads', 0)
-                    source.setdefault('users', 0)
-                    version = res['_version']
-                source['downloads'] += item.get('downloads_count', 0)
-                source['users'] += item.get('users_count', 0)
-                self.client.index('totals', 'apps', source,
-                    id=id_, es_version=version)
+                apps[id_]['downloads'] += item.get('downloads_count', 0)
+                apps[id_]['users'] += item.get('users_count', 0)
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs)
+        # do one get/index call per app
+        for id_, value in apps.items():
+            try:
+                res = self.client.get('totals', 'apps', id_)
+            except ElasticHttpNotFoundError:
+                version = 0
+                source = value
+            else:
+                version = res['_version']
+                source = res['_source']
+                source['downloads'] += value['downloads']
+                source['users'] += source['users']
+            self.client.index('totals', 'apps', source,
+                id=id_, es_version=version)
