@@ -126,23 +126,41 @@ class ESSetup(object):
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
-                    'category': {
-                        'type': 'string',
-                        'index': 'not_analyzed',
-                    },
-                    'date': {
-                        'type': 'date',
+                },
+            }
+        })
+
+        # setup template for totals index
+        res = self.client.get_template('total_1')
+        if res:
+            try:
+                self.client.delete_template('total_1')
+            except Exception:
+                pass
+        self.client.create_template('total_1', {
+            'template': 'totals',
+            'settings': {
+                'number_of_shards': 12,
+                'number_of_replicas': 0,
+                'refresh_interval': '10s',
+                'analysis': {
+                    'analyzer': {
+                        'default': {
+                            'type': 'custom',
+                            'tokenizer': 'keyword',
+                        }
                     },
                 },
-                'dynamic_templates': {
-                    'string_template': {
-                        'match': '*',
-                        'mapping': {
-                            'type': 'string',
-                            'index': 'not_analyzed',
-                        },
-                        'match_mapping_type': 'string',
-                    },
+                'store': {
+                    'compress': {
+                        'stored': 'true',
+                        'tv': 'true',
+                    }
+                }
+            },
+            'mappings': {
+                '_default_': {
+                    '_all': {'enabled': False},
                 },
             }
         })

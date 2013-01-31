@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import uuid
 
 from unittest2 import TestCase
 
@@ -253,14 +254,31 @@ class TestESSetup(TestCase, ESTestHarness):
         setup.configure_templates()
         # directly use the client, which should pick up the template settings
         client.create_index('time_2013-01')
+        client.create_index('totals')
         self.assertEqual(
             client.status('time_2013-01')['_shards']['total'], 2)
+        self.assertEqual(
+            client.status('totals')['_shards']['total'], 12)
         for i in range(1, 32):
             client.index('time_2013-01', 'downloads', {
                 'category': 'daily',
                 'date': datetime.datetime(2013, 01, i),
                 'count': i % 5,
             })
+        app_uuids = []
+        for i in range(9, -1, -1):
+            app_uuid = uuid.uuid4().hex
+            app_uuids.append(app_uuid)
+            if i > 0:
+                client.index('totals', 'apps', {
+                    'downloads': i * 2,
+                    'users': i},
+                    id=app_uuid)
+            else:
+                # index one document with a missing value
+                client.index('totals', 'apps', {
+                    'users': i},
+                    id=app_uuid)
         client.refresh()
         # integers should stay as ints, and not be converted to strings
         res = client.search(
@@ -271,6 +289,13 @@ class TestESSetup(TestCase, ESTestHarness):
         # and dates should be in their typical ES format
         first = res['hits']['hits'][0]['_source']['date']
         self.assertEqual(first, '2013-01-01T00:00:00')
+        # test totals
+        res = client.search({'sort': [{'downloads': {'order': 'desc'}}]},
+            index='totals', doc_type='apps')
+        # all apps should be in the list, those with missing values
+        # are sorted last in descending order
+        sorted_ids = [h['_id'] for h in res['hits']['hits']]
+        self.assertEqual(sorted_ids, list(app_uuids))
 
     def test_create_index_no_string_analysis(self):
         setup = self._make_one()
