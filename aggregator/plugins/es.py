@@ -1,6 +1,7 @@
 from collections import defaultdict
 import datetime
 
+from pyelasticsearch import ElasticHttpNotFoundError
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
@@ -211,6 +212,24 @@ class ESWrite(Plugin):
             index = self._index_name(date)
             category = item.pop('category', 'unknown')
             holder[(index, category)].append(item)
+            # upsert totals data for app download/users
+            if ('app_uuid' in item and
+               ('downloads_count' in item or 'users_count' in item)):
+                id_ = item['app_uuid']
+                try:
+                    res = self.client.get('totals', 'apps', id_)
+                except ElasticHttpNotFoundError:
+                    source = {'downloads': 0, 'users': 0}
+                    version = 0
+                else:
+                    source = res['_source']
+                    source.setdefault('downloads', 0)
+                    source.setdefault('users', 0)
+                    version = res['_version']
+                source['downloads'] += item.get('downloads_count', 0)
+                source['users'] += item.get('users_count', 0)
+                self.client.index('totals', 'apps', source,
+                    id=id_, es_version=version)
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs)
