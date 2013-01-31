@@ -90,7 +90,8 @@ sharding instead. Access to this data is by application / addon id. So we can
 store one entry for each app and have it contain the total values for multiple
 metrics, making this a key (app id) to value (JSON document) storage. As each
 app has a uuid, we can take those and use them as the ES _id. This way data
-lookup becomes a `es_client.get(app_uuid)` call and we avoid a search.
+lookup becomes a `es_client.get('totals', 'apps' app_uuid)` call and we avoid
+a search.
 
 elasticsearch.yml
 :::::::::::::::::
