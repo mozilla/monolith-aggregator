@@ -95,28 +95,6 @@ class ESSetup(object):
     def __init__(self, client):
         self.client = client
 
-    @property
-    def _time_settings(self):
-        return {
-            'number_of_shards': 1,
-            'number_of_replicas': 1,
-            'refresh_interval': '10s',
-            'analysis': {
-                'analyzer': {
-                    'default': {
-                        'type': 'custom',
-                        'tokenizer': 'keyword',
-                    }
-                },
-            },
-            'store': {
-                'compress': {
-                    'stored': 'true',
-                    'tv': 'true',
-                }
-            }
-        }
-
     def configure_templates(self):
         res = self.client.get_template('time_1')
         if res:
@@ -126,7 +104,25 @@ class ESSetup(object):
                 pass
         self.client.create_template('time_1', {
             'template': 'time_*',
-            'settings': self._time_settings,
+            'settings': {
+                'number_of_shards': 1,
+                'number_of_replicas': 1,
+                'refresh_interval': '10s',
+                'analysis': {
+                    'analyzer': {
+                        'default': {
+                            'type': 'custom',
+                            'tokenizer': 'keyword',
+                        }
+                    },
+                },
+                'store': {
+                    'compress': {
+                        'stored': 'true',
+                        'tv': 'true',
+                    }
+                }
+            },
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
