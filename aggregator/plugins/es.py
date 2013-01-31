@@ -126,6 +126,13 @@ class ESSetup(object):
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
+                    'category': {
+                        'type': 'string',
+                        'index': 'not_analyzed',
+                    },
+                    'date': {
+                        'type': 'date',
+                    },
                 },
                 'dynamic_templates': {
                     'string_template': {
@@ -137,15 +144,6 @@ class ESSetup(object):
                         'match_mapping_type': 'string',
                     },
                 },
-                'properties': {
-                    'category': {
-                        'type': 'string',
-                        'index': 'not_analyzed',
-                    },
-                    'date': {
-                        'type': 'date',
-                    },
-                }
             }
         })
 
