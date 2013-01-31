@@ -63,6 +63,34 @@ Elastic Search allows you to read from `_all` or `time_*` indexes at once.
 We hide the index details in our REST API, so the client side only has to care
 about the REST endpoint like `GET /v1/time`.
 
+Totals indexes
+::::::::::::::
+
+In addition to time-based data, we are also keeping track of some lifetime
+totals, like total downloads or users per application. In the future this might
+extend to total number of reviews, or be more specific, like grouped by region.
+
+While it's possible to calculate those totals from the time series data, it is
+extremely inefficient. As an example consider the total downloads for an old
+addon. There's probably four download entries per day (per language/version/os)
+and data exists for five years. So we have to query 4 * 365 * 5 entries from
+all indexes/shards to calculate the result and handle an intermediate result
+of 7300 rows. As these counters are prominently displayed on each addon page,
+these queries should be fast. As there's a huge long-tail of addons and daily
+updates to most of the data, a caching scheme seems sub-optimal. In addition
+there's some reports which want to sort other data on "app rank" - which is
+defined as "total downloads".
+
+ElasticSearch unfortunately has no concept akin to materialized views, so we
+have to design and update these aggregates ourselves.
+
+As all of the data is constantly changing, there's little benefit in splicing
+the data on a time-basis. So we'll use a single index for all totals and use
+sharding instead. Access to this data is by application / addon id. So we can
+store one entry for each app and have it contain the total values for multiple
+metrics, making this a key (app id) to value (JSON document) storage. As each
+app has a uuid, we can take those and use them as the ES _id. This way data
+lookup becomes a `es_client.get(app_uuid)` call and we avoid a search.
 
 elasticsearch.yml
 :::::::::::::::::
