@@ -140,7 +140,7 @@ class ESSetup(object):
         self.client.create_template('total_1', {
             'template': 'totals',
             'settings': {
-                'number_of_shards': 12,
+                'number_of_shards': 6,
                 'number_of_replicas': 0,
                 'refresh_interval': '10s',
                 'analysis': {

@@ -258,7 +258,7 @@ class TestESSetup(TestCase, ESTestHarness):
         self.assertEqual(
             client.status('time_2013-01')['_shards']['total'], 2)
         self.assertEqual(
-            client.status('totals')['_shards']['total'], 12)
+            client.status('totals')['_shards']['total'], 6)
         for i in range(1, 32):
             client.index('time_2013-01', 'downloads', {
                 'category': 'daily',
