@@ -272,19 +272,13 @@ class TestESSetup(TestCase, ESTestHarness):
         first = res['hits']['hits'][0]['_source']['date']
         self.assertEqual(first, '2013-01-01T00:00:00')
 
-    def test_create_index(self):
-        setup = self._make_one()
-        client = setup.client
-        setup.create_index('foo_2011-11')
-        self.assertEqual(
-            client.status('foo_2011-11')['_shards']['successful'], 1)
-
     def test_create_index_no_string_analysis(self):
         setup = self._make_one()
         client = setup.client
-        setup.create_index('foo_2011-11')
-        client.index('foo_2011-11', 'test', {'a': 'Foo bar', 'b': 1})
-        client.index('foo_2011-11', 'test', {'a': 'foo baz', 'b': 2})
+        setup.configure_templates()
+        client.create_index('time_2011-11')
+        client.index('time_2011-11', 'test', {'a': 'Foo bar', 'b': 1})
+        client.index('time_2011-11', 'test', {'a': 'foo baz', 'b': 2})
         client.refresh()
         # make sure we get facets for the two exact strings we indexed
         res = client.search(
@@ -297,7 +291,7 @@ class TestESSetup(TestCase, ESTestHarness):
     def test_optimize_index(self):
         setup = self._make_one()
         client = setup.client
-        setup.create_index('foo_2011-11')
+        client.create_index('foo_2011-11')
         client.index('foo_2011-11', 'test', {'foo': 1})
         res = client.index('foo_2011-11', 'test', {'foo': 2})
         client.delete('foo_2011-11', 'test', res['_id'])

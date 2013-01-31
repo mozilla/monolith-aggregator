@@ -96,7 +96,7 @@ class ESSetup(object):
         self.client = client
 
     @property
-    def _settings(self):
+    def _time_settings(self):
         return {
             'number_of_shards': 1,
             'number_of_replicas': 1,
@@ -126,7 +126,7 @@ class ESSetup(object):
                 pass
         self.client.create_template('time_1', {
             'template': 'time_*',
-            'settings': self._settings,
+            'settings': self._time_settings,
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
@@ -152,11 +152,6 @@ class ESSetup(object):
                 }
             }
         })
-
-    def create_index(self, name):
-        """Create an index with our custom settings.
-        """
-        return self.client.create_index(name, settings=self._settings)
 
     def optimize_index(self, name):
         """Fully optimize an index down to one segment.
