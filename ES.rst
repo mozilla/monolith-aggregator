@@ -14,8 +14,8 @@ Currently external systems do some of the aggregation, but in the future we
 might want to do this work inside monolith to gain more real-time and
 precision.
 
-Indexes
-:::::::
+Time-series indexes
+:::::::::::::::::::
 
 Multiple indexes are created to cover a distinct time period each. The
 best time unit depends on the exact data volume and retention policies.
@@ -29,10 +29,10 @@ The suggested starting setup is to use monthly indexes. Old months can
 then be easily archived / rolled up into lower granularity (1 minute / daily /
 weekly etc. time precision). So there would be indexes like::
 
-    monolith-2013-01
-    monolith-2012-12
-    monolith-2012-11
-    monolith-2012-10
+    time_2013-01
+    time_2012-12
+    time_2012-11
+    time_2012-10
 
 All writes would happen to the *correct* index based on the timestamp of each
 entry.
@@ -58,21 +58,23 @@ data. All but the current index can also be highly compacted / optimized
 (down to one lucene segment), as they'll never change and backup tools likely
 appreciate a large amount of static data as well.
 
-Note that you don't need to manually write to the different indexes yourself,
-Elastic Search will take care of this automatically, and write / read from the
-right shards / indexes.
+Note that you don't need to manually specify the indexes yourself, but
+Elastic Search allows you to read from `_all` or `time_*` indexes at once.
+We hide the index details in our REST API, so the client side only has to care
+about the REST endpoint like `GET /v1/time`.
+
 
 elasticsearch.yml
 :::::::::::::::::
 
-TODO - extract info from articles
-
-(compress, disable all field, don't store full doc, lower flush values, ...)
+We don't need to have any custom elasticsearch.yml settings, as we are managing
+all of these settings via index templates and cluster API calls.
 
 Open questions
 ::::::::::::::
 
-- Time precision / granularity?
+- Time precision / granularity? -> Daily stats for the first versions,
+  might extend in the future. We keep all historical records.
 - How do we keep counters tracking events `since the beginning of time`, like
   all downloads that ever happen for an app. Especially if we only keep
   detailed download events for the past X months. Do we need to store those
