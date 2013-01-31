@@ -1,5 +1,6 @@
 import datetime
 import random
+import uuid
 
 from aggregator.plugins import Plugin
 
@@ -17,6 +18,10 @@ class RandomGenerator(Plugin):
         else:
             platforms = platforms.split(', ')
 
+        uuids = {}
+        for addon in range(addons):
+            uuids[addon] = uuid.uuid4().hex
+
         for addon in range(addons):
             for delta in range((end_date - start_date).days):
                 yield {'date': start_date + datetime.timedelta(days=delta),
@@ -24,4 +29,5 @@ class RandomGenerator(Plugin):
                        'os': random.choice(platforms),
                        'downloads_count': random.randint(1000, 1500),
                        'users_count': random.randint(10000, 15000),
-                       'add_on': addon + 1}
+                       'add_on': addon + 1,
+                       'app_uuid': uuids.get(addon)}
