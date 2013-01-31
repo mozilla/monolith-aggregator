@@ -119,36 +119,39 @@ class ESSetup(object):
 
     def configure_templates(self):
         res = self.client.get_template('time_1')
-        if not res:
-            # TODO: update/merge template settings
-            self.client.create_template('monolith_1', {
-                'template': 'monolith_*',
-                'settings': self._settings,
-                'mappings': {
-                    '_default_': {
-                        '_all': {'enabled': False},
-                    },
-                    'dynamic_templates': {
-                        'string_template': {
-                            'match': '*',
-                            'mapping': {
-                                'type': 'string',
-                                'index': 'not_analyzed',
-                            },
-                            'match_mapping_type': 'string',
-                        },
-                    },
-                    'properties': {
-                        'category': {
+        if res:
+            try:
+                self.client.delete_template('time_1')
+            except Exception:
+                pass
+        self.client.create_template('time_1', {
+            'template': 'time_*',
+            'settings': self._settings,
+            'mappings': {
+                '_default_': {
+                    '_all': {'enabled': False},
+                },
+                'dynamic_templates': {
+                    'string_template': {
+                        'match': '*',
+                        'mapping': {
                             'type': 'string',
                             'index': 'not_analyzed',
                         },
-                        'date': {
-                            'type': 'date',
-                        },
-                    }
+                        'match_mapping_type': 'string',
+                    },
+                },
+                'properties': {
+                    'category': {
+                        'type': 'string',
+                        'index': 'not_analyzed',
+                    },
+                    'date': {
+                        'type': 'date',
+                    },
                 }
-            })
+            }
+        })
 
     def create_index(self, name):
         """Create an index with our custom settings.
@@ -172,7 +175,7 @@ class ESWrite(Plugin):
         self.setup.configure_templates()
 
     def _index_name(self, date):
-        return 'monolith_%.4d-%.2d' % (date.year, date.month)
+        return 'time_%.4d-%.2d' % (date.year, date.month)
 
     def _bulk_index(self, index, doc_type, docs):
         # an optimized version of the bulk_index, avoiding
