@@ -90,6 +90,20 @@ class ExtendedClient(ElasticSearch):
         return self.send_request(
             'GET', ['_cluster', 'state'], query_params=query_params)
 
+    @es_kwargs()
+    def multi_get(self, index=None, doc_type=None, body=None,
+                  query_params=None):
+        if not body:
+            # keep index and doc_type as first arguments,
+            # but require body
+            raise ValueError('A body is required.')
+
+        return self.send_request(
+            'GET',
+            [self._concat(index), self._concat(doc_type), '_mget'],
+            body,
+            query_params=query_params)
+
 
 class ESSetup(object):
 
@@ -222,17 +236,23 @@ class ESWrite(Plugin):
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs)
-        # do one get/index call per app
+        # do one multi-get call for all apps
+        try:
+            res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
+        except ElasticHttpNotFoundError:
+            found = {}
+        else:
+            found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
+        # and one index call per item
         for id_, value in apps.items():
-            try:
-                res = self.client.get('totals', 'apps', id_)
-            except ElasticHttpNotFoundError:
-                version = 0
-                source = value
-            else:
+            res = found.get(id_)
+            if res:
                 version = res['_version']
                 source = res['_source']
                 source['downloads'] += value['downloads']
                 source['users'] += source['users']
+            else:
+                version = 0
+                source = value
             self.client.index('totals', 'apps', source,
                 id=id_, es_version=version)
