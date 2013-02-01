@@ -220,6 +220,7 @@ class ESWrite(Plugin):
         holder = defaultdict(list)
         apps = defaultdict(lambda: dict(downloads=0, users=0))
         today = datetime.date.today()
+
         # sort data into index/type buckets
         for item in batch:
             item = dict(item)
@@ -233,9 +234,15 @@ class ESWrite(Plugin):
                 id_ = item['app_uuid']
                 apps[id_]['downloads'] += item.get('downloads_count', 0)
                 apps[id_]['users'] += item.get('users_count', 0)
+
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs)
+
+        # do we need to update total counts?
+        if not apps:
+            return
+
         # do one multi-get call for all apps
         try:
             res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
@@ -243,6 +250,7 @@ class ESWrite(Plugin):
             found = {}
         else:
             found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
+
         # and one index call per item
         for id_, value in apps.items():
             res = found.get(id_)
