@@ -235,8 +235,10 @@ class ESWrite(Plugin):
             if res:
                 version = res['_version']
                 source = res['_source']
-                source['downloads'] += value['downloads']
-                source['users'] += value['users']
+                # modify _source, so we don't remove other keys
+                source['downloads'] = \
+                    source.get('downloads', 0) + value['downloads']
+                source['users'] = source.get('users', 0) + value['users']
             else:
                 version = 0
                 source = value
