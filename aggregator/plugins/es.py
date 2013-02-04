@@ -1,6 +1,7 @@
 from collections import defaultdict
 import datetime
 
+from pyelasticsearch import ElasticHttpError
 from pyelasticsearch import ElasticHttpNotFoundError
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
@@ -227,6 +228,7 @@ class ESWrite(Plugin):
         return found
 
     def update_app_totals(self, apps, found):
+        retry = {}
         # and one index call per item
         for id_, value in apps.items():
             res = found.get(id_)
@@ -238,8 +240,17 @@ class ESWrite(Plugin):
             else:
                 version = 0
                 source = value
-            self.client.index('totals', 'apps', source,
-                id=id_, es_version=version)
+            try:
+                self.client.index('totals', 'apps', source,
+                    id=id_, es_version=version)
+            except ElasticHttpError as e:
+                if getattr(e, 'status_code', None) != 409:
+                    raise e
+                else:
+                    retry[id_] = apps[id_]
+        if retry:
+            newer = self.get_app_totals(retry.keys())
+            self.update_app_totals(retry, newer)
 
     def sum_up_app(self, item, apps):
         if ('app_uuid' in item and

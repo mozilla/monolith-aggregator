@@ -411,6 +411,25 @@ class TestESWrite(TestCase, ESTestHarness):
         self.assertEqual(docs['2']['_source'], {'downloads': 47, 'users': 64})
         self.assertEqual(docs['3']['_source'], {'downloads': 13, 'users': 17})
 
+    def test_get_concurrent_app_totals_update(self):
+        plugin = self._make_one()
+        client = plugin.client
+        client.index('totals', 'apps', {'downloads': 1, 'users': 1}, id='1')
+        client.index('totals', 'apps', {'downloads': 2, 'users': 2}, id='2')
+        client.refresh('totals')
+        found = plugin.get_app_totals(['1', '2'])
+        # introduce updates in between get/update calls
+        client.index('totals', 'apps', {'downloads': 5, 'users': 5}, id='1')
+        client.refresh('totals')
+        plugin.update_app_totals({
+            '1': {'downloads': 3, 'users': 6},
+            '2': {'downloads': 7, 'users': 14},
+        }, found)
+        res = client.multi_get('totals', 'apps', {'ids': ['1', '2']})
+        docs = dict([(d['_id'], d) for d in res['docs']])
+        self.assertEqual(docs['1']['_source'], {'downloads': 8, 'users': 11})
+        self.assertEqual(docs['2']['_source'], {'downloads': 9, 'users': 16})
+
     def test_call_and_update_app_totals(self):
         plugin = self._make_one()
         client = plugin.client
