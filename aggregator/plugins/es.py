@@ -232,7 +232,7 @@ class ESWrite(Plugin):
                 version = res['_version']
                 source = res['_source']
                 source['downloads'] += value['downloads']
-                source['users'] += source['users']
+                source['users'] += value['users']
             else:
                 version = 0
                 source = value

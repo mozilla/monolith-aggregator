@@ -380,3 +380,22 @@ class TestESWrite(TestCase, ESTestHarness):
         plugin.sum_up_app(
             {'app_uuid': 3, 'downloads_count': 4, 'users_count': 1}, apps)
         self.assertEqual(apps[3], {'downloads': 9, 'users': 5})
+
+    def test_update_app_totals(self):
+        plugin = self._make_one()
+        client = plugin.client
+        client.index('totals', 'apps', {'downloads': 10, 'users': 20}, id='1')
+        client.index('totals', 'apps', {'downloads': 40, 'users': 50}, id='2')
+        client.refresh('totals')
+
+        plugin.update_app_totals({
+            '1': {'downloads': 3, 'users': 6},
+            '2': {'downloads': 7, 'users': 14},
+            '3': {'downloads': 13, 'users': 17},
+        })
+        res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3']})
+        docs = dict([(d['_id'], d) for d in res['docs']])
+
+        self.assertEqual(docs['1']['_source'], {'downloads': 13, 'users': 26})
+        self.assertEqual(docs['2']['_source'], {'downloads': 47, 'users': 64})
+        self.assertEqual(docs['3']['_source'], {'downloads': 13, 'users': 17})
