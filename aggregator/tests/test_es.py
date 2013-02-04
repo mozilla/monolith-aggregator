@@ -399,3 +399,25 @@ class TestESWrite(TestCase, ESTestHarness):
         self.assertEqual(docs['1']['_source'], {'downloads': 13, 'users': 26})
         self.assertEqual(docs['2']['_source'], {'downloads': 47, 'users': 64})
         self.assertEqual(docs['3']['_source'], {'downloads': 13, 'users': 17})
+
+    def test_call_and_update_app_totals(self):
+        plugin = self._make_one()
+        client = plugin.client
+        client.index('totals', 'apps', {'downloads': 1, 'users': 2}, id='1')
+        client.index('totals', 'apps', {'downloads': 2, 'users': 3}, id='2')
+        data = [
+            {'app_uuid': '1', 'downloads_count': 1, 'users_count': 2},
+            {'app_uuid': '2', 'downloads_count': 2, 'users_count': 3},
+            {'app_uuid': '3', 'downloads_count': 3, 'users_count': 6},
+            {'app_uuid': '1', 'downloads_count': 10, 'users_count': 20},
+            {'app_uuid': '3', 'downloads_count': 3, 'users_count': 6},
+            {'app_uuid': '1', 'downloads_count': 5, 'users_count': 10},
+        ]
+        plugin(data)
+
+        res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3']})
+        docs = dict([(d['_id'], d) for d in res['docs']])
+
+        self.assertEqual(docs['1']['_source'], {'downloads': 17, 'users': 34})
+        self.assertEqual(docs['2']['_source'], {'downloads': 4, 'users': 6})
+        self.assertEqual(docs['3']['_source'], {'downloads': 6, 'users': 12})
