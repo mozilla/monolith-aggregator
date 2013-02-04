@@ -216,10 +216,10 @@ class ESWrite(Plugin):
             encode_body=False,
         )
 
-    def get_app_totals(self, apps):
+    def get_app_totals(self, app_ids):
         # do one multi-get call for all apps
         try:
-            res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
+            res = self.client.multi_get('totals', 'apps', {'ids': app_ids})
         except ElasticHttpNotFoundError:
             found = {}
         else:
@@ -269,5 +269,5 @@ class ESWrite(Plugin):
 
         # do we need to update total counts?
         if apps:
-            found = self.get_app_totals(apps)
+            found = self.get_app_totals(apps.keys())
             self.update_app_totals(apps, found)
