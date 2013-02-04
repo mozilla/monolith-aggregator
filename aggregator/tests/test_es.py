@@ -1,4 +1,5 @@
 import atexit
+import collections
 import datetime
 import os
 import os.path
@@ -359,3 +360,23 @@ class TestESWrite(TestCase, ESTestHarness):
         for field in ('foo', 'baz'):
             self.assertEqual(source[field], data[field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')
+
+    def test_sum_up_app(self):
+        plugin = self._make_one()
+        apps = collections.defaultdict(lambda: dict(downloads=0, users=0))
+
+        plugin.sum_up_app({'foo': 1}, apps)
+        self.assertEqual(len(apps), 0)
+
+        plugin.sum_up_app({'app_uuid': 1}, apps)
+        self.assertEqual(apps[1], {'downloads': 0, 'users': 0})
+
+        apps[2]['downloads'] = 3
+        plugin.sum_up_app({'app_uuid': 2, 'downloads_count': 4}, apps)
+        self.assertEqual(apps[2], {'downloads': 7, 'users': 0})
+
+        apps[3]['downloads'] = 5
+        apps[3]['users'] = 4
+        plugin.sum_up_app(
+            {'app_uuid': 3, 'downloads_count': 4, 'users_count': 1}, apps)
+        self.assertEqual(apps[3], {'downloads': 9, 'users': 5})
