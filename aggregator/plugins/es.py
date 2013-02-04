@@ -239,6 +239,13 @@ class ESWrite(Plugin):
             self.client.index('totals', 'apps', source,
                 id=id_, es_version=version)
 
+    def sum_up_app(self, item, apps):
+        if ('app_uuid' in item and
+           ('downloads_count' in item or 'users_count' in item)):
+            id_ = item['app_uuid']
+            apps[id_]['downloads'] += item.get('downloads_count', 0)
+            apps[id_]['users'] += item.get('users_count', 0)
+
     def __call__(self, batch):
         holder = defaultdict(list)
         apps = defaultdict(lambda: dict(downloads=0, users=0))
@@ -252,11 +259,7 @@ class ESWrite(Plugin):
             category = item.pop('category', 'unknown')
             holder[(index, category)].append(item)
             # upsert totals data for app download/users
-            if ('app_uuid' in item and
-               ('downloads_count' in item or 'users_count' in item)):
-                id_ = item['app_uuid']
-                apps[id_]['downloads'] += item.get('downloads_count', 0)
-                apps[id_]['users'] += item.get('users_count', 0)
+            self.sum_up_app(item, apps)
 
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
