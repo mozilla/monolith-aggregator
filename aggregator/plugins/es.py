@@ -245,10 +245,14 @@ class ESWrite(Plugin):
                     id=id_, es_version=version)
             except ElasticHttpError as e:
                 if getattr(e, 'status_code', None) != 409:
+                    # non-version-conflict, raise!
                     raise e
                 else:
+                    # the document has been updated in the meantime
                     retry[id_] = apps[id_]
         if retry:
+            # retry failed documents, this might loop forever, if some
+            # other process is constantly updating one of our documents
             newer = self.get_app_totals(retry.keys())
             self.update_app_totals(retry, newer)
 
