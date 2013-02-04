@@ -216,7 +216,7 @@ class ESWrite(Plugin):
             encode_body=False,
         )
 
-    def update_app_totals(self, apps):
+    def get_app_totals(self, apps):
         # do one multi-get call for all apps
         try:
             res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
@@ -224,7 +224,9 @@ class ESWrite(Plugin):
             found = {}
         else:
             found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
+        return found
 
+    def update_app_totals(self, apps, found):
         # and one index call per item
         for id_, value in apps.items():
             res = found.get(id_)
@@ -267,4 +269,5 @@ class ESWrite(Plugin):
 
         # do we need to update total counts?
         if apps:
-            self.update_app_totals(apps)
+            found = self.get_app_totals(apps)
+            self.update_app_totals(apps, found)

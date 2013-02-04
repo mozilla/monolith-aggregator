@@ -388,11 +388,12 @@ class TestESWrite(TestCase, ESTestHarness):
         client.index('totals', 'apps', {'downloads': 40, 'users': 50}, id='2')
         client.refresh('totals')
 
+        found = plugin.get_app_totals({'1': None, '2': None})
         plugin.update_app_totals({
             '1': {'downloads': 3, 'users': 6},
             '2': {'downloads': 7, 'users': 14},
             '3': {'downloads': 13, 'users': 17},
-        })
+        }, found)
         res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3']})
         docs = dict([(d['_id'], d) for d in res['docs']])
 
