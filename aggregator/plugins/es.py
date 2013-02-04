@@ -216,6 +216,29 @@ class ESWrite(Plugin):
             encode_body=False,
         )
 
+    def update_app_totals(self, apps):
+        # do one multi-get call for all apps
+        try:
+            res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
+        except ElasticHttpNotFoundError:
+            found = {}
+        else:
+            found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
+
+        # and one index call per item
+        for id_, value in apps.items():
+            res = found.get(id_)
+            if res:
+                version = res['_version']
+                source = res['_source']
+                source['downloads'] += value['downloads']
+                source['users'] += source['users']
+            else:
+                version = 0
+                source = value
+            self.client.index('totals', 'apps', source,
+                id=id_, es_version=version)
+
     def __call__(self, batch):
         holder = defaultdict(list)
         apps = defaultdict(lambda: dict(downloads=0, users=0))
@@ -240,27 +263,5 @@ class ESWrite(Plugin):
             self._bulk_index(key[0], key[1], docs)
 
         # do we need to update total counts?
-        if not apps:
-            return
-
-        # do one multi-get call for all apps
-        try:
-            res = self.client.multi_get('totals', 'apps', {'ids': apps.keys()})
-        except ElasticHttpNotFoundError:
-            found = {}
-        else:
-            found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
-
-        # and one index call per item
-        for id_, value in apps.items():
-            res = found.get(id_)
-            if res:
-                version = res['_version']
-                source = res['_source']
-                source['downloads'] += value['downloads']
-                source['users'] += source['users']
-            else:
-                version = 0
-                source = value
-            self.client.index('totals', 'apps', source,
-                id=id_, es_version=version)
+        if apps:
+            self.update_app_totals(apps)
