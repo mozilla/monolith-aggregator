@@ -15,7 +15,8 @@ requires = [
     'pyelasticsearch>=0.3',
     'python-gflags',
     'SQLAlchemy',
-    'oauth2client'
+    'oauth2client',
+    'google-api-python-client'
 ]
 
 test_requires = requires + [

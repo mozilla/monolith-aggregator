@@ -8,28 +8,46 @@ from gdata.analytics.client import AnalyticsClient, DataFeedQuery
 from gdata.gauth import OAuth2Token
 from gdata.analytics.client import ProfileQuery, WebPropertyQuery
 
+from apiclient.discovery import build
+from oauth2client.client import OAuth2Credentials
+import httplib2
+
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
 
 
-def get_profile_id(domain, client):
-    # collecting profiles
-    wbp = client.get_management_feed(WebPropertyQuery())
-    for entry in wbp.entry:
-        account_id = entry.get_property('ga:accountId').value
-        web_property_id = entry.get_property('ga:webPropertyId').value
-        profile_query = ProfileQuery(acct_id=account_id,
-                                     web_prop_id=web_property_id)
-        feed = client.get_management_feed(profile_query)
-        for entry in feed.entry:
-            # we got 'marketplace.firefox.com (unfiltered)' ... so not sure
-            # about that
-            # XXX domain?
-            profile = entry.get_property('ga:profileName').value
-            if profile == domain:
-                return entry.get_property('ga:profileId').value
 
-    raise NotImplementedError()
+def get_service(**options):
+    creds = OAuth2Credentials(
+        *[options[k] for k in
+          ('access_token', 'client_id', 'client_secret',
+           'refresh_token', 'token_expiry', 'token_uri',
+           'user_agent')])
+    h = httplib2.Http()
+    creds.authorize(h)
+    return build('analytics', 'v3', http=h)
+
+
+def get_profile_id(service, domain):
+    accounts = service.management().accounts().list().execute()
+    account_ids = [a['id'] for a in accounts.get('items', ())]
+    for account_id in account_ids:
+        webproperties = service.management().webproperties().list(
+            accountId=account_id).execute()
+        webproperty_ids = [p['id'] for p in webproperties.get('items', ())]
+        for webproperty_id in webproperty_ids:
+            profiles = service.management().profiles().list(
+                accountId=account_id,
+                webPropertyId=webproperty_id).execute()
+            for p in profiles.get('items', ()):
+                # sometimes GA includes "http://", sometimes it doesn't.
+                if '://' in p['websiteUrl']:
+                    name = p['websiteUrl'].partition('://')[-1]
+                else:
+                    name = p['websiteUrl']
+
+                if name == domain:
+                    return p['id']
 
 
 def _ga(name):
@@ -57,30 +75,8 @@ class GoogleAnalytics(Plugin):
             with open(options['oauth_token']) as f:
                 token = json.loads(f.read())
 
-            #token['token_expiry'] = iso2datetime(token['token_expiry'])
-
-            fields = ('access_token', 'refresh_token', 'auth_uri',
-                      'token_uri', 'revoke_uri')
-
-            args = {}
-            for field in token.keys():
-                if field in fields:
-                    args[field] = token[field]
-
-            self.token = OAuth2Token(token['client_id'], token['client_secret'],
-                                     token.get('scope', ''), token['user_agent'],
-                                     **args)
-            self.client = AnalyticsClient(source=SOURCE_APP_NAME,
-                                          auth_token=self.token)
-            self.token.authorize(self.client)
-        else:
-            self.client = AnalyticsClient(source=SOURCE_APP_NAME)
-            login = options['login']
-            password = options['password']
-            self.client.client_login(login, password, source=SOURCE_APP_NAME,
-                                     service=self.client.auth_service)
-
-        self.profile_id = _ga(get_profile_id(options['domain'], self.client))
+        self.client = get_service(**token)
+        self.profile_id = _ga(get_profile_id(self.client, options['domain']))
         self.table_id = _ga(options['table_id'])
         self.metrics = _gatable(options['metrics'])
         self.qmetrics = ','.join(self.metrics)
@@ -93,21 +89,26 @@ class GoogleAnalytics(Plugin):
 
     def __call__(self, start_date, end_date):
         options = {'ids': self.profile_id,
-                   'start-date': start_date.isoformat(),
-                   'end-date': end_date.isoformat(),
+                   'start_date': start_date.isoformat(),
+                   'end_date': end_date.isoformat(),
                    'dimensions': self.qdimensions,
                    'metrics': self.qmetrics}
 
-        query = DataFeedQuery(options)
-        feed = self.client.GetDataFeed(query)
+        results = self.client.data().ga().get(**options).execute()
 
-        for entry in feed.entry:
+        cols = [col['name'] for col in results['columnHeaders']]
+
+        for entry in results['rows']:
             data = {}
-            for dimension in self.dimensions:
-                data[dimension] = entry.get_dimension(dimension).value
+            for index, value in enumerate(entry):
+                data[cols[index]] = value
 
-            for metric in self.metrics:
-                data[metric] = float(entry.get_metric(metric).value)
+            #for dimension in self.dimensions:
+            #    data[dimension] = entry.get_dimension(dimension).value
+
+            #for metric in self.metrics:
+            #    data[metric] = float(entry.get_metric(metric).value)
 
             # XXX more stuff in that mapping ?
+            print data
             yield data
