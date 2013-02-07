@@ -25,6 +25,7 @@ Detailed Documentation
 .. toctree::
    :maxdepth: 1
 
+   install
    Changelog <changelog>
 
 Source Code

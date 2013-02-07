@@ -15,7 +15,7 @@ all: build
 $(PYTHON):
 	virtualenv $(VTENV_OPTS) .
 
-build: $(PYTHON)
+build: $(PYTHON) elasticsearch
 	$(PYTHON) setup.py develop
 	$(INSTALL) monolith-aggregator[test]
 
@@ -25,7 +25,7 @@ clean:
 docs:
 	cd docs && make html
 
-test: build elasticsearch
+test: build
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
 
 elasticsearch:
