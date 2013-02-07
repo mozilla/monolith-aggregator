@@ -7,6 +7,8 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
+with open(os.path.join(here, 'CHANGES.rst')) as f:
+    CHANGES = f.read()
 
 requires = [
     'gdata',
@@ -30,8 +32,9 @@ test_requires = requires + [
 setup(name='monolith-aggregator',
       version=__version__,
       description='The monolith aggregator',
-      long_description=README,
+      long_description=README + '\n\n' + CHANGES,
       classifiers=[
+          "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
           "Programming Language :: Python",
           "Programming Language :: Python :: 2",
           "Programming Language :: Python :: 2.6",
@@ -40,6 +43,7 @@ setup(name='monolith-aggregator',
       author='Mozilla Services',
       author_email='services-dev@mozilla.org',
       url='https://github.com/mozilla/monolith-aggregator',
+      license="MPLv2.0",
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,

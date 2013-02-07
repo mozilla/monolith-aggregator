@@ -8,7 +8,7 @@ ES_VERSION ?= 0.20.4
 
 BUILD_DIRS = bin build elasticsearch include lib lib64 man share
 
-.PHONY: all clean test
+.PHONY: all clean docs test
 
 all: build
 
@@ -21,6 +21,9 @@ build: $(PYTHON)
 
 clean:
 	rm -rf $(BUILD_DIRS)
+
+docs:
+	cd docs && make html
 
 test: build elasticsearch
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
