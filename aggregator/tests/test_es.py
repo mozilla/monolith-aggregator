@@ -9,7 +9,6 @@ import subprocess
 import tempfile
 import time
 import uuid
-import sys
 
 from unittest2 import TestCase
 
@@ -149,13 +148,12 @@ appender:
                 if (health['status'] == 'green' and
                    health['cluster_name'] == 'test'):
                     break
-            except Exception, exc:
+            except Exception:
                 # wait a bit before re-trying
                 time.sleep(0.5)
         else:
             self.client = None
             raise OSError("Couldn't start elasticsearch")
-
 
     def reset(self):
         if self.client is None:
