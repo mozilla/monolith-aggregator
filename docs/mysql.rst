@@ -8,7 +8,7 @@ We will have 2 types of interactions with the database:
 
 1. the script that grabs data from various sources and feeds the Database
 2. the script that queries the Database on specific date ranges and
-  feed the Elastic Search indexes.
+   feed the Elastic Search indexes.
 
 Note that Elastic Search will be feed live when 1. occurs,
 and that 2. will happen only on reindexations.

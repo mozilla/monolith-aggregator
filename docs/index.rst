@@ -26,6 +26,8 @@ Detailed Documentation
    :maxdepth: 1
 
    install
+   mysql
+   ES
    Changelog <changelog>
 
 Source Code
