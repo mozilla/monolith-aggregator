@@ -3,6 +3,7 @@ import os
 import random
 import copy
 import datetime
+import json
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
@@ -10,6 +11,8 @@ from sqlalchemy import create_engine
 from aggregator.extract import extract, main
 from aggregator.plugins import plugin
 from aggregator.util import word2daterange
+from apiclient.http import HttpMock
+from apiclient.discovery import build
 
 
 _res = []
@@ -82,19 +85,21 @@ class TestExtract(TestCase):
             self.tearDown()
             raise
 
-        # patching gdata
-        def _nothing(*args, **kw):
-            pass
+        from aggregator.plugins import ganalytics
+        from apiclient.http import HttpRequest
 
-        def _data(*args, **kw):
-            from gdata.analytics.data import DataFeed
-            from atom.core import parse
-            with open(_FEED) as f:
-                return parse(f.read(), DataFeed)
+        def _execute(self, *args, **options):
+            call = self.uri.split('/')[-1].split('?')[0]
+            name = os.path.join(os.path.dirname(__file__), '%s.json' % call)
 
-        from gdata.analytics.client import AnalyticsClient
-        AnalyticsClient.client_login = _nothing
-        AnalyticsClient.GetDataFeed = _data
+            with open(name) as f:
+                data = f.read()
+
+            return json.loads(data)
+
+
+        HttpRequest.execute = _execute
+
 
     def tearDown(self):
         if os.path.exists(DB_FILE):
@@ -103,7 +108,7 @@ class TestExtract(TestCase):
     def test_extract(self):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
-        self.assertEqual(len(_res), 207)
+        self.assertEqual(len(_res), 302)
 
     def test_main(self):
         old = copy.copy(sys.argv)
@@ -113,4 +118,4 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 207)
+        self.assertEqual(len(_res), 302)

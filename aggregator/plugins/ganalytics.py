@@ -4,10 +4,6 @@ import datetime
 from aggregator.plugins import Plugin
 from aggregator import __version__
 
-from gdata.analytics.client import AnalyticsClient, DataFeedQuery
-from gdata.gauth import OAuth2Token
-from gdata.analytics.client import ProfileQuery, WebPropertyQuery
-
 from apiclient.discovery import build
 from oauth2client.client import OAuth2Credentials
 import httplib2
@@ -71,13 +67,11 @@ class GoogleAnalytics(Plugin):
     def __init__(self, **options):
         self.options = options
 
-        if options['oauth'] == 'true':   # XXX we need a converter
-            with open(options['oauth_token']) as f:
-                token = json.loads(f.read())
+        with open(options['oauth_token']) as f:
+            token = json.loads(f.read())
 
         self.client = get_service(**token)
         self.profile_id = _ga(get_profile_id(self.client, options['domain']))
-        self.table_id = _ga(options['table_id'])
         self.metrics = _gatable(options['metrics'])
         self.qmetrics = ','.join(self.metrics)
         if 'dimensions' in options:
@@ -110,5 +104,4 @@ class GoogleAnalytics(Plugin):
             #    data[metric] = float(entry.get_metric(metric).value)
 
             # XXX more stuff in that mapping ?
-            print data
             yield data

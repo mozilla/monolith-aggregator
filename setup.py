@@ -11,7 +11,6 @@ with open(os.path.join(here, 'CHANGES.rst')) as f:
     CHANGES = f.read()
 
 requires = [
-    'gdata',
     'gevent',
     'oauth2client',
     'pyelasticsearch>=0.3',
