@@ -9,12 +9,12 @@ with open(os.path.join(here, 'README.rst')) as f:
     README = f.read()
 
 requires = [
-    'pyelasticsearch>=0.3',
-    'SQLAlchemy',
-    'gevent',
     'gdata',
-    'python-gflags',
+    'gevent',
     'oauth2client'
+    'pyelasticsearch>=0.3',
+    'python-gflags',
+    'SQLAlchemy',
 ]
 
 test_requires = requires + [
