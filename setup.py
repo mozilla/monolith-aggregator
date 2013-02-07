@@ -20,6 +20,7 @@ requires = [
 test_requires = requires + [
     'coverage',
     'nose',
+    'Sphinx',
     'unittest2',
 ]
 
