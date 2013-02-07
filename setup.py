@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.rst')) as f:
 requires = [
     'gdata',
     'gevent',
-    'oauth2client'
+    'oauth2client',
     'pyelasticsearch>=0.3',
     'python-gflags',
     'SQLAlchemy',
