@@ -12,7 +12,9 @@ requires = [
     'pyelasticsearch>=0.3',
     'SQLAlchemy',
     'gevent',
-    'gdata'
+    'gdata',
+    'python-gflags',
+    'oauth2client'
 ]
 
 test_requires = requires + [
@@ -45,4 +47,5 @@ setup(name='monolith-aggregator',
       entry_points="""
       [console_scripts]
       monolith-extract = aggregator.extract:main
+      monolith-ga-oauth = tools.auth_google_analytics:main
       """)

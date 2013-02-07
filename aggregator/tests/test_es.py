@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import time
 import uuid
+import sys
 
 from unittest2 import TestCase
 
@@ -122,7 +123,8 @@ appender:
         self.process = subprocess.Popen(
             args=[bin_path + "/elasticsearch", "-f",
                   "-Des.config=" + conf_path],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            #stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             env=environ
         )
         self.running = True
@@ -140,19 +142,20 @@ appender:
 
     def wait_until_ready(self):
         now = time.time()
-        while time.time() - now < 60:
+        while time.time() - now < 10:
             try:
                 # check to see if our process is ready
                 health = self.client.health()
                 if (health['status'] == 'green' and
                    health['cluster_name'] == 'test'):
                     break
-            except Exception:
+            except Exception, exc:
                 # wait a bit before re-trying
                 time.sleep(0.5)
         else:
             self.client = None
             raise OSError("Couldn't start elasticsearch")
+
 
     def reset(self):
         if self.client is None:
