@@ -6,7 +6,7 @@ monolith-aggregator
 
 Here's the high-level overview of the whole system:
 
-.. image:: http://blog.ziade.org/monolith.png
+.. image:: https://raw.github.com/mozilla/monolith-aggregator/master/docs/monolith-sequence.png
 
 This script could be replaced at some point by `Heka
 <https://heka-docs.readthedocs.org/>`_.
