@@ -1,7 +1,6 @@
 monolith-aggregator
 ===================
 
-
 **monolith-aggregator** is the script that feeds the Monolith Database.
 
 Here's the high-level overview of the whole system:
@@ -11,20 +10,13 @@ Here's the high-level overview of the whole system:
 This script could be replaced at some point by `Heka
 <https://heka-docs.readthedocs.org/>`_.
 
-**monolith-aggregator** maintains a database and provides two command-line
-scripts that interact with it:
+**monolith-aggregator** maintains a database and provides a command-line
+script that interact with it:
 
 - *monolith-extract*: the script that grabs data from all defined sources and
-  pour them in the SQL Database.
+  pour them in the SQL Database and ElasticSearch.
 
-- *monolith-index*: the script that indexes the database content into Elastic
-  Search
-
-
-A typical setup is to run *monolith-aggregate* then *monolith-index* every
-hour, but both scripts can be executed independently. For instance we may want
-to run *monolith-index* to rebuild the Elastic Search index, with existing data
-from MySQL.
+A typical setup is to run *monolith-extract* every hour.
 
 The database
 ::::::::::::
@@ -74,16 +66,4 @@ an open SQL connector to the storage.
 
 *monolith-extract* can run against all sources, or a specific list of sources.
 This let us configure several crons if we need to extract data from sources
-at specific paces/times.
-
-
-monolith-index
-::::::::::::::
-
-*monolith-index* loops on all the section starting by *target:* and
-works like *monolith-extract*.
-
-*monolith-index* has a couple of extra options:
-
-- date ranges: filters what entries from the Database should actually
-  be loaded.
+at specific times.
