@@ -1,5 +1,6 @@
 from collections import defaultdict
 import datetime
+from uuid import uuid1
 
 from pyelasticsearch import ElasticHttpError
 from pyelasticsearch import ElasticHttpNotFoundError
@@ -200,14 +201,15 @@ class ESWrite(Plugin):
     def _index_name(self, date):
         return 'time_%.4d-%.2d' % (date.year, date.month)
 
-    def _bulk_index(self, index, doc_type, docs):
+    def _bulk_index(self, index, doc_type, docs, id_field='id'):
         # an optimized version of the bulk_index, avoiding
         # repetition of index and doc_type in each action line
         _encode_json = self.client._encode_json
-        action_encoded = _encode_json({'index': {}})
         body_bits = []
         for doc in docs:
-            body_bits.extend([action_encoded, _encode_json(doc)])
+            id_ = doc.pop(id_field, uuid1().hex)
+            action = {'index': {'_id': id_}}
+            body_bits.extend([_encode_json(action), _encode_json(doc)])
 
         # Need the trailing newline.
         body = '\n'.join(body_bits) + '\n'
@@ -282,7 +284,7 @@ class ESWrite(Plugin):
 
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
-            self._bulk_index(key[0], key[1], docs)
+            self._bulk_index(key[0], key[1], docs, id_field='uid')
 
         # do we need to update total counts?
         if apps:
