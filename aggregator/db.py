@@ -1,7 +1,8 @@
 from datetime import datetime
+from uuid import uuid1
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Integer, String, Binary, DateTime, Column
+from sqlalchemy import String, Binary, DateTime, Column
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -14,7 +15,7 @@ _Model = declarative_base()
 class Record(_Model):
     __tablename__ = 'record'
 
-    id = Column(Integer, primary_key=True)
+    uid = Column(Binary(32), primary_key=True)
     date = Column(DateTime, default=datetime.now())
     category = Column(String, nullable=False)
     value = Column(Binary)
@@ -24,9 +25,9 @@ record = Record.__table__
 
 PUT_QUERY = """\
 insert into record
-    (date, category, value)
+    (uid, date, category, value)
 values
-    (:date, :category, :value)
+    (:uid, :date, :category, :value)
 """
 
 
@@ -49,7 +50,9 @@ class Database(object):
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = self.session_factory()
 
-    def put(self, category="unknown", date=None, **data):
+    def put(self, uid=None, category="unknown", date=None, **data):
+        if uid is None:
+            uid = uuid1().hex
         if date is None:
             date = datetime.now()
 
@@ -57,7 +60,7 @@ class Database(object):
 
         # store in db
         # XXX try..except etc
-        self.engine.execute(PUT_QUERY, date=date, category=category,
+        self.engine.execute(PUT_QUERY, uid=uid, date=date, category=category,
                             value=json_dumps(data))
 
     def put_batch(self, batch):
@@ -65,9 +68,10 @@ class Database(object):
         now = datetime.now()
         for item in batch:
             item = dict(item)
+            uid = item.pop('uid', uuid1().hex)
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')
-            session.add(Record(date=date, category=category,
+            session.add(Record(uid=uid, date=date, category=category,
                 value=json_dumps(item)))
         session.commit()
 

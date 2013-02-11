@@ -2,6 +2,7 @@ import os
 import datetime
 from time import mktime
 import tempfile
+from uuid import uuid1
 
 from sqlalchemy import create_engine
 from unittest2 import TestCase
@@ -72,6 +73,14 @@ class TestDatabase(TestCase):
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday).all()
         self.assertEquals(len(results), 2)
+
+    def test_put_item_with_uid(self):
+        uid = uuid1().hex
+        self.db.put(uid=uid, category='foo',
+            data=dict(category='foo', key='value'))
+        results = self.db.get(category='foo').all()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].uid, uid)
 
     def test_put_item_with_date(self):
         self.db.put(category='foo',
