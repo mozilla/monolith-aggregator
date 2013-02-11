@@ -11,8 +11,6 @@ from sqlalchemy import create_engine
 from aggregator.extract import extract, main
 from aggregator.plugins import plugin
 from aggregator.util import word2daterange
-from apiclient.http import HttpMock
-from apiclient.discovery import build
 
 
 _res = []
