@@ -114,7 +114,7 @@ class ESSetup(object):
 
     def configure_templates(self):
         res = self.client.get_template('time_1')
-        if res:
+        if res:  # pragma: no cover
             try:
                 self.client.delete_template('time_1')
             except Exception:
