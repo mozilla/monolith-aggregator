@@ -131,26 +131,26 @@ class ESSetup(object):
                         'default': {
                             'type': 'custom',
                             'tokenizer': 'keyword',
-                        }
+                        },
                     },
                 },
                 'store': {
                     'compress': {
                         'stored': 'true',
                         'tv': 'true',
-                    }
+                    },
                 },
                 'cache': {
                     'field': {
                         'tpye': 'soft',
-                    }
+                    },
                 },
             },
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
                 },
-            }
+            },
         })
 
         # setup template for totals index
@@ -172,26 +172,26 @@ class ESSetup(object):
                         'default': {
                             'type': 'custom',
                             'tokenizer': 'keyword',
-                        }
+                        },
                     },
                 },
                 'store': {
                     'compress': {
                         'stored': 'true',
                         'tv': 'true',
-                    }
+                    },
                 },
                 'cache': {
                     'field': {
                         'tpye': 'soft',
-                    }
+                    },
                 },
             },
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
                 },
-            }
+            },
         })
 
     def optimize_index(self, name):
