@@ -125,6 +125,7 @@ class ESSetup(object):
                 'number_of_shards': 1,
                 'number_of_replicas': 1,
                 'refresh_interval': '10s',
+                'default_field': '_id',
                 'analysis': {
                     'analyzer': {
                         'default': {
@@ -160,6 +161,7 @@ class ESSetup(object):
                 'number_of_shards': 6,
                 'number_of_replicas': 0,
                 'refresh_interval': '10s',
+                'default_field': '_id',
                 'analysis': {
                     'analyzer': {
                         'default': {
