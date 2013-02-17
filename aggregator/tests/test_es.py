@@ -285,7 +285,8 @@ class TestESSetup(TestCase, ESTestHarness):
         # integers should stay as ints, and not be converted to strings
         res = client.search(
             {'facets': {'facet1': {'terms': {'field': 'count'}}},
-             'sort': [{"date": {"order": "asc"}}]})
+             'sort': [{"date": {"order": "asc"}}]},
+            index='time_*')
         for ft in [t['term'] for t in res['facets']['facet1']['terms']]:
             self.assertTrue(isinstance(ft, int))
         # and dates should be in their typical ES format
