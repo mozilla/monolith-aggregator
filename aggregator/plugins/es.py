@@ -133,7 +133,7 @@ class ESSetup(object):
                 },
                 "cache": {
                     "field": {
-                        "tpye": "soft",
+                        "type": "soft",
                     },
                 },
             },
