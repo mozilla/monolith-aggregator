@@ -139,7 +139,12 @@ class ESSetup(object):
                         'stored': 'true',
                         'tv': 'true',
                     }
-                }
+                },
+                'cache': {
+                    'field': {
+                        'tpye': 'soft',
+                    }
+                },
             },
             'mappings': {
                 '_default_': {
@@ -175,7 +180,12 @@ class ESSetup(object):
                         'stored': 'true',
                         'tv': 'true',
                     }
-                }
+                },
+                'cache': {
+                    'field': {
+                        'tpye': 'soft',
+                    }
+                },
             },
             'mappings': {
                 '_default_': {
