@@ -114,32 +114,32 @@ class ESSetup(object):
 
     def _default_settings(self):
         return {
-            'settings': {
-                'refresh_interval': '10s',
-                'default_field': '_id',
-                'analysis': {
-                    'analyzer': {
-                        'default': {
-                            'type': 'custom',
-                            'tokenizer': 'keyword',
+            "settings": {
+                "refresh_interval": "10s",
+                "default_field": "_id",
+                "analysis": {
+                    "analyzer": {
+                        "default": {
+                            "type": "custom",
+                            "tokenizer": "keyword",
                         },
                     },
                 },
-                'store': {
-                    'compress': {
-                        'stored': 'true',
-                        'tv': 'true',
+                "store": {
+                    "compress": {
+                        "stored": "true",
+                        "tv": "true",
                     },
                 },
-                'cache': {
-                    'field': {
-                        'tpye': 'soft',
+                "cache": {
+                    "field": {
+                        "tpye": "soft",
                     },
                 },
             },
-            'mappings': {
-                '_default_': {
-                    '_all': {'enabled': False},
+            "mappings": {
+                "_default_": {
+                    "_all": {"enabled": False},
                     "dynamic_templates": [{
                         "disable_string_analyzing": {
                             "match": "*",
@@ -156,30 +156,30 @@ class ESSetup(object):
 
     def configure_templates(self):
         # setup template for time-slice index
-        res = self.client.get_template('time_1')
+        res = self.client.get_template("time_1")
         if res:  # pragma: no cover
             try:
-                self.client.delete_template('time_1')
+                self.client.delete_template("time_1")
             except Exception:
                 pass
         time_settings = self._default_settings()
-        time_settings['template'] = 'time_*'
-        time_settings['settings']['number_of_shards'] = 1
-        time_settings['settings']['number_of_replicas'] = 1
-        self.client.create_template('time_1', time_settings)
+        time_settings["template"] = "time_*"
+        time_settings["settings"]["number_of_shards"] = 1
+        time_settings["settings"]["number_of_replicas"] = 1
+        self.client.create_template("time_1", time_settings)
 
         # setup template for totals index
-        res = self.client.get_template('total_1')
+        res = self.client.get_template("total_1")
         if res:  # pragma: no cover
             try:
-                self.client.delete_template('total_1')
+                self.client.delete_template("total_1")
             except Exception:
                 pass
         total_settings = self._default_settings()
-        total_settings['template'] = 'totals'
-        total_settings['settings']['number_of_shards'] = 6
-        total_settings['settings']['number_of_replicas'] = 0
-        self.client.create_template('total_1', total_settings)
+        total_settings["template"] = "totals"
+        total_settings["settings"]["number_of_shards"] = 6
+        total_settings["settings"]["number_of_replicas"] = 0
+        self.client.create_template("total_1", total_settings)
 
     def optimize_index(self, name):
         """Fully optimize an index down to one segment.
