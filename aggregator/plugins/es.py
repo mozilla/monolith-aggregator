@@ -149,6 +149,16 @@ class ESSetup(object):
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
+                    "dynamic_templates": [{
+                        "disable_string_analyzing": {
+                            "match": "*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                                "type": "string",
+                                "index": "not_analyzed",
+                            },
+                        },
+                    }],
                 },
             },
         })
@@ -190,6 +200,16 @@ class ESSetup(object):
             'mappings': {
                 '_default_': {
                     '_all': {'enabled': False},
+                    "dynamic_templates": [{
+                        "disable_string_analyzing": {
+                            "match": "*",
+                            "match_mapping_type": "string",
+                            "mapping": {
+                                "type": "string",
+                                "index": "not_analyzed",
+                            },
+                        },
+                    }],
                 },
             },
         })
