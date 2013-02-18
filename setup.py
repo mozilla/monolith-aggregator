@@ -1,4 +1,5 @@
 import os
+import sys
 from setuptools import setup, find_packages
 from aggregator import __version__
 
@@ -10,6 +11,8 @@ with open(os.path.join(here, 'README.rst')) as f:
 with open(os.path.join(here, 'CHANGES.rst')) as f:
     CHANGES = f.read()
 
+PYTHON26 = sys.version_info < (2, 7)
+
 requires = [
     'gevent',
     'oauth2client',
@@ -19,6 +22,9 @@ requires = [
     'oauth2client',
     'google-api-python-client'
 ]
+
+if PYTHON26:
+    requires.append('argparse')
 
 test_requires = requires + [
     'coverage',
