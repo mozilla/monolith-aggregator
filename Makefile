@@ -5,6 +5,7 @@ PYTHON = $(BIN)/python
 INSTALL = $(BIN)/pip install
 VTENV_OPTS ?= --distribute
 ES_VERSION ?= 0.20.5
+GEVENT_VERSION ?= 1.0rc2
 
 BUILD_DIRS = bin build elasticsearch include lib lib64 man share
 
@@ -16,6 +17,7 @@ $(PYTHON):
 	virtualenv $(VTENV_OPTS) .
 
 build: $(PYTHON) elasticsearch
+	$(INSTALL) -f https://github.com/SiteSupport/gevent/downloads gevent==$(GEVENT_VERSION)
 	$(PYTHON) setup.py develop
 	$(INSTALL) monolith-aggregator[test]
 
