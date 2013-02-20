@@ -89,6 +89,8 @@ class GoogleAnalytics(Plugin):
     def __call__(self, start_date, end_date):
         # we won't use GA aggregation feature here,
         # but extract day-by-day
+         
+        # can this query be batched
         delta = (end_date - start_date).days
         drange = (start_date + datetime.timedelta(n) for n in range(delta))
 
@@ -102,8 +104,10 @@ class GoogleAnalytics(Plugin):
                        'metrics': self.qmetrics}
 
             results = self.client.data().ga().get(**options).execute()
-            cols = [col['name'] for col in results['columnHeaders']]
+            if results['totalResults'] == 0:
+                continue
 
+            cols = [col['name'] for col in results['columnHeaders']]
             for entry in results['rows']:
                 data = {'date': current}
 
