@@ -99,17 +99,30 @@ elasticsearch.yml
 We don't need to have any custom elasticsearch.yml settings, as we are managing
 all of these settings via index templates and cluster API calls.
 
-Open questions
-::::::::::::::
+High-availability
+:::::::::::::::::
 
-- Time precision / granularity? -> Daily stats for the first versions,
-  might extend in the future. We keep all historical records.
-- How do we keep counters tracking events `since the beginning of time`, like
-  all downloads that ever happen for an app. Especially if we only keep
-  detailed download events for the past X months. Do we need to store those
-  separately for performance reasons? Or cache them at a different layer?
-- The suggested structure is optimized for looking at data by time. We might
-  need to have a separate structure to optimize lookups by addon/app.
+ElasticSearch doesn't have any good built-in multi-DC support. Inside a single
+DC you can configure various degrees of HA via setting up replica counts for
+each index. In our planned 3-node cluster we use a single replica, and thus
+can loose a single node out of three.
+
+For monolith, we can use a trick for the multi-DC case: Since all the data is
+stored in MySQL, we can simply run two (or any number) completely separate
+clusters in each DC. And then have a job to update the data in each DC from the
+single MySQL source. Since we introduced per-record uuid's we can run integrate
+checks and push new / remove old records in each ES cluster.
+
+Connection problems or downtimes of some of the DC's can lead to stale data for
+some period of time, but won't cause any data-integrity issues.
+
+The MySQL source is only setup in a single DC (though with a master-master)
+setup. A downtime of the DC can lead to stale data, but won't cause downtime or
+complete service unavailability for the end-user facing site.
+
+As a first remedy, we can setup a passive MySQL slave in a different DC and
+have a manual process to elect this slave to serve as the new master. Or we can
+investigate switching to a proper multi-DC-capable storage like Cassandra.
 
 Articles / videos
 :::::::::::::::::
