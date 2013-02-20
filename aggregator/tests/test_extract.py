@@ -106,9 +106,12 @@ class TestExtract(TestCase):
     def test_extract(self):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
-        self.assertEqual(len(_res), 302)
+        self.assertEqual(len(_res), 6202)
 
     def test_main(self):
+        # XXX this still depends on google.com, on this call:
+        # aggregator/plugins/ganalytics.py:24
+        #    return build('analytics', 'v3', http=h)
         old = copy.copy(sys.argv)
         sys.argv[:] = ['python', '--date', 'last-month', self.config]
         try:
@@ -116,4 +119,4 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 302)
+        self.assertEqual(len(_res), 6202)
