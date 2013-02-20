@@ -15,9 +15,9 @@ _Model = declarative_base()
 class Record(_Model):
     __tablename__ = 'record'
 
-    uid = Column(Binary(32), primary_key=True)
+    uid = Column(String(32), primary_key=True)
     date = Column(DateTime, default=datetime.now())
-    category = Column(String, nullable=False)
+    category = Column(String(256), nullable=False)
     value = Column(Binary)
 
 
