@@ -114,7 +114,7 @@ class GoogleAnalytics(Plugin):
                 for index, value in enumerate(entry):
                     field = self._fix_name(cols[index])
                     # XXX see how to convert genericaly
-                    if field == 'pageviews':
+                    if field in ('pageviews', 'visitors'):
                         value = int(value)
 
                     data[field] = value
