@@ -2,12 +2,12 @@ import os
 import datetime
 from time import mktime
 import tempfile
-from uuid import uuid1
 
 from sqlalchemy import create_engine
 from unittest2 import TestCase
 
 from aggregator.db import Database, Record
+from aggregator.util import urlsafe_uuid
 
 
 class TestDatabase(TestCase):
@@ -75,7 +75,7 @@ class TestDatabase(TestCase):
         self.assertEquals(len(results), 2)
 
     def test_put_item_with_uid(self):
-        uid = uuid1().hex
+        uid = urlsafe_uuid()
         self.db.put(uid=uid, category='foo',
             data=dict(category='foo', key='value'))
         results = self.db.get(category='foo').all()

@@ -1,6 +1,5 @@
 from collections import defaultdict
 import datetime
-from uuid import uuid1
 
 from pyelasticsearch import ElasticHttpError
 from pyelasticsearch import ElasticHttpNotFoundError
@@ -8,6 +7,7 @@ from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
 from aggregator.plugins import Plugin
+from aggregator.util import urlsafe_uuid
 
 
 class ExtendedClient(ElasticSearch):
@@ -206,7 +206,7 @@ class ESWrite(Plugin):
         _encode_json = self.client._encode_json
         body_bits = []
         for doc in docs:
-            id_ = doc.pop(id_field, uuid1().hex)
+            id_ = doc.pop(id_field, urlsafe_uuid())
             action = {'index': {'_id': id_}}
             body_bits.extend([_encode_json(action), _encode_json(doc)])
 

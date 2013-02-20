@@ -3,6 +3,7 @@ import random
 from uuid import uuid1
 
 from aggregator.plugins import Plugin
+from aggregator.util import urlsafe_uuid
 
 
 class RandomGenerator(Plugin):
@@ -24,7 +25,7 @@ class RandomGenerator(Plugin):
 
         for addon in range(addons):
             for delta in range((end_date - start_date).days):
-                yield {'uid': uuid1().hex,
+                yield {'uid': urlsafe_uuid(),
                        'date': start_date + datetime.timedelta(days=delta),
                        'category': 'downloads',
                        'os': random.choice(platforms),

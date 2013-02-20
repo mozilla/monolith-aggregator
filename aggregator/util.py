@@ -5,6 +5,7 @@ import logging
 import fcntl
 from datetime import date, datetime, timedelta
 from calendar import monthrange
+import uuid
 
 try:
     from importlib import import_module         # NOQA
@@ -220,3 +221,7 @@ def word2daterange(datestr):
         return date(year, 1, 1), date(year, 12, last_day_of_month)
 
     raise NotImplementedError(datestr)
+
+
+def urlsafe_uuid(node=uuid.getnode()):
+    return uuid.uuid1(node=node).hex

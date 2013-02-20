@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import uuid1
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Binary, DateTime, Column
@@ -7,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import BINARY
 
-from aggregator.util import json_dumps, all_
+from aggregator.util import json_dumps, all_, urlsafe_uuid
 
 
 _Model = declarative_base()
@@ -53,7 +52,7 @@ class Database(object):
 
     def put(self, uid=None, category="unknown", date=None, **data):
         if uid is None:
-            uid = uuid1().hex
+            uid = urlsafe_uuid()
         if date is None:
             date = datetime.now()
 
@@ -69,7 +68,7 @@ class Database(object):
         now = datetime.now()
         for item in batch:
             item = dict(item)
-            uid = item.pop('uid', uuid1().hex)
+            uid = item.pop('uid', urlsafe_uuid())
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')
             session.add(Record(uid=uid, date=date, category=category,
