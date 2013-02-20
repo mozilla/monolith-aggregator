@@ -87,25 +87,31 @@ class GoogleAnalytics(Plugin):
         return name
 
     def __call__(self, start_date, end_date):
-        options = {'ids': self.profile_id,
-                   'start_date': start_date.isoformat(),
-                   'end_date': end_date.isoformat(),
-                   'dimensions': self.qdimensions,
-                   'metrics': self.qmetrics}
+        # we won't use GA aggregation feature here,
+        # but extract day-by-day
+        delta = (end_date - start_date).days
+        drange = (start_date + datetime.timedelta(n) for n in range(delta))
 
-        results = self.client.data().ga().get(**options).execute()
+        for current in drange:
+            iso = current.isoformat()
+	
+	    options = {'ids': self.profile_id,
+	               'start_date': iso,
+                       'end_date': iso,
+                       'dimensions': self.qdimensions,
+                       'metrics': self.qmetrics}
 
-        cols = [col['name'] for col in results['columnHeaders']]
-        for entry in results['rows']:
-            data = {'date': start_date}
-            for index, value in enumerate(entry):
-                data[self._fix_name(cols[index])] = value
+            results = self.client.data().ga().get(**options).execute()
+            cols = [col['name'] for col in results['columnHeaders']]
 
-            #for dimension in self.dimensions:
-            #    data[dimension] = entry.get_dimension(dimension).value
+            for entry in results['rows']:
+                data = {'date': current}
 
-            #for metric in self.metrics:
-            #    data[metric] = float(entry.get_metric(metric).value)
+                for index, value in enumerate(entry):
+                    field = self._fix_name(cols[index])
+                    # XXX see how to convert genericaly
+                    if field == 'pageviews':
+                        value = int(value)
 
-            # XXX more stuff in that mapping ?
-            yield data
+                    data[field] = value
+                    yield data
