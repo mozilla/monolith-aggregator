@@ -1,4 +1,5 @@
 import json
+from base64 import urlsafe_b64encode
 from time import mktime
 from time import time
 import random
@@ -236,7 +237,7 @@ def urlsafe_uuid():
     """
     global _last_timestamp
     timestamp = int(time() * 1e7) + 0x01b21dd213814000L
-    if timestamp <= _last_timestamp:
+    if timestamp <= _last_timestamp:  # pragma: no cover
         timestamp = _last_timestamp + 1
     _last_timestamp = timestamp
 
@@ -248,4 +249,8 @@ def urlsafe_uuid():
     int_ = ((_node << 80L) | (time_hi << 64L) | (time_mid << 48L) |
             (time_low << 16L) | clock_seq)
 
-    return '%032x' % int_
+    bytes = ''
+    for shift in range(0, 128, 8):
+        bytes = chr((int_ >> shift) & 0xff) + bytes
+
+    return urlsafe_b64encode(bytes)
