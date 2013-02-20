@@ -1,5 +1,7 @@
 import json
 from time import mktime
+from time import time
+import random
 import sys
 import logging
 import fcntl
@@ -222,6 +224,28 @@ def word2daterange(datestr):
 
     raise NotImplementedError(datestr)
 
+_last_timestamp = 0
+_randrange = random.Random().randrange
+_node = uuid.getnode()
 
-def urlsafe_uuid(node=uuid.getnode()):
-    return uuid.uuid1(node=node).hex
+
+def urlsafe_uuid():
+    """
+    A simplified version of uuid1 - optimized for usage as a
+    MySQL primary key and ElasticSearch id.
+    """
+    global _last_timestamp
+    timestamp = int(time() * 1e7) + 0x01b21dd213814000L
+    if timestamp <= _last_timestamp:
+        timestamp = _last_timestamp + 1
+    _last_timestamp = timestamp
+
+    time_low = timestamp & 0xffffffffL
+    time_mid = (timestamp >> 32L) & 0xffffL
+    time_hi_version = (timestamp >> 48L) & 0x0fffL
+    clock_seq = _randrange(1 << 14L)
+
+    int_ = ((time_low << 96L) | (time_mid << 80L) |
+            (time_hi_version << 64L) | (clock_seq << 48L) | _node)
+
+    return '%032x' % int_
