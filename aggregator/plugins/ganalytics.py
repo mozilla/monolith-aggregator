@@ -81,6 +81,11 @@ class GoogleAnalytics(Plugin):
             self.dimensions = ['ga:date']
             self.qdimensions = 'ga:date'
 
+    def _fix_name(self, name):
+        if name.startswith('ga:'):
+            name = name[len('ga:'):]
+        return name
+
     def __call__(self, start_date, end_date):
         options = {'ids': self.profile_id,
                    'start_date': start_date.isoformat(),
@@ -91,11 +96,10 @@ class GoogleAnalytics(Plugin):
         results = self.client.data().ga().get(**options).execute()
 
         cols = [col['name'] for col in results['columnHeaders']]
-
         for entry in results['rows']:
-            data = {}
+            data = {'date': start_date}
             for index, value in enumerate(entry):
-                data[cols[index]] = value
+                data[self._fix_name(cols[index])] = value
 
             #for dimension in self.dimensions:
             #    data[dimension] = entry.get_dimension(dimension).value
