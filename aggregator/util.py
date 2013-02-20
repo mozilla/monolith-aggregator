@@ -240,12 +240,12 @@ def urlsafe_uuid():
         timestamp = _last_timestamp + 1
     _last_timestamp = timestamp
 
-    time_low = timestamp & 0xffffffffL
-    time_mid = (timestamp >> 32L) & 0xffffL
-    time_hi_version = (timestamp >> 48L) & 0x0fffL
+    time_low = timestamp & 0xffffffffL  # changes every 100 nano-seconds
+    time_mid = (timestamp >> 32L) & 0xffffL  # changes every ~15 minutes
+    time_hi = (timestamp >> 48L) & 0x0fffL  # changes every ~3 years
     clock_seq = _randrange(1 << 14L)
 
-    int_ = ((time_low << 96L) | (time_mid << 80L) |
-            (time_hi_version << 64L) | (clock_seq << 48L) | _node)
+    int_ = ((_node << 80L) | (time_hi << 64L) | (time_mid << 48L) |
+            (time_low << 16L) | clock_seq)
 
     return '%032x' % int_
