@@ -12,7 +12,6 @@ import httplib2
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
 
 
-
 def get_service(**options):
     creds = OAuth2Credentials(
         *[options[k] for k in
@@ -59,6 +58,7 @@ def _gatable(option):
 
 _ISO = '%Y-%m-%dT%H:%M:%S.%f'
 
+
 def iso2datetime(data):
     return datetime.datetime.strptime(data, _ISO)
 
@@ -89,16 +89,16 @@ class GoogleAnalytics(Plugin):
     def __call__(self, start_date, end_date):
         # we won't use GA aggregation feature here,
         # but extract day-by-day
-         
+
         # can this query be batched
         delta = (end_date - start_date).days
         drange = (start_date + datetime.timedelta(n) for n in range(delta))
 
         for current in drange:
             iso = current.isoformat()
-	
-	    options = {'ids': self.profile_id,
-	               'start_date': iso,
+
+            options = {'ids': self.profile_id,
+                       'start_date': iso,
                        'end_date': iso,
                        'dimensions': self.qdimensions,
                        'metrics': self.qmetrics}

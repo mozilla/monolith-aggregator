@@ -49,17 +49,19 @@ def get_market_place(start_date, end_date, **options):
         yield {'from': 'Marketplace'}
 
 
-DB_FILE = os.path.join(os.path.dirname(__file__), 'source.db')
-DB = 'sqlite:///' + DB_FILE
+DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
+            os.path.join(os.path.dirname(__file__), 'target.db'))
+
+DB = 'sqlite:///' + DB_FILES[0]
 
 CREATE = """\
 create table downloads
-    (count INTEGER, start DATE, end DATE)
+    (count INTEGER, date DATE)
 """
 
 INSERT = """\
-insert into downloads (count, start, end)
-values (:count, :start, :end)
+insert into downloads (count, date)
+values (:count, :date)
 """
 
 
@@ -71,19 +73,19 @@ class TestExtract(TestCase):
 
         # let's create a DB for the tests
         engine = create_engine(DB)
-        today = datetime.date.today().isoformat()
-        start, end = word2daterange('last-month')
+        today = datetime.date.today()
 
         try:
             engine.execute(CREATE)
-            for i in range(100):
-                v = random.randint(0, 1000)
-                engine.execute(INSERT, count=v, start=start, end=end)
+            for i in range(30):
+                date = today - datetime.timedelta(days=i)
+                for i in range(10):
+                    v = random.randint(0, 1000)
+                    engine.execute(INSERT, count=v, date=date)
         except Exception:
             self.tearDown()
             raise
 
-        from aggregator.plugins import ganalytics
         from apiclient.http import HttpRequest
 
         def _execute(self, *args, **options):
@@ -95,18 +97,17 @@ class TestExtract(TestCase):
 
             return json.loads(data)
 
-
         HttpRequest.execute = _execute
 
-
     def tearDown(self):
-        if os.path.exists(DB_FILE):
-            os.remove(DB_FILE)
+        for file_ in DB_FILES:
+            if os.path.exists(file_):
+                os.remove(file_)
 
     def test_extract(self):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
-        self.assertEqual(len(_res), 6202)
+        self.assertEqual(len(_res), 6090)
 
     def test_main(self):
         # XXX this still depends on google.com, on this call:
@@ -119,4 +120,4 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 6202)
+        self.assertEqual(len(_res), 6090)

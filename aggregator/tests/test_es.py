@@ -30,6 +30,44 @@ def get_global_es():
     return ES_PROCESS
 
 
+_CONF = """\
+cluster.name: test
+node.name: "test_1"
+index.number_of_shards: 1
+index.number_of_replicas: 0
+http.port: {port}
+transport.tcp.port: {tport}
+discovery.zen.ping.multicast.enabled: false
+path.conf: {config_path}
+path.work: {work_path}
+path.plugins: {work_path}
+path.data: {data_path}
+path.logs: {log_path}
+"""
+
+_CONF2 = """\
+rootLogger: INFO, console, file
+
+logger:
+  action: DEBUG
+
+appender:
+  console:
+    type: console
+    layout:
+      type: consolePattern
+      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
+
+  file:
+    type: dailyRollingFile
+    file: ${path.logs}/${cluster.name}.log
+    datePattern: "'.'yyyy-MM-dd"
+    layout:
+      type: pattern
+      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
+"""
+
+
 class ESProcess(object):
     """Start a new ElasticSearch process, isolated in a temporary
     directory. By default it's configured to listen on localhost and
@@ -69,45 +107,14 @@ class ESProcess(object):
 
         # write configuration file
         with open(conf_path, "w") as config:
-            config.write("""
-cluster.name: test
-node.name: "test_1"
-index.number_of_shards: 1
-index.number_of_replicas: 0
-http.port: {port}
-transport.tcp.port: {tport}
-discovery.zen.ping.multicast.enabled: false
-path.conf: {config_path}
-path.work: {work_path}
-path.plugins: {work_path}
-path.data: {data_path}
-path.logs: {log_path}
-""".format(port=self.port, tport=self.port + 1, work_path=self.working_path,
-           config_path=config_path, data_path=data_path, log_path=log_path))
+            config.write(_CONF.format(port=self.port, tport=self.port + 1,
+                                      work_path=self.working_path,
+                                      config_path=config_path,
+                                      data_path=data_path, log_path=log_path))
 
         # write log file
         with open(log_conf_path, "w") as config:
-            config.write("""
-rootLogger: INFO, console, file
-
-logger:
-  action: DEBUG
-
-appender:
-  console:
-    type: console
-    layout:
-      type: consolePattern
-      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
-
-  file:
-    type: dailyRollingFile
-    file: ${path.logs}/${cluster.name}.log
-    datePattern: "'.'yyyy-MM-dd"
-    layout:
-      type: pattern
-      conversionPattern: "[%d{ISO8601}][%-5p][%-25c] %m%n"
-""")
+            config.write(_CONF2)
 
         # setup environment, copy from base process
         environ = os.environ.copy()
@@ -116,8 +123,8 @@ appender:
         environ['ES_INCLUDE'] = os.path.join(bin_path, 'elasticsearch.in.sh')
         lib_dir = os.path.join(ES_DIR, 'lib')
         # let the process find our jar files first
-        environ['ES_CLASSPATH'] = ('{dir}/elasticsearch-*:{dir}/*:'
-            '{dir}/sigar/*:$ES_CLASSPATH'.format(dir=lib_dir))
+        path = '{dir}/elasticsearch-*:{dir}/*:{dir}/sigar/*:$ES_CLASSPATH'
+        environ['ES_CLASSPATH'] = path.format(dir=lib_dir)
 
         self.process = subprocess.Popen(
             args=[bin_path + "/elasticsearch", "-f",
@@ -145,8 +152,9 @@ appender:
             try:
                 # check to see if our process is ready
                 health = self.client.health()
-                if (health['status'] == 'green' and
-                   health['cluster_name'] == 'test'):
+                status = health['status']
+                name = health['cluster_name']
+                if status == 'green' and name == 'test':
                     break
             except Exception:
                 # wait a bit before re-trying
@@ -294,7 +302,7 @@ class TestESSetup(TestCase, ESTestHarness):
         self.assertEqual(first, '2013-01-01T00:00:00')
         # test totals
         res = client.search({'sort': [{'downloads': {'order': 'desc'}}]},
-            index='totals', doc_type='apps')
+                            index='totals', doc_type='apps')
         # all apps should be in the list, those with missing values
         # are sorted last in descending order
         sorted_ids = [h['_id'] for h in res['hits']['hits']]
@@ -314,7 +322,7 @@ class TestESSetup(TestCase, ESTestHarness):
              'facets': {'facet1': {'terms': {'field': 'a'}}}})
         facet1 = res['facets']['facet1']
         self.assertEqual(set([f['term'] for f in facet1['terms']]),
-            set(['Foo bar', 'foo baz']))
+                         set(['Foo bar', 'foo baz']))
 
     def test_optimize_index(self):
         setup = self._make_one()

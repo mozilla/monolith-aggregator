@@ -1,7 +1,7 @@
-from datetime import datetime
+import datetime
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import String, Binary, DateTime, Column
+from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import BINARY
@@ -12,11 +12,15 @@ from aggregator.util import json_dumps, all_, urlsafe_uuid
 _Model = declarative_base()
 
 
+def today():
+    return datetime.date.today()
+
+
 class Record(_Model):
     __tablename__ = 'record'
 
     uid = Column(BINARY(24), primary_key=True)
-    date = Column(DateTime, default=datetime.now())
+    date = Column(Date, default=today())
     category = Column(String(256), nullable=False)
     value = Column(Binary)
 
@@ -54,7 +58,7 @@ class Database(object):
         if uid is None:
             uid = urlsafe_uuid()
         if date is None:
-            date = datetime.now()
+            date = today()
 
         data.setdefault('date', date)
 
@@ -65,14 +69,14 @@ class Database(object):
 
     def put_batch(self, batch):
         session = self.session_factory()
-        now = datetime.now()
+        now = today()
         for item in batch:
             item = dict(item)
             uid = item.pop('uid', urlsafe_uuid())
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')
             session.add(Record(uid=uid, date=date, category=category,
-                value=json_dumps(item)))
+                               value=json_dumps(item)))
         session.commit()
 
     def get(self, category=None, start_date=None, end_date=None):
