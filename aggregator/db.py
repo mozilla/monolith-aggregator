@@ -21,6 +21,8 @@ class Record(_Model):
     __table_args__ = {
         'mysql_engine': 'InnoDB',
         'mysql_charset': 'utf8',
+        'mysql_row_format': 'compressed',
+        'mysql_key_block_size': '4',
     }
 
     uid = Column(BINARY(24), primary_key=True)
@@ -53,6 +55,10 @@ class Database(object):
 
     def __init__(self, engine=None, sqluri=None, **params):
         self.engine = engine or get_engine(sqluri, **params)
+        if not sqluri.startswith('sqlite'):
+            self.engine.execute("SET GLOBAL innodb_file_format='Barracuda'")
+            self.engine.execute("SET GLOBAL innodb_file_per_table=1")
+
         record.metadata.bind = self.engine
         record.create(checkfirst=True)
         self.session_factory = sessionmaker(bind=self.engine)
