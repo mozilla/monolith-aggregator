@@ -26,10 +26,10 @@ class ExtendedClient(ElasticSearch):
         See `ES's index-template API`_ for more detail.
 
         .. _`ES's index-template API`:
-            http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html
+           http://tinyurl.com/es-index-template
         """
         return self.send_request('PUT', ['_template', name], settings,
-            query_params=query_params)
+                                 query_params=query_params)
 
     @es_kwargs()
     def delete_template(self, name, query_params=None):
@@ -41,10 +41,10 @@ class ExtendedClient(ElasticSearch):
         See `ES's index-template API`_ for more detail.
 
         .. _`ES's index-template API`:
-            http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html
+            http://tinyurl.com/es-index-template
         """
         return self.send_request('DELETE', ['_template', name],
-            query_params=query_params)
+                                 query_params=query_params)
 
     @es_kwargs()
     def get_template(self, name, query_params=None):
@@ -56,10 +56,10 @@ class ExtendedClient(ElasticSearch):
         See `ES's index-template API`_ for more detail.
 
         .. _`ES's index-template API`:
-            http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html
+            http://tinyurl.com/es-index-template
         """
         return self.send_request('GET', ['_template', name],
-            query_params=query_params)
+                                 query_params=query_params)
 
     def list_templates(self):
         """
@@ -68,10 +68,10 @@ class ExtendedClient(ElasticSearch):
         See `ES's index-template API`_ for more detail.
 
         .. _`ES's index-template API`:
-            http://www.elasticsearch.org/guide/reference/api/admin-indices-templates.html
+            http://tinyurl.com/es-index-template
         """
         res = self.cluster_state(filter_routing_table=True,
-            filter_nodes=True, filter_blocks=True)
+                                 filter_nodes=True, filter_blocks=True)
         return res['metadata']['templates']
 
     @es_kwargs('filter_nodes', 'filter_routing_table', 'filter_metadata',
@@ -87,7 +87,7 @@ class ExtendedClient(ElasticSearch):
         See `ES's cluster-state API`_ for more detail.
 
         .. _`ES's cluster-state API`:
-            http://www.elasticsearch.org/guide/reference/api/admin-cluster-state.html
+           http://tinyurl.com/cluster-state
         """
         return self.send_request(
             'GET', ['_cluster', 'state'], query_params=query_params)
@@ -213,10 +213,9 @@ class ESWrite(Plugin):
         # Need the trailing newline.
         body = '\n'.join(body_bits) + '\n'
         return self.client.send_request('POST',
-            [index, doc_type, '_bulk'],
-            body,
-            encode_body=False,
-        )
+                                        [index, doc_type, '_bulk'],
+                                        body,
+                                        encode_body=False)
 
     def get_app_totals(self, app_ids):
         # do one multi-get call for all apps
@@ -245,7 +244,7 @@ class ESWrite(Plugin):
                 source = value
             try:
                 self.client.index('totals', 'apps', source,
-                    id=id_, es_version=version)
+                                  id=id_, es_version=version)
             except ElasticHttpError as e:
                 if getattr(e, 'status_code', None) != 409:
                     # non-version-conflict, raise!

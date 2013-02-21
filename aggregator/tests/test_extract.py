@@ -86,7 +86,6 @@ class TestExtract(TestCase):
             self.tearDown()
             raise
 
-        from aggregator.plugins import ganalytics
         from apiclient.http import HttpRequest
 
         def _execute(self, *args, **options):
@@ -98,9 +97,7 @@ class TestExtract(TestCase):
 
             return json.loads(data)
 
-
         HttpRequest.execute = _execute
-
 
     def tearDown(self):
         for file_ in DB_FILES:

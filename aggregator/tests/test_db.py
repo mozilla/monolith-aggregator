@@ -1,6 +1,5 @@
 import os
 import datetime
-from time import mktime
 import tempfile
 
 from sqlalchemy import create_engine
@@ -70,15 +69,15 @@ class TestDatabase(TestCase):
     def test_put_item_with_uid(self):
         uid = urlsafe_uuid()
         self.db.put(uid=uid, category='foo',
-            data=dict(category='foo', key='value'))
+                    data=dict(category='foo', key='value'))
         results = self.db.get(category='foo').all()
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].uid, uid)
 
     def test_put_item_with_date(self):
         self.db.put(category='foo',
-                data=dict(category='foo', key='value',
-                          date=self._yesterday))
+                    data=dict(category='foo', key='value',
+                              date=self._yesterday))
         results = self.db.get(start_date=self._last_week).all()
         self.assertEquals(len(results), 1)
 

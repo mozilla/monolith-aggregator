@@ -11,6 +11,7 @@ from aggregator.util import json_dumps, all_, urlsafe_uuid
 
 _Model = declarative_base()
 
+
 def today():
     return datetime.date.today()
 
@@ -75,7 +76,7 @@ class Database(object):
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')
             session.add(Record(uid=uid, date=date, category=category,
-                value=json_dumps(item)))
+                               value=json_dumps(item)))
         session.commit()
 
     def get(self, category=None, start_date=None, end_date=None):

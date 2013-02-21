@@ -60,7 +60,6 @@ def _push_to_target(queue, targets, batch_size):
         finally:
             queue.task_done()
 
-
     if len(batch) != 0:
         #logger.info('Pushing %s items', len(batch))
         greenlets = Group()
@@ -119,7 +118,7 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
             plugin = resolve_name(options['use'])
         except KeyError:
             msg = "Missing the 'use' option for plugin %r" % name
-            msg += '\nGot: %s' %  str(options)
+            msg += '\nGot: %s' % str(options)
             raise KeyError(msg)
 
         options['parser'] = parser
@@ -148,7 +147,6 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
 
     # a sequence is made of phases (XXX should move this to a class)
     sequence = [_build_phase(phase) for phase in sequence]
-
 
     # run the sequence by phase
     queue = JoinableQueue()
