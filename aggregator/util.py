@@ -230,7 +230,7 @@ _randrange = random.Random().randrange
 _node = uuid.getnode()
 
 
-def urlsafe_uuid():
+def urlsafe_uuid(date=None):
     """
     A simplified version of uuid1 - optimized for usage as a
     MySQL primary key and ElasticSearch id.

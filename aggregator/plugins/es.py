@@ -206,7 +206,7 @@ class ESWrite(Plugin):
         _encode_json = self.client._encode_json
         body_bits = []
         for doc in docs:
-            id_ = doc.pop(id_field, urlsafe_uuid())
+            id_ = doc.pop(id_field, urlsafe_uuid(doc.get('date', None)))
             action = {'index': {'_id': id_}}
             body_bits.extend([_encode_json(action), _encode_json(doc)])
 

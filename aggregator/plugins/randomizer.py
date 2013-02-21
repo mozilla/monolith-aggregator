@@ -25,8 +25,9 @@ class RandomGenerator(Plugin):
 
         for addon in range(addons):
             for delta in range((end_date - start_date).days):
-                yield {'uid': urlsafe_uuid(),
-                       'date': start_date + datetime.timedelta(days=delta),
+                date = start_date + datetime.timedelta(days=delta)
+                yield {'uid': urlsafe_uuid(date),
+                       'date': date,
                        'category': 'downloads',
                        'os': random.choice(platforms),
                        'downloads_count': random.randint(1000, 1500),

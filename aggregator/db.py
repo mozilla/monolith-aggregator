@@ -65,10 +65,10 @@ class Database(object):
         self.session = self.session_factory()
 
     def put(self, uid=None, category="unknown", date=None, **data):
-        if uid is None:
-            uid = urlsafe_uuid()
         if date is None:
             date = today()
+        if uid is None:
+            uid = urlsafe_uuid(date)
 
         data.setdefault('date', date)
 
@@ -82,8 +82,8 @@ class Database(object):
         now = today()
         for item in batch:
             item = dict(item)
-            uid = item.pop('uid', urlsafe_uuid())
             date = item.pop('date', now)
+            uid = item.pop('uid', urlsafe_uuid(date))
             category = item.pop('category', 'unknown')
             session.add(Record(uid=uid, date=date, category=category,
                                value=json_dumps(item)))
