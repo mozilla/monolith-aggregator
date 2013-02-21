@@ -29,14 +29,6 @@ class Transaction(_Model):
 transaction = Transaction.__table__
 
 
-PUT_QUERY = """\
-insert into monolith_transaction
-    (date, source)
-values
-    (:date, :source)
-"""
-
-
 def get_engine(sqluri, pool_size=100, pool_recycle=60, pool_timeout=30):
     extras = {}
     if not sqluri.startswith('sqlite'):
@@ -77,13 +69,13 @@ class History(object):
             drange = (start_date + datetime.timedelta(n)
                       for n in range(day_count))
 
-        # XXX single batch query?
+        session = self.session_factory()
         for date in drange:
             for source in sources:
-                # store in db
-                # XXX try..except etc
-                self.engine.execute(PUT_QUERY, date=date,
-                                    source=self._get_digest(source))
+                session.add(Transaction(source=self._get_digest(source),
+                                        date=date))
+        session.commit()
+
 
     def exists(self, source, start_date, end_date):
         query = self.session.query(Transaction)
