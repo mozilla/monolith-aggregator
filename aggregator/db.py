@@ -18,6 +18,10 @@ def today():
 
 class Record(_Model):
     __tablename__ = 'record'
+    __table_args__ = {
+        'mysql_engine': 'InnoDB',
+        'mysql_charset': 'utf8',
+    }
 
     uid = Column(BINARY(24), primary_key=True)
     date = Column(Date, default=today(), nullable=False)
