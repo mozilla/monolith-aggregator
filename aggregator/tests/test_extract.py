@@ -8,7 +8,7 @@ import json
 from unittest2 import TestCase
 from sqlalchemy import create_engine
 
-from aggregator.extract import extract, main
+from aggregator.extract import extract, main, AlreadyDoneError
 from aggregator.plugins import plugin
 from aggregator.util import word2daterange
 
@@ -50,7 +50,8 @@ def get_market_place(start_date, end_date, **options):
 
 
 DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
-            os.path.join(os.path.dirname(__file__), 'target.db'))
+            os.path.join(os.path.dirname(__file__), 'target.db'),
+            os.path.join(os.path.dirname(__file__), 'history.db'))
 
 DB = 'sqlite:///' + DB_FILES[0]
 
@@ -109,6 +110,14 @@ class TestExtract(TestCase):
         extract(self.config, start, end)
         self.assertEqual(len(_res), 6090)
 
+        # a second attempt should fail
+        # because we did not use the force flag
+        self.assertRaises(AlreadyDoneError, extract, self.config, start, end)
+
+        # unless we force it
+        extract(self.config, start, end, force=True)
+        self.assertEqual(len(_res), 18270)
+
     def test_main(self):
         # XXX this still depends on google.com, on this call:
         # aggregator/plugins/ganalytics.py:24
@@ -121,3 +130,23 @@ class TestExtract(TestCase):
             sys.argv[:] = old
 
         self.assertEqual(len(_res), 6090)
+
+        # a second attempt should fail
+        # because we did not use the force flag
+        old = copy.copy(sys.argv)
+        sys.argv[:] = ['python', '--date', 'last-month', self.config]
+        try:
+            self.assertRaises(AlreadyDoneError, main)
+        finally:
+            sys.argv[:] = old
+
+        # unless we force it
+        old = copy.copy(sys.argv)
+        sys.argv[:] = ['python', '--force', '--date', 'last-month',
+                       self.config]
+        try:
+            main()
+        finally:
+            sys.argv[:] = old
+
+        self.assertEqual(len(_res), 18270)

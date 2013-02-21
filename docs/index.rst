@@ -54,7 +54,7 @@ This is useful when you need a two-phase strategy.
 
     [monolith]
     timeout = 10
-    database = pymysql://user:password@localhost/monolith
+    history = pymysql://user:password@localhost/monolith
     sequence = extract, load
 
     [phase:extract]

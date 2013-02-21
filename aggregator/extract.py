@@ -13,9 +13,14 @@ from gevent.pool import Group
 from aggregator import __version__
 from aggregator.util import (resolve_name, configure_logger, LOG_LEVELS,
                              word2daterange)
+from aggregator.history import History
 
 
 logger = logging.getLogger('aggregator')
+
+
+class AlreadyDoneError(Exception):
+    pass
 
 
 def _mkdate(datestring):
@@ -70,7 +75,8 @@ def _push_to_target(queue, targets, batch_size):
     return eoq
 
 
-def extract(config, start_date, end_date, sequence=None, batch_size=None):
+def extract(config, start_date, end_date, sequence=None, batch_size=None,
+            force=False):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
@@ -93,7 +99,7 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
             raise ValueError("You need to define a sequence.")
 
     sequence = [phase.strip() for phase in sequence.split(',')]
-    config = defaultdict(dict)
+    dconfig = defaultdict(dict)
     keys = ('phase', 'source', 'target')
 
     for section in parser.sections():
@@ -101,7 +107,7 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
             prefix = key + ':'
             if section.startswith(prefix):
                 name = section[len(prefix):]
-                config[key][name] = dict(parser.items(section))
+                dconfig[key][name] = dict(parser.items(section))
 
     # (XXX should move this to a class)
     # let's load all the plugins we need for the sequence now
@@ -130,15 +136,15 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
     def _build_phase(phase):
         def _load(name, type_):
             name = name.strip()
-            if name not in config[type_]:
+            if name not in dconfig[type_]:
                 raise ValueError('%r %s is undefined' % (name, type_))
             logger.info('Loading %s:%s' % (type_, name))
-            return _load_plugin(type_, name, config[type_][name])
+            return _load_plugin(type_, name, dconfig[type_][name])
 
-        if phase not in config['phase']:
+        if phase not in dconfig['phase']:
             raise ValueError('%r phase is undefined' % phase)
 
-        options = config['phase'][phase]
+        options = dconfig['phase'][phase]
         targets = [_load(target, 'target')
                    for target in options['targets'].split(',')]
         sources = [_load(source, 'source')
@@ -148,10 +154,21 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
     # a sequence is made of phases (XXX should move this to a class)
     sequence = [_build_phase(phase) for phase in sequence]
 
+    # load the history
+    try:
+        history_db = parser.get('monolith', 'history')
+    except NoOptionError:
+        raise ValueError("You need a history db option")
+
+    history = History(sqluri=history_db)
     # run the sequence by phase
     queue = JoinableQueue()
 
     for phase, sources, targets in sequence:
+        for source in sources:
+            if history.exists(source, start_date, end_date) and not force:
+                raise AlreadyDoneError()
+
         logger.info('Running phase %r' % phase)
         greenlets = Group()
 
@@ -168,6 +185,10 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None):
             gevent.sleep(0)
 
         greenlets.join()
+
+        # if we reach this point we can consider the transaction a success
+        # for these sources
+        history.add_entry(sources, start_date, end_date)
 
 
 _DATES = ['today', 'yesterday', 'last-week', 'last-month',
@@ -199,6 +220,8 @@ def main():
     parser.add_argument('--batch-size', dest='batch_size', default=None,
                         type=int,
                         help='The size of the batch when writing')
+    parser.add_argument('--force', action='store_true', default=False,
+                        help='Forces a run')
 
     args = parser.parse_args()
 
@@ -212,7 +235,8 @@ def main():
         start, end = args.start_date, args.end_date
 
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, start, end, args.sequence, args.batch_size)
+    extract(args.config, start, end, args.sequence, args.batch_size,
+            args.force)
 
 
 if __name__ == '__main__':
