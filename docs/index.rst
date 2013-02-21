@@ -113,7 +113,9 @@ Detailed Documentation
    mysql
    ES
    high-availability
+   transaction
    Changelog <changelog>
+
 
 Source Code
 ===========
