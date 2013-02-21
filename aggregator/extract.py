@@ -13,62 +13,13 @@ from aggregator.util import (configure_logger, LOG_LEVELS,
                              word2daterange)
 from aggregator.history import History
 from aggregator.sequence import Sequence
+from aggregator.engine import Engine
 
-
-class AlreadyDoneError(Exception):
-    pass
 
 
 def _mkdate(datestring):
     return datetime.strptime(datestring, '%Y-%m-%d').date()
 
-
-def _get_data(queue, callable, start_date, end_date):
-    #logger.info('Getting from %s' % callable)
-    try:
-        for item in callable(start_date, end_date):
-            queue.put(item)
-    finally:
-        queue.put('END')
-
-
-def _put_data(callable, data):
-    #logger.info('Pushing to %s' % callable)
-    return callable(data)
-
-
-def _push_to_target(queue, targets, batch_size):
-    """Get a batch of elements from the queue, and push it to the targets.
-
-    This function returns True if it proceeded all the elements in the queue,
-    and there isn't anything more to read.
-    """
-    if queue.empty():
-        return False    # nothing
-
-    batch = []
-    eoq = False
-
-    # collecting a batch
-    while len(batch) < batch_size:
-        try:
-            item = queue.get()
-            if item == 'END':
-                # reached the end
-                eoq = True
-                break
-            batch.append(item)
-        finally:
-            queue.task_done()
-
-    if len(batch) != 0:
-        #logger.info('Pushing %s items', len(batch))
-        greenlets = Group()
-        for plugin in targets:
-            greenlets.spawn(_put_data, plugin, batch)
-        greenlets.join()
-
-    return eoq
 
 
 def extract(config, start_date, end_date, sequence=None, batch_size=None,
@@ -97,34 +48,10 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
         raise ValueError("You need a history db option")
 
     history = History(sqluri=history_db)
-    # run the sequence by phase
-    queue = JoinableQueue()
 
-    for phase, sources, targets in sequence:
-        for source in sources:
-            if history.exists(source, start_date, end_date) and not force:
-                raise AlreadyDoneError()
-
-        logger.info('Running phase %r' % phase)
-        greenlets = Group()
-
-        # each callable will push its result in the queue
-        for source in sources:
-            greenlets.spawn(_get_data, queue, source, start_date, end_date)
-
-        # looking at the queue
-        processed = 0
-        while processed < len(sources):
-            eoq = _push_to_target(queue, targets, batch_size)
-            if eoq:
-                processed += 1
-            gevent.sleep(0)
-
-        greenlets.join()
-
-        # if we reach this point we can consider the transaction a success
-        # for these sources
-        history.add_entry(sources, start_date, end_date)
+    # run the engine
+    engine = Engine(sequence, history, batch_size=batch_size, force=force)
+    engine.run(start_date, end_date)
 
 
 _DATES = ['today', 'yesterday', 'last-week', 'last-month',
