@@ -18,27 +18,20 @@ class TestDatabase(TestCase):
         self.sqluri = 'sqlite:///%s' % self.filename
         self.engine = create_engine(self.sqluri)
         self.db = Database(self.engine)
-
-        self._last_week = datetime.datetime.now() - datetime.timedelta(weeks=1)
-        self._yesterday = datetime.datetime.now() - datetime.timedelta(days=1)
-        self._now = datetime.datetime.now()
+        self._today = datetime.date.today()
+        self._last_week = self._today - datetime.timedelta(weeks=1)
+        self._yesterday = self._today - datetime.timedelta(days=1)
 
     def tearDown(self):
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
-    def _get_date(self, date=None):
-        if date is None:
-            date = datetime.datetime.now()
-        return int(mktime(date.timetuple()))
-
-    def test_record_creation_defaults_to_now(self):
-        before = datetime.datetime.now()
-
+    def test_record_creation_defaults_to_today(self):
+        before = self._today
         self.db.put(category='foo', key='value', another_key='value2')
         query = self.db.session.query(Record)
         results = query.all()
-        self.assertTrue(before <= results[0].date <= datetime.datetime.now())
+        self.assertTrue(before <= results[0].date <= self._today)
 
     def test_record_creation_use_specified_date(self):
         self.db.put(category='foo', key='value', date=self._last_week)
@@ -51,7 +44,7 @@ class TestDatabase(TestCase):
 
     def test_filter_end_date(self):
         self.db.put(category='foo', key='value', date=self._last_week)
-        self.db.put(category='foo', key='value', date=self._now)
+        self.db.put(category='foo', key='value', date=self._today)
 
         results = self.db.get(end_date=self._yesterday).all()
         self.assertEquals(len(results), 1)
@@ -68,7 +61,7 @@ class TestDatabase(TestCase):
     def test_filter_start_and_end_date(self):
         self.db.put(category='foo', key='value', date=self._last_week)
         self.db.put(category='foo', key='value', date=self._yesterday)
-        self.db.put(category='foo', key='value', date=self._now)
+        self.db.put(category='foo', key='value', date=self._today)
 
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday).all()
@@ -101,8 +94,8 @@ class TestDatabase(TestCase):
         self.db.put(category='foo', key='value', date=self._last_week)
         self.db.put(category='foo', key='value', date=self._yesterday)
         self.db.put(category='bar', key='value', date=self._yesterday)
-        self.db.put(category='foo', key='value', date=self._now)
-        self.db.put(category='bar', key='value', date=self._now)
+        self.db.put(category='foo', key='value', date=self._today)
+        self.db.put(category='bar', key='value', date=self._today)
 
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday,

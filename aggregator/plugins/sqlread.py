@@ -1,3 +1,4 @@
+import datetime
 from copy import copy
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
@@ -20,6 +21,16 @@ class SQLRead(Plugin):
         self.query = text(options['query'])
 
     def __call__(self, start_date, end_date):
+
+        def _check(data):
+            # XXX sqlite crapiness ?
+            if 'date' in data:
+                date = data['date']
+                if isinstance(date, basestring):
+                    data = dict(data)
+                    data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+            return data
+
         query_params = {}
         unwanted = ('database', 'parser', 'here', 'query')
 
@@ -30,4 +41,5 @@ class SQLRead(Plugin):
 
         query_params['start_date'] = start_date
         query_params['end_date'] = end_date
-        return self.engine.execute(self.query, **query_params)
+        data = self.engine.execute(self.query, **query_params)
+        return (_check(line) for line in data)
