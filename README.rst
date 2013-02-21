@@ -21,4 +21,4 @@ The web-service and dashboard are implemented in `monolith
 
 Here's the high-level overview of the whole system:
 
-.. image:: https://raw.github.com/mozilla/monolith-aggregator/master/docs/monolith-sequence.png
+.. image:: https://raw.github.com/mozilla/monolith-aggregator/master/docs/monolith-big-picture.png
