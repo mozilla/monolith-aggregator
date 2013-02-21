@@ -55,7 +55,7 @@ class Database(object):
 
     def __init__(self, engine=None, sqluri=None, **params):
         self.engine = engine or get_engine(sqluri, **params)
-        if not sqluri.startswith('sqlite'):
+        if sqluri is not None and not sqluri.startswith('sqlite'):
             self.engine.execute("SET GLOBAL innodb_file_format='Barracuda'")
             self.engine.execute("SET GLOBAL innodb_file_per_table=1")
 
