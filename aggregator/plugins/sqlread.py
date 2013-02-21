@@ -1,5 +1,7 @@
 from copy import copy
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+
 from aggregator.plugins import Plugin
 
 
@@ -15,7 +17,7 @@ class SQLRead(Plugin):
             extras['pool_recycle'] = int(options.get('pool_recycle', 60))
 
         self.engine = create_engine(self.sqluri, **extras)
-        self.query = options['query']
+        self.query = text(options['query'])
 
     def __call__(self, start_date, end_date):
         query_params = {}
