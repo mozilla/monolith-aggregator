@@ -76,7 +76,6 @@ class History(object):
                                         date=date))
         session.commit()
 
-
     def exists(self, source, start_date, end_date):
         query = self.session.query(Transaction)
         query = query.filter(Transaction.source == self._get_digest(source))

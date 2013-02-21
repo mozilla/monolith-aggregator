@@ -1,22 +1,18 @@
 import os
-import logging
 import argparse
 from ConfigParser import ConfigParser, NoOptionError
 import sys
 from datetime import datetime
-from collections import defaultdict
 
 import gevent
 from gevent.queue import JoinableQueue
 from gevent.pool import Group
 
-from aggregator import __version__
-from aggregator.util import (resolve_name, configure_logger, LOG_LEVELS,
+from aggregator import __version__, logger
+from aggregator.util import (configure_logger, LOG_LEVELS,
                              word2daterange)
 from aggregator.history import History
-
-
-logger = logging.getLogger('aggregator')
+from aggregator.sequence import Sequence
 
 
 class AlreadyDoneError(Exception):
@@ -91,68 +87,8 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
 
     logger.info('size of the batches: %s', batch_size)
 
-    # parsing the sequence, phases, sources and targets
-    if sequence is None:
-        try:
-            sequence = parser.get('monolith', 'sequence')
-        except NoOptionError:
-            raise ValueError("You need to define a sequence.")
-
-    sequence = [phase.strip() for phase in sequence.split(',')]
-    dconfig = defaultdict(dict)
-    keys = ('phase', 'source', 'target')
-
-    for section in parser.sections():
-        for key in keys:
-            prefix = key + ':'
-            if section.startswith(prefix):
-                name = section[len(prefix):]
-                dconfig[key][name] = dict(parser.items(section))
-
-    # (XXX should move this to a class)
-    # let's load all the plugins we need for the sequence now
-    plugins = {}
-
-    def _load_plugin(type_, name, options):
-        key = type_, name
-
-        if key in plugins:
-            return plugins[key]
-
-        options = dict(options)
-        try:
-            plugin = resolve_name(options['use'])
-        except KeyError:
-            msg = "Missing the 'use' option for plugin %r" % name
-            msg += '\nGot: %s' % str(options)
-            raise KeyError(msg)
-
-        options['parser'] = parser
-        del options['use']
-        instance = plugin(**options)
-        plugins[key] = instance
-        return instance
-
-    def _build_phase(phase):
-        def _load(name, type_):
-            name = name.strip()
-            if name not in dconfig[type_]:
-                raise ValueError('%r %s is undefined' % (name, type_))
-            logger.info('Loading %s:%s' % (type_, name))
-            return _load_plugin(type_, name, dconfig[type_][name])
-
-        if phase not in dconfig['phase']:
-            raise ValueError('%r phase is undefined' % phase)
-
-        options = dconfig['phase'][phase]
-        targets = [_load(target, 'target')
-                   for target in options['targets'].split(',')]
-        sources = [_load(source, 'source')
-                   for source in options['sources'].split(',')]
-        return phase, sources, targets
-
-    # a sequence is made of phases (XXX should move this to a class)
-    sequence = [_build_phase(phase) for phase in sequence]
+    # creating the sequence
+    sequence = Sequence(parser, sequence)
 
     # load the history
     try:
