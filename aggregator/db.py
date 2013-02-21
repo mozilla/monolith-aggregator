@@ -20,7 +20,7 @@ class Record(_Model):
     __tablename__ = 'record'
 
     uid = Column(BINARY(24), primary_key=True)
-    date = Column(Date, default=today())
+    date = Column(Date, default=today(), nullable=False)
     category = Column(String(256), nullable=False)
     value = Column(Binary)
 
