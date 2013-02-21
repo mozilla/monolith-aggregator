@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import String, Binary, DateTime, Column
+from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import BINARY
@@ -16,7 +16,7 @@ class Record(_Model):
     __tablename__ = 'record'
 
     uid = Column(BINARY(24), primary_key=True)
-    date = Column(DateTime, default=datetime.now())
+    date = Column(Date, default=date.today())
     category = Column(String(256), nullable=False)
     value = Column(Binary)
 
