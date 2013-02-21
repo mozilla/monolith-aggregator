@@ -70,6 +70,7 @@ Detailed Documentation
    install
    mysql
    ES
+   high-availability
    Changelog <changelog>
 
 Source Code
