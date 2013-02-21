@@ -18,7 +18,14 @@ class SQLRead(Plugin):
         self.query = options['query']
 
     def __call__(self, start_date, end_date):
-        query_params = copy(self.options)
+        query_params = {}
+        unwanted = ('database', 'parser', 'here', 'query')
+
+        for key, val in self.options.items():
+            if key in unwanted:
+                continue
+            query_params[key] = val
+
         query_params['start_date'] = start_date
         query_params['end_date'] = end_date
         return self.engine.execute(self.query, **query_params)

@@ -1,10 +1,10 @@
 import os
 import logging
 import argparse
-from ConfigParser import ConfigParser
-from ConfigParser import NoOptionError
+from ConfigParser import ConfigParser, NoOptionError
 import sys
 from datetime import datetime
+from collections import defaultdict
 
 import gevent
 from gevent.queue import JoinableQueue
@@ -62,57 +62,99 @@ def _push_to_target(queue, targets, batch_size):
     return True
 
 
-def extract(config, start_date, end_date, valid_sources=None,
-            valid_targets=None, batch_size=None):
+def extract(config, start_date, end_date, sequence=None, batch_size=100):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
     parser.read(config)
 
-    if not batch_size:
-        try:
-            batch_size = parser.get('monolith', 'batch_size')
-        except NoOptionError:
-            batch_size = 100
-        else:
-            batch_size = int(batch_size)
+    try:
+        batch_size = parser.get('monolith', 'batch_size')
+    except NoOptionError:
+        # using the default value
+        pass
+
     logger.debug('size of the batches: %s', batch_size)
 
-    # parsing the sources and targets
-    sources = []
-    targets = []
+    # parsing the sequence, phases, sources and targets
+    if sequence is None:
+        try:
+            sequence = parser.get('monolith', 'sequence')
+        except NoOptionError:
+            raise ValueError("You need to define a sequence.")
+
+    sequence = [phase.strip() for phase in sequence.split(',')]
+    config = defaultdict(dict)
+    keys = ('phase', 'source', 'target')
 
     for section in parser.sections():
-        if section.startswith('source:'):
-            if valid_sources is None or section.endswith(valid_sources):
-                logger.debug('loading %s' % section)
-                options = dict(parser.items(section))
-                plugin = resolve_name(options['use'])
-                options['parser'] = parser
-                del options['use']
-                sources.append(plugin(**options))
+        for key in keys:
+            prefix = key + ':'
+            if section.startswith(prefix):
+                name = section[len(prefix):]
+                config[key][name] = dict(parser.items(section))
 
-        elif section.startswith('target:'):
-            if valid_targets is None or section.endswith(valid_targets):
-                options = dict(parser.items(section))
-                logger.debug('loading %s' % section)
-                plugin = resolve_name(options['use'])
-                options['parser'] = parser
-                del options['use']
-                targets.append(plugin(**options))
+    # (XXX should move this to a class)
+    # let's load all the plugins we need for the sequence now
+    plugins = {}
 
+    def _load_plugin(type_, name, options):
+        key = type_, name
+
+        if key in plugins:
+            return plugins[key]
+
+        options = dict(options)
+        try:
+            plugin = resolve_name(options['use'])
+        except KeyError:
+            msg = "Missing the 'use' option for plugin %r" % name
+            msg += '\nGot: %s' %  str(options)
+            raise KeyError(msg)
+
+        options['parser'] = parser
+        del options['use']
+        instance = plugin(**options)
+        plugins[key] = instance
+        return instance
+
+    def _build_phase(phase):
+        def _load(name, type_):
+            name = name.strip()
+            if name not in config[type_]:
+                raise ValueError('%r %s is undefined' % (name, type_))
+            logger.info('Loading %s:%s' % (type_, name))
+            return _load_plugin(type_, name, config[type_][name])
+
+        if phase not in config['phase']:
+            raise ValueError('%r phase is undefined' % phase)
+
+        options = config['phase'][phase]
+        targets = [_load(target, 'target')
+                   for target in options['targets'].split(',')]
+        sources = [_load(source, 'source')
+                   for source in options['sources'].split(',')]
+        return phase, sources, targets
+
+    # a sequence is made of phases (XXX should move this to a class)
+    sequence = [_build_phase(phase) for phase in sequence]
+
+
+    # run the sequence by phase
     queue = JoinableQueue()
 
-    # run the extraction
-    # each callable will push its result in the queue
-    for plugin in sources:
-        gevent.spawn(_get_data, queue, plugin, start_date, end_date)
+    for phase, sources, targets in sequence:
+        logger.info('Running phase %r' % phase)
 
-    # looking at the queue
-    processed = 0
-    while processed < len(sources):
-        if not _push_to_target(queue, targets, batch_size):
-            processed += 1
+        # each callable will push its result in the queue
+        for source in sources:
+            gevent.spawn(_get_data, queue, source, start_date, end_date)
+
+        # looking at the queue
+        processed = 0
+        while processed < len(sources):
+            if not _push_to_target(queue, targets, batch_size):
+                processed += 1
 
 
 _DATES = ['today', 'yesterday', 'last-week', 'last-month',
@@ -139,10 +181,8 @@ def main():
                         help="log level")
     parser.add_argument('--log-output', dest='logoutput', default='-',
                         help="log output")
-    parser.add_argument('--source', dest='source', default=None,
-                        help='A comma-separated list of sources')
-    parser.add_argument('--target', dest='target', default=None,
-                        help='A comma-separated list of targets')
+    parser.add_argument('--sequence', dest='sequence', default=None,
+                        help='A comma-separated list of sequences.')
     parser.add_argument('--batch-size', dest='batch_size', default=None,
                         type=int,
                         help='The size of the batch when writing')
@@ -158,16 +198,8 @@ def main():
     else:
         start, end = args.start_date, args.end_date
 
-    source = args.source
-    if args.source is not None:
-        source = tuple(args.source.split(','))
-
-    target = args.target
-    if args.target is not None:
-        target = tuple(args.target.split(','))
-
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, start, end, source, target, args.batch_size)
+    extract(args.config, start, end, args.sequence, args.batch_size)
 
 
 if __name__ == '__main__':
