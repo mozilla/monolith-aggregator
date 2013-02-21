@@ -64,9 +64,12 @@ class APIReader(Plugin):
     def __init__(self, parser, **kwargs):
         self.keys = kwargs['keys'].split(',')
         self.endpoint = kwargs['endpoint']
-        self.oauth_key = kwargs['oauth_key']
-        self.oauth_secret = kwargs['oauth_secret']
-        self.oauth_header = OAuth1(self.oauth_key, self.oauth_secret)
+        self.oauth_key = kwargs.get('oauth_key', None)
+        self.oauth_secret = kwargs.get('oauth_secret', None)
+        if self.oauth_key and self.oauth_secret:
+            self.oauth_header = OAuth1(self.oauth_key, self.oauth_secret)
+        else:
+            self.oauth_header = None
 
         # Store the data for each key.
         self._retrieved_data = defaultdict(list)
