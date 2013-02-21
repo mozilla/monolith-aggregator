@@ -23,8 +23,8 @@ class Engine(object):
     def _push_to_target(self, targets):
         """Get a batch of elements from the queue, and push it to the targets.
 
-        This function returns True if it proceeded all the elements in the queue,
-        and there isn't anything more to read.
+        This function returns True if it proceeded all the elements in
+        the queue, and there isn't anything more to read.
         """
         if self.queue.empty():
             return False    # nothing
@@ -66,8 +66,8 @@ class Engine(object):
     def run(self, start_date, end_date):
         for phase, sources, targets in self.sequence:
             for source in sources:
-                if (self.history.exists(source, start_date, end_date)
-                    and not self.force):
+                exists = self.history.exists(source, start_date, end_date)
+                if exists and not self.force:
                     raise AlreadyDoneError()
 
             logger.info('Running phase %r' % phase)

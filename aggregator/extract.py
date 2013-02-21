@@ -4,10 +4,6 @@ from ConfigParser import ConfigParser, NoOptionError
 import sys
 from datetime import datetime
 
-import gevent
-from gevent.queue import JoinableQueue
-from gevent.pool import Group
-
 from aggregator import __version__, logger
 from aggregator.util import (configure_logger, LOG_LEVELS,
                              word2daterange)
@@ -16,10 +12,8 @@ from aggregator.sequence import Sequence
 from aggregator.engine import Engine
 
 
-
 def _mkdate(datestring):
     return datetime.strptime(datestring, '%Y-%m-%d').date()
-
 
 
 def extract(config, start_date, end_date, sequence=None, batch_size=None,
