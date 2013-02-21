@@ -17,24 +17,66 @@ The database
 The database stores directly JSON objects, as blobs. It has the following
 fields:
 
-- type (the type of data we are storing, TBD)
+- category (the category of data we are storing)
 - data (the JSON object, as a blob)
-- date (a SQL date type)
+- date (the date of the data)
+
+A few definitions
+:::::::::::::::::
+
+**monolith-aggregator** works with **sequences**. A **sequence** is a
+list of **phases**.
+
+A **phase** defines a list of **sources** and a list of **targets**.
+Each target and each source is defined by a plugin class, that
+receives a few options to run.
+
 
 monolith-extract
 ::::::::::::::::
 
-*monolith-extract* is based on a configuration file and plugins. Each source
-is defined in a configuration file, and for each source a section starting by
-*source:* is defined::
+*monolith-extract* is based on a configuration file and plugins.
+
+Each source and each target are defined in a section *prefixed*
+by **source:** or **target**.
+
+The file also defines **phases**, that reunite a list of **sources**
+and **targets**.
+
+Last, a **sequence** is built using a list of **phases**.
+
+Everything is run asynchronously but the system makes sure
+a phase is over when starting a new one in a sequence.
+
+This is useful when you need a two-phase strategy.
+
+.. code-block:: ini
 
     [monolith]
     timeout = 10
     database = pymysql://user:password@localhost/monolith
+    sequence = extract, load
+
+    [phase:extract]
+    sources = google-analytics, solitude, marketplace
+    targets = sql
+
+    [phase:load]
+    sources = sql
+    targets = elasticsearch
 
     [target:elasticsearch]
     user = monolithic.plugins.elasticsearch
     url = http://es/is/here
+
+    [source:sql]
+    use = aggregator.plugins.sqlread.SQLRead
+    database = mysql+pymysql://monolith:monolith@localhost/monolith
+    query = select * from record where date BETWEEN :start_date and :end_date
+
+    [target:sql]
+    use = aggregator.plugins.sqlwrite.SQLInjecter
+    database = mysql+pymysql://monolith:monolith@localhost/monolith
 
     [source:google-analytics]
     use = monolithic.plugins.ganalytics
@@ -57,9 +99,9 @@ of the section and the variables defined in **monolith** to perform the work.
 *monolith-extract* invokes in parallel every callable, which also receives
 an open SQL connector to the storage.
 
-*monolith-extract* can run against all sources, or a specific list of sources.
-This let us configure several crons if we need to extract data from sources
-at specific times.
+*monolith-extract* can run the predefined sequence, or one passed as an option.
+This is useful when you just need to replay a specific phase.
+
 
 Detailed Documentation
 ======================
