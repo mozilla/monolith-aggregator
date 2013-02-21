@@ -21,7 +21,9 @@ requires = [
     'python-gflags',
     'SQLAlchemy',
     'oauth2client',
-    'google-api-python-client'
+    'google-api-python-client',
+    'requests',
+    'requests-oauthlib',
 ]
 
 if PYTHON26:
@@ -32,6 +34,7 @@ test_requires = requires + [
     'nose',
     'Sphinx',
     'unittest2',
+    'HTTPretty',
 ]
 
 
