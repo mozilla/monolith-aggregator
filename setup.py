@@ -17,6 +17,7 @@ requires = [
     'gevent',
     'oauth2client',
     'pyelasticsearch>=0.3',
+    'PyMySQL',
     'python-gflags',
     'SQLAlchemy',
     'oauth2client',
