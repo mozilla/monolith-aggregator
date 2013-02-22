@@ -2,8 +2,8 @@ import datetime
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Date, Column, Integer
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
+from aggregator.util import Transactional
 
 
 _Model = declarative_base()
@@ -28,39 +28,26 @@ class Transaction(_Model):
 transaction = Transaction.__table__
 
 
-def get_engine(sqluri, pool_size=100, pool_recycle=60, pool_timeout=30):
-    extras = {}
-    if not sqluri.startswith('sqlite'):
-        extras['pool_size'] = pool_size
-        extras['pool_timeout'] = pool_timeout
-        extras['pool_recycle'] = pool_recycle
-
-    return create_engine(sqluri, **extras)
-
-
-class History(object):
+class History(Transactional):
 
     def __init__(self, engine=None, sqluri=None, **params):
-        self.engine = engine or get_engine(sqluri, **params)
+        super(History, self).__init__(engine, sqluri, **params)
         transaction.metadata.bind = self.engine
         transaction.create(checkfirst=True)
-        self.session_factory = sessionmaker(bind=self.engine)
-        self.session = self.session_factory()
 
     def add_entry(self, sources, start_date, end_date=None):
-        if end_date is None:
-            drange = (start_date,)
-        else:
-            day_count = (end_date - start_date).days
-            drange = (start_date + datetime.timedelta(n)
-                      for n in range(day_count))
+        with self.transaction() as session:
+            if end_date is None:
+                drange = (start_date,)
+            else:
+                day_count = (end_date - start_date).days
+                drange = (start_date + datetime.timedelta(n)
+                          for n in range(day_count))
 
-        session = self.session_factory()
-        for date in drange:
-            for source in sources:
-                session.add(Transaction(source=source.get_id(),
-                                        date=date))
-        session.commit()
+            for date in drange:
+                for source in sources:
+                    session.add(Transaction(source=source.get_id(),
+                                            date=date))
 
     def exists(self, source, start_date, end_date):
         query = self.session.query(Transaction)

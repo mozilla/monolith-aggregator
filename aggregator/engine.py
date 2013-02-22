@@ -89,6 +89,7 @@ class Engine(object):
             logger.info('Running phase %r' % phase)
 
             self._start_transactions(targets)
+            self.history.start_transaction()
             try:
                 greenlets = Group()
                 # each callable will push its result in the queue
@@ -104,12 +105,11 @@ class Engine(object):
                     gevent.sleep(0)
 
                 greenlets.join()
+                self.history.add_entry(sources, start_date, end_date)
             except Exception:
                 self._rollback_transactions(targets)
+                self.history.rollback_transaction()
                 raise
             else:
                 self._commit_transactions(targets)
-
-            # if we reach this point we can consider the transaction a success
-            # for these sources
-            self.history.add_entry(sources, start_date, end_date)
+                self.history.commit_transaction()
