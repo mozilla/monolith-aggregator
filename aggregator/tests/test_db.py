@@ -6,7 +6,6 @@ from sqlalchemy import create_engine
 from unittest2 import TestCase
 
 from aggregator.db import Database, Record
-from aggregator.util import urlsafe_uuid
 
 
 class TestDatabase(TestCase):
