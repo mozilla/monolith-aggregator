@@ -30,15 +30,16 @@ class Record(_Model):
     date = Column(Date, default=today(), nullable=False)
     category = Column(String(256), nullable=False)
     value = Column(Binary)
+    source = Column(String(32), nullable=False)
 
 
 record = Record.__table__
 
 PUT_QUERY = text("""\
 insert into record
-    (uid, date, category, value)
+    (uid, date, category, value, source)
 values
-    (:uid, :date, :category, :value)
+    (:uid, :date, :category, :value, :source)
 """)
 
 
@@ -69,7 +70,8 @@ class Database(object):
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = self.session_factory()
 
-    def put(self, uid=None, category="unknown", date=None, **data):
+    def put(self, uid=None, category="unknown", date=None,
+            source_id="unkown", **data):
         if date is None:
             date = today()
         if uid is None:
@@ -80,23 +82,28 @@ class Database(object):
         # store in db
         # XXX try..except etc
         self.engine.execute(PUT_QUERY, uid=uid, date=date, category=category,
-                            value=json_dumps(data))
+                            value=json_dumps(data),
+                            source=source_id)
 
     def put_batch(self, batch):
+        # XXX use source_id as a key with dates for updates
+        # so we don't put dupes
+
         session = self.session_factory()
         now = today()
         for source_id, item in batch:
-            # XXX use source_id as a key with dates for updates
             item = dict(item)
             date = item.pop('date', now)
             uid = item.pop('uid', urlsafe_uuid(date))
             category = item.pop('category', 'unknown')
             session.add(Record(uid=uid, date=date, category=category,
-                               value=json_dumps(item)))
+                               value=json_dumps(item),
+                               source=source_id))
         session.commit()
 
-    def get(self, category=None, start_date=None, end_date=None):
-        if all_((category, start_date, end_date), None):
+    def get(self, category=None, start_date=None, end_date=None,
+            source_id=None):
+        if all_((category, start_date, end_date, source_id), None):
             raise ValueError("You need to filter something")
 
         query = self.session.query(Record)
@@ -109,5 +116,8 @@ class Database(object):
 
         if end_date is not None:
             query = query.filter(Record.date <= end_date)
+
+        if source_id is not None:
+            query = query.filter(Record.source_id == source_id)
 
         return query
