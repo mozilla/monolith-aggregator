@@ -58,13 +58,13 @@ class History(object):
         session = self.session_factory()
         for date in drange:
             for source in sources:
-                session.add(Transaction(source=source.digest(),
+                session.add(Transaction(source=source.get_id(),
                                         date=date))
         session.commit()
 
     def exists(self, source, start_date, end_date):
         query = self.session.query(Transaction)
-        query = query.filter(Transaction.source == source.digest())
+        query = query.filter(Transaction.source == source.get_id())
         query = query.filter(Transaction.date >= start_date)
         query = query.filter(Transaction.date <= end_date)
         return query.first() is not None

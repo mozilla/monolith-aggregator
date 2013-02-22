@@ -54,10 +54,10 @@ class Sequence(object):
         return phase, sources, targets
 
     def _load_plugin(self, type_, name, options):
-        key = type_, name
+        source_id = type_, name
 
-        if key in self.plugins:
-            return self.plugins[key]
+        if source_id in self.plugins:
+            return self.plugins[source_id]
 
         options = dict(options)
         try:
@@ -68,7 +68,8 @@ class Sequence(object):
             raise KeyError(msg)
 
         options['parser'] = self.parser
+        options['id'] = ':'.join(source_id)
         del options['use']
         instance = plugin(**options)
-        self.plugins[key] = instance
+        self.plugins[source_id] = instance
         return instance

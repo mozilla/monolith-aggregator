@@ -59,7 +59,7 @@ class Engine(object):
     def _get_data(self, plugin, start_date, end_date):
         try:
             for item in plugin(start_date, end_date):
-                self.queue.put((plugin.digest(), item))
+                self.queue.put((plugin.get_id(), item))
         finally:
             self.queue.put('END')
 
