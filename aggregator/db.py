@@ -46,6 +46,8 @@ class Database(Transactional):
         with self.transaction() as session:
             for source_id, item in batch:
                 item = dict(item)
+                # remove date / category from the item dump,
+                # fail with KeyError if they aren't present
                 date = item.pop('date')
                 category = item.pop('category')
                 session.add(Record(uid=urlsafe_uuid(date),
