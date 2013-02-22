@@ -104,7 +104,7 @@ class Engine(object):
                     gevent.sleep(0)
 
                 greenlets.join()
-            except Exception, e:
+            except Exception:
                 self._rollback_transactions(targets)
                 raise
             else:
