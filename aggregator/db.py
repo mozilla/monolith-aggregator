@@ -1,5 +1,3 @@
-import datetime
-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy import create_engine
@@ -13,10 +11,6 @@ from aggregator.util import json_dumps, all_, urlsafe_uuid
 _Model = declarative_base()
 
 
-def today():
-    return datetime.date.today()
-
-
 class Record(_Model):
     __tablename__ = 'record'
     __table_args__ = {
@@ -27,7 +21,7 @@ class Record(_Model):
     }
 
     uid = Column(BINARY(24), primary_key=True)
-    date = Column(Date, default=today(), nullable=False)
+    date = Column(Date, nullable=False)
     category = Column(String(256), nullable=False)
     value = Column(Binary)
     source = Column(String(32), nullable=False)
@@ -103,11 +97,10 @@ class Database(object):
 
         session = self._transaction
         try:
-            now = today()
             for source_id, item in batch:
                 item = dict(item)
-                date = item.pop('date', now)
-                category = item.pop('category', 'unknown')
+                date = item.pop('date')
+                category = item.pop('category')
                 session.add(Record(uid=urlsafe_uuid(date),
                                    date=date, category=category,
                                    value=json_dumps(item),

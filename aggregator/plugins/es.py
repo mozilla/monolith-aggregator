@@ -190,8 +190,6 @@ class ESWrite(Plugin):
         _encode_json = self.client._encode_json
         body_bits = []
         for doc in docs:
-            if id_field not in doc:
-                raise ValueError('Missing uid in document: %r' % doc)
             id_ = doc.pop(id_field)
             action = {'index': {'_id': id_}}
             body_bits.extend([_encode_json(action), _encode_json(doc)])

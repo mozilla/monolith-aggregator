@@ -18,6 +18,7 @@ from sqlalchemy.sql import text
 
 _res = []
 _FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
+TODAY = datetime.date.today()
 
 
 @inject_plugin
@@ -33,7 +34,7 @@ def get_ga(start_date, end_date, **options):
     """Google Analytics
     """
     for i in range(10):
-        yield {'from': 'Google Analytics'}
+        yield {'category': 'google_analytics', 'date': TODAY}
 
 
 @extract_plugin
@@ -41,7 +42,7 @@ def get_rest(start_date, end_date, **options):
     """Solitude
     """
     for i in range(100):
-        yield {'from': 'Solitude'}
+        yield {'category': 'solitude', 'date': TODAY}
 
 
 @extract_plugin
@@ -49,7 +50,7 @@ def get_market_place(start_date, end_date, **options):
     """MarketPlace
     """
     for i in range(2):
-        yield {'from': 'Marketplace'}
+        yield {'category': 'marketplace', 'date': TODAY}
 
 
 DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
@@ -60,12 +61,12 @@ DB = 'sqlite:///' + DB_FILES[0]
 
 CREATE = """\
 create table downloads
-    (count INTEGER, date DATE)
+    (count INTEGER, date DATE, category VARCHAR(32))
 """
 
 INSERT = text("""\
-insert into downloads (count, date)
-values (:count, :date)
+insert into downloads (count, date, category)
+values (:count, :date, :category)
 """)
 
 
@@ -85,7 +86,7 @@ class TestExtract(TestCase):
                 date = today - datetime.timedelta(days=i)
                 for i in range(10):
                     v = random.randint(0, 1000)
-                    engine.execute(INSERT, count=v, date=date)
+                    engine.execute(INSERT, count=v, date=date, category='sql')
         except Exception:
             self.tearDown()
             raise

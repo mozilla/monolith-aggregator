@@ -24,14 +24,11 @@ class TestDatabase(TestCase):
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
-    def test_record_creation_defaults_to_today(self):
-        before = self._today
-        self.db.put([
-            ('test', dict(category='foo', key='value', another_key='value2')),
-        ])
-        query = self.db.session.query(Record)
-        results = query.all()
-        self.assertTrue(before <= results[0].date <= self._today)
+    def test_record_creation_no_defaults(self):
+        self.assertRaises(KeyError, self.db.put,
+            [('test', dict(category='foo', key='value'))])
+        self.assertRaises(KeyError, self.db.put,
+            [('test', dict(key='value', date=self._today))])
 
     def test_record_creation_use_specified_date(self):
         self.db.put([
@@ -81,8 +78,8 @@ class TestDatabase(TestCase):
 
     def test_filter_category(self):
         self.db.put([
-            ('test', dict(category='foo', key='value')),
-            ('test', dict(category='foobar', key='value')),
+            ('test', dict(category='foo', key='value', date=self._yesterday)),
+            ('test', dict(category='foobar', key='value', date=self._today)),
         ])
         results = self.db.get(category='foo').all()
         self.assertEquals(len(results), 1)
