@@ -99,7 +99,8 @@ class Database(object):
         # store in db
         # XXX try..except etc
         self.engine.execute(PUT_QUERY, uid=urlsafe_uuid(date), date=date,
-            category=category, value=json_dumps(data), source=source_id)
+                            category=category, value=json_dumps(data),
+                            source=source_id)
 
     def put_batch(self, batch):
         # XXX use source_id as a key with dates for updates
