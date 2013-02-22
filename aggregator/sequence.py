@@ -1,7 +1,7 @@
 from ConfigParser import NoOptionError
 from collections import defaultdict
 
-from aggregator.util import resolve_name
+from aggregator.resolver import resolve_name
 from aggregator import logger
 
 

@@ -26,9 +26,9 @@ class TestDatabase(TestCase):
 
     def test_record_creation_no_defaults(self):
         self.assertRaises(KeyError, self.db.put,
-            [('test', dict(category='foo', key='value'))])
+                          [('test', dict(category='foo', key='value'))])
         self.assertRaises(KeyError, self.db.put,
-            [('test', dict(key='value', date=self._today))])
+                          [('test', dict(key='value', date=self._today))])
 
     def test_record_creation_use_specified_date(self):
         self.db.put([
