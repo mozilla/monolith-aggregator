@@ -332,6 +332,7 @@ class TestESWrite(TestCase, ESTestHarness):
         plugin = self._make_one()
         es_client = self.es_process.client
         data = ('source_id', {
+            'uid': 'abc123',
             'category': 'downloads',
             'date': datetime.datetime(2012, 7, 4),
             'foo': 'bar',

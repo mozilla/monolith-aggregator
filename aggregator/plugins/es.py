@@ -5,7 +5,6 @@ from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
 from aggregator.plugins import Plugin
-from aggregator.util import urlsafe_uuid
 
 
 class ExtendedClient(ElasticSearch):
@@ -191,7 +190,9 @@ class ESWrite(Plugin):
         _encode_json = self.client._encode_json
         body_bits = []
         for doc in docs:
-            id_ = doc.pop(id_field, urlsafe_uuid(doc.get('date', None)))
+            if id_field not in doc:
+                raise ValueError('Missing uid in document: %r' % doc)
+            id_ = doc.pop(id_field)
             action = {'index': {'_id': id_}}
             body_bits.extend([_encode_json(action), _encode_json(doc)])
 
