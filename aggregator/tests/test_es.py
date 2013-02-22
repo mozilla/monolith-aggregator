@@ -264,31 +264,14 @@ class TestESSetup(TestCase, ESTestHarness):
         setup.configure_templates()
         # directly use the client, which should pick up the template settings
         client.create_index('time_2013-01')
-        client.create_index('totals')
         self.assertEqual(
             client.status('time_2013-01')['_shards']['total'], 2)
-        self.assertEqual(
-            client.status('totals')['_shards']['total'], 6)
         for i in range(1, 32):
             client.index('time_2013-01', 'downloads', {
                 'category': 'daily',
                 'date': datetime.datetime(2013, 01, i),
                 'count': i % 5,
             })
-        app_uuids = []
-        for i in range(9, -1, -1):
-            app_uuid = uuid.uuid4().hex
-            app_uuids.append(app_uuid)
-            if i > 0:
-                client.index('totals', 'apps', {
-                    'downloads': i * 2,
-                    'users': i},
-                    id=app_uuid)
-            else:
-                # index one document with a missing value
-                client.index('totals', 'apps', {
-                    'users': i},
-                    id=app_uuid)
         client.refresh()
         # integers should stay as ints, and not be converted to strings
         res = client.search(
@@ -300,13 +283,6 @@ class TestESSetup(TestCase, ESTestHarness):
         # and dates should be in their typical ES format
         first = res['hits']['hits'][0]['_source']['date']
         self.assertEqual(first, '2013-01-01T00:00:00')
-        # test totals
-        res = client.search({'sort': [{'downloads': {'order': 'desc'}}]},
-                            index='totals', doc_type='apps')
-        # all apps should be in the list, those with missing values
-        # are sorted last in descending order
-        sorted_ids = [h['_id'] for h in res['hits']['hits']]
-        self.assertEqual(sorted_ids, list(app_uuids))
 
     def test_create_index_no_string_analysis(self):
         setup = self._make_one()
@@ -370,98 +346,3 @@ class TestESWrite(TestCase, ESTestHarness):
         for field in ('foo', 'baz'):
             self.assertEqual(source[field], data[1][field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')
-
-    def test_sum_up_app(self):
-        plugin = self._make_one()
-        apps = collections.defaultdict(lambda: dict(downloads=0, users=0))
-
-        plugin.sum_up_app({'foo': 1}, apps)
-        self.assertEqual(len(apps), 0)
-
-        plugin.sum_up_app({'app_uuid': 1}, apps)
-        self.assertEqual(apps[1], {'downloads': 0, 'users': 0})
-
-        apps[2]['downloads'] = 3
-        plugin.sum_up_app({'app_uuid': 2, 'downloads_count': 4}, apps)
-        self.assertEqual(apps[2], {'downloads': 7, 'users': 0})
-
-        apps[3]['downloads'] = 5
-        apps[3]['users'] = 4
-        plugin.sum_up_app(
-            {'app_uuid': 3, 'downloads_count': 4, 'users_count': 1}, apps)
-        self.assertEqual(apps[3], {'downloads': 9, 'users': 5})
-
-    def test_get_app_totals(self):
-        plugin = self._make_one()
-        client = plugin.client
-        client.index('totals', 'apps', {'downloads': 10, 'users': 20}, id='1')
-        client.index('totals', 'apps', {'downloads': 40, 'users': 50}, id='2')
-        client.refresh('totals')
-
-        res = plugin.get_app_totals(['1', '2'])
-        self.assertEqual(res['1']['_source'], {'downloads': 10, 'users': 20})
-        self.assertEqual(res['2']['_source'], {'downloads': 40, 'users': 50})
-
-    def test_update_app_totals(self):
-        plugin = self._make_one()
-        client = plugin.client
-        found = {
-            '1': {'_source': {'downloads': 10, 'users': 20}, '_version': 0},
-            '2': {'_source': {'downloads': 40, 'users': 50}, '_version': 0}
-        }
-        plugin.update_app_totals({
-            '1': {'downloads': 3, 'users': 6},
-            '2': {'downloads': 7, 'users': 14},
-            '3': {'downloads': 13, 'users': 17},
-        }, found)
-        res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3']})
-        docs = dict([(d['_id'], d) for d in res['docs']])
-
-        self.assertEqual(docs['1']['_source'], {'downloads': 13, 'users': 26})
-        self.assertEqual(docs['2']['_source'], {'downloads': 47, 'users': 64})
-        self.assertEqual(docs['3']['_source'], {'downloads': 13, 'users': 17})
-
-    def test_get_concurrent_app_totals_update(self):
-        plugin = self._make_one()
-        client = plugin.client
-        client.index('totals', 'apps', {'downloads': 1, 'users': 1}, id='1')
-        client.index('totals', 'apps', {'downloads': 2, 'users': 2}, id='2')
-        client.refresh('totals')
-        found = plugin.get_app_totals(['1', '2'])
-        # introduce updates in between get/update calls
-        client.index('totals', 'apps', {'downloads': 5, 'users': 5}, id='1')
-        client.refresh('totals')
-        plugin.update_app_totals({
-            '1': {'downloads': 3, 'users': 6},
-            '2': {'downloads': 7, 'users': 14},
-        }, found)
-        res = client.multi_get('totals', 'apps', {'ids': ['1', '2']})
-        docs = dict([(d['_id'], d) for d in res['docs']])
-        self.assertEqual(docs['1']['_source'], {'downloads': 8, 'users': 11})
-        self.assertEqual(docs['2']['_source'], {'downloads': 9, 'users': 16})
-
-    def test_call_and_update_app_totals(self):
-        plugin = self._make_one()
-        client = plugin.client
-        client.index('totals', 'apps', {'downloads': 1, 'users': 2}, id='1')
-        client.index('totals', 'apps', {'downloads': 2, 'users': 3}, id='2')
-        client.index('totals', 'apps', {'foo': 0}, id='4')
-        data = [
-            {'app_uuid': '1', 'downloads_count': 1, 'users_count': 2},
-            {'app_uuid': '2', 'downloads_count': 2, 'users_count': 3},
-            {'app_uuid': '3', 'downloads_count': 3, 'users_count': 6},
-            {'app_uuid': '1', 'downloads_count': 10, 'users_count': 20},
-            {'app_uuid': '3', 'downloads_count': 3, 'users_count': 6},
-            {'app_uuid': '1', 'downloads_count': 5, 'users_count': 10},
-            {'app_uuid': '4', 'downloads_count': 1, 'users_count': 1},
-        ]
-        plugin([('fake_id', d) for d in data])
-
-        res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3', '4']})
-        docs = dict([(d['_id'], d) for d in res['docs']])
-
-        self.assertEqual(docs['1']['_source'], {'downloads': 17, 'users': 34})
-        self.assertEqual(docs['2']['_source'], {'downloads': 4, 'users': 6})
-        self.assertEqual(docs['3']['_source'], {'downloads': 6, 'users': 12})
-        self.assertEqual(
-            docs['4']['_source'], {'downloads': 1, 'users': 1, 'foo': 0})

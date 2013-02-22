@@ -168,19 +168,6 @@ class ESSetup(object):
         time_settings["settings"]["number_of_replicas"] = 1
         self.client.create_template("time_1", time_settings)
 
-        # setup template for totals index
-        res = self.client.get_template("total_1")
-        if res:  # pragma: no cover
-            try:
-                self.client.delete_template("total_1")
-            except Exception:
-                pass
-        total_settings = self._default_settings()
-        total_settings["template"] = "totals"
-        total_settings["settings"]["number_of_shards"] = 6
-        total_settings["settings"]["number_of_replicas"] = 0
-        self.client.create_template("total_1", total_settings)
-
     def optimize_index(self, name):
         """Fully optimize an index down to one segment.
         """
@@ -217,57 +204,8 @@ class ESWrite(Plugin):
                                         body,
                                         encode_body=False)
 
-    def get_app_totals(self, app_ids):
-        # do one multi-get call for all apps
-        try:
-            res = self.client.multi_get('totals', 'apps', {'ids': app_ids})
-        except ElasticHttpNotFoundError:
-            found = {}
-        else:
-            found = dict([(d['_id'], d) for d in res['docs'] if d['exists']])
-        return found
-
-    def update_app_totals(self, apps, found):
-        retry = {}
-        # and one index call per item
-        for id_, value in apps.items():
-            res = found.get(id_)
-            if res:
-                version = res['_version']
-                source = res['_source']
-                # modify _source, so we don't remove other keys
-                source['downloads'] = \
-                    source.get('downloads', 0) + value['downloads']
-                source['users'] = source.get('users', 0) + value['users']
-            else:
-                version = 0
-                source = value
-            try:
-                self.client.index('totals', 'apps', source,
-                                  id=id_, es_version=version)
-            except ElasticHttpError as e:
-                if getattr(e, 'status_code', None) != 409:
-                    # non-version-conflict, raise!
-                    raise e
-                else:
-                    # the document has been updated in the meantime
-                    retry[id_] = apps[id_]
-        if retry:
-            # retry failed documents, this might loop forever, if some
-            # other process is constantly updating one of our documents
-            newer = self.get_app_totals(retry.keys())
-            self.update_app_totals(retry, newer)
-
-    def sum_up_app(self, item, apps):
-        if ('app_uuid' in item and
-           ('downloads_count' in item or 'users_count' in item)):
-            id_ = item['app_uuid']
-            apps[id_]['downloads'] += item.get('downloads_count', 0)
-            apps[id_]['users'] += item.get('users_count', 0)
-
     def __call__(self, batch):
         holder = defaultdict(list)
-        apps = defaultdict(lambda: dict(downloads=0, users=0))
         today = datetime.date.today()
 
         # sort data into index/type buckets
@@ -278,14 +216,7 @@ class ESWrite(Plugin):
             index = self._index_name(date)
             category = item.pop('category', 'unknown')
             holder[(index, category)].append(item)
-            # upsert totals data for app download/users
-            self.sum_up_app(item, apps)
 
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs, id_field='uid')
-
-        # do we need to update total counts?
-        if apps:
-            found = self.get_app_totals(apps.keys())
-            self.update_app_totals(apps, found)
