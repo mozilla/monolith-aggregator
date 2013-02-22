@@ -1,7 +1,6 @@
 from collections import defaultdict
 from operator import itemgetter
 from itertools import groupby
-from uuid import uuid1
 from urlparse import urljoin
 
 import requests
@@ -48,8 +47,7 @@ class InstallsAggregator(object):
                 for anonymous, group in groupby(addon_group,
                                                 key=lambda x: x['anonymous']):
                     count = sum([i['data']['installs'] for i in group])
-                    yield {'uuid': uuid1().hex,
-                           'date': date,
+                    yield {'date': date,
                            'add_on': addon_id,
                            'installs_count': count,
                            'anonymous': anonymous,
