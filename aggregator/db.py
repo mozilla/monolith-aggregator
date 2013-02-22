@@ -91,17 +91,6 @@ class Database(object):
         finally:
             self._transaction = None
 
-    def put(self, category="unknown", date=None, source_id="unkown", **data):
-        if date is None:
-            date = today()
-        data.setdefault('date', date)
-
-        # store in db
-        # XXX try..except etc
-        self.engine.execute(PUT_QUERY, uid=urlsafe_uuid(date), date=date,
-                            category=category, value=json_dumps(data),
-                            source=source_id)
-
     def put_batch(self, batch):
         # XXX use source_id as a key with dates for updates
         # so we don't put dupes
