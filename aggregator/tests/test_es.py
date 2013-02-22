@@ -1,5 +1,4 @@
 import atexit
-import collections
 import datetime
 import os
 import os.path
@@ -8,7 +7,6 @@ import shutil
 import subprocess
 import tempfile
 import time
-import uuid
 
 from unittest2 import TestCase
 

@@ -39,7 +39,6 @@ def inject(func):
     return type(func.__name__.upper(), (_FuncPlugin,), {'func': __func})
 
 
-
 @inject
 def stdout(batch):
     for data in batch:

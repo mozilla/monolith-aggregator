@@ -1,8 +1,6 @@
 from collections import defaultdict
 import datetime
 
-from pyelasticsearch import ElasticHttpError
-from pyelasticsearch import ElasticHttpNotFoundError
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
