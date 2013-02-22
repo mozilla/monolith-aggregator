@@ -146,7 +146,7 @@ class ESProcess(object):
 
     def wait_until_ready(self):
         now = time.time()
-        while time.time() - now < 10:
+        while time.time() - now < 30:
             try:
                 # check to see if our process is ready
                 health = self.client.health()
