@@ -70,20 +70,15 @@ class Database(object):
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = self.session_factory()
 
-    def put(self, uid=None, category="unknown", date=None,
-            source_id="unkown", **data):
+    def put(self, category="unknown", date=None, source_id="unkown", **data):
         if date is None:
             date = today()
-        if uid is None:
-            uid = urlsafe_uuid(date)
-
         data.setdefault('date', date)
 
         # store in db
         # XXX try..except etc
-        self.engine.execute(PUT_QUERY, uid=uid, date=date, category=category,
-                            value=json_dumps(data),
-                            source=source_id)
+        self.engine.execute(PUT_QUERY, uid=urlsafe_uuid(date), date=date,
+            category=category, value=json_dumps(data), source=source_id)
 
     def put_batch(self, batch):
         # XXX use source_id as a key with dates for updates
@@ -94,11 +89,9 @@ class Database(object):
         for source_id, item in batch:
             item = dict(item)
             date = item.pop('date', now)
-            uid = item.pop('uid', urlsafe_uuid(date))
             category = item.pop('category', 'unknown')
-            session.add(Record(uid=uid, date=date, category=category,
-                               value=json_dumps(item),
-                               source=source_id))
+            session.add(Record(uid=urlsafe_uuid(date), date=date,
+                category=category, value=json_dumps(item), source=source_id))
         session.commit()
 
     def get(self, category=None, start_date=None, end_date=None,
