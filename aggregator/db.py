@@ -5,6 +5,7 @@ from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.types import BINARY
+from sqlalchemy.sql import text
 
 from aggregator.util import json_dumps, all_, urlsafe_uuid
 
@@ -33,12 +34,12 @@ class Record(_Model):
 
 record = Record.__table__
 
-PUT_QUERY = """\
+PUT_QUERY = text("""\
 insert into record
     (uid, date, category, value)
 values
     (:uid, :date, :category, :value)
-"""
+""")
 
 
 def get_engine(sqluri, pool_size=100, pool_recycle=60, pool_timeout=30):
@@ -55,7 +56,11 @@ class Database(object):
 
     def __init__(self, engine=None, sqluri=None, **params):
         self.engine = engine or get_engine(sqluri, **params)
-        if sqluri is not None and not sqluri.startswith('sqlite'):
+        self.mysql = 'mysql' in self.engine.driver
+
+        if self.mysql:
+            # mysql specific settings
+            # XXX you need to be SUPER user to do these calls.
             self.engine.execute("SET GLOBAL innodb_file_format='Barracuda'")
             self.engine.execute("SET GLOBAL innodb_file_per_table=1")
 
