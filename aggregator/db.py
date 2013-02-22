@@ -91,22 +91,34 @@ class Database(object):
         finally:
             self._transaction = None
 
-    def put(self, batch):
-        # XXX use source_id as a key with dates for updates
-        # so we don't put dupes
-        session = self._transaction
-        if session is None:
-            raise ValueError('You need to be in a transaction')
+    def in_transaction(self):
+        return self._transaction is not None
 
-        now = today()
-        for source_id, item in batch:
-            item = dict(item)
-            date = item.pop('date', now)
-            category = item.pop('category', 'unknown')
-            session.add(Record(uid=urlsafe_uuid(date),
-                               date=date, category=category,
-                               value=json_dumps(item),
-                               source=source_id))
+    def put(self, batch):
+        if not self.in_transaction():
+            self.start_transaction()
+            explicit_transaction = True
+        else:
+            explicit_transaction = False
+
+        session = self._transaction
+        try:
+            now = today()
+            for source_id, item in batch:
+                item = dict(item)
+                date = item.pop('date', now)
+                category = item.pop('category', 'unknown')
+                session.add(Record(uid=urlsafe_uuid(date),
+                                date=date, category=category,
+                                value=json_dumps(item),
+                                source=source_id))
+        except Exception:
+            if explicit_transaction:
+                self.rollback_transaction()
+            raise
+        else:
+            if explicit_transaction:
+                self.commit_transaction()
 
     def get(self, category=None, start_date=None, end_date=None,
             source_id=None):
