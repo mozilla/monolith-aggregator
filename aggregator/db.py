@@ -3,7 +3,8 @@ from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
-from aggregator.util import json_dumps, all_, urlsafe_uuid, Transactional
+from aggregator.util import json_dumps, all_, Transactional
+from aggregator.uid import urlsafe_uid
 
 
 _Model = declarative_base()
@@ -50,7 +51,7 @@ class Database(Transactional):
                 # fail with KeyError if they aren't present
                 date = item.pop('date')
                 category = item.pop('category')
-                session.add(Record(uid=urlsafe_uuid(date),
+                session.add(Record(uid=urlsafe_uid(date),
                                    date=date, category=category,
                                    value=json_dumps(item),
                                    source=source_id))
