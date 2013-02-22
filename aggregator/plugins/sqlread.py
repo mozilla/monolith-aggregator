@@ -18,17 +18,17 @@ class SQLRead(Plugin):
 
         self.engine = create_engine(self.sqluri, **extras)
         self.query = text(options['query'])
+        self.mysql = 'mysql' in self.engine.driver
+
+    def _check(self, data):
+        if 'date' in data:
+            date = data['date']
+            if isinstance(date, basestring):
+                data = dict(data)
+                data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+        return data
 
     def __call__(self, start_date, end_date):
-
-        def _check(data):
-            # XXX sqlite crapiness ?
-            if 'date' in data:
-                date = data['date']
-                if isinstance(date, basestring):
-                    data = dict(data)
-                    data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
-            return data
 
         query_params = {}
         unwanted = ('database', 'parser', 'here', 'query')
@@ -41,4 +41,8 @@ class SQLRead(Plugin):
         query_params['start_date'] = start_date
         query_params['end_date'] = end_date
         data = self.engine.execute(self.query, **query_params)
-        return (_check(line) for line in data)
+
+        if self.mysql:
+            return data
+
+        return (self._check(line) for line in data)
