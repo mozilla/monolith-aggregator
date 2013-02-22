@@ -21,25 +21,24 @@ def get_data(count, key, user, addon_id, date=None, **data):
     def __get_data(user=None, date=None, anonymous=None, **data):
         global DATA_ID
         DATA_ID += 1
-        return{
-               'id': DATA_ID,
-               'key': key,
-               'user': user,
-               'data': data,
-               'date': date,
-               'anonymous': anonymous}
+        return {'id': DATA_ID,
+                'key': key,
+                'user': user,
+                'data': data,
+                'date': date,
+                'anonymous': anonymous}
 
     if date is None:
         date = datetime(2013, 02, 12, 17, 34)
 
     returned_data = []
     for i in range(1, count + 1):
-        returned_data.append(__get_data(
-            user=user,
-            addon_id=addon_id,
-            anonymous=(user == 'anonymous'),
-            date=(date + timedelta(days=i)).isoformat(),
-            **data))
+        data_ = __get_data(user=user,
+                           addon_id=addon_id,
+                           anonymous=(user == 'anonymous'),
+                           date=(date + timedelta(days=i)).isoformat(),
+                           **data)
+        returned_data.append(data_)
     return returned_data
 
 
@@ -105,21 +104,18 @@ class TestAPIReader(TestCase):
             if offset == 80:
                 next_uri = None
             else:
-                next_uri = self.resource_uri\
-                        + "/?limit=20&key=app.installs&offset=%d" % offset
+                query = '/?limit=20&key=app.installs&offset=%d'
+                next_uri = self.resource_uri + query % offset
 
             HTTPretty.register_uri(
                 HTTPretty.GET,
                 regexp,
-                body=json.dumps(
-                    {'meta': {
-                        "limit": 20,
-                        "next": next_uri,
-                        "offset": 0,
-                        "previous": None,
-                        "total_count": len(raw_values)
-                    },
-                    'objects': rest_data}))
+                body=json.dumps({'meta': {"limit": 20,
+                                          "next": next_uri,
+                                          "offset": 0,
+                                          "previous": None,
+                                          "total_count": len(raw_values)},
+                                 'objects': rest_data}))
 
             rest = islice(values, 20)
             rest_data = list(rest)

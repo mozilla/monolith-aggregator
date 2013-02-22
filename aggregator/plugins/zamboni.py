@@ -46,7 +46,7 @@ class InstallsAggregator(object):
             for addon_id, addon_group in addons:
                 # for each addon, group by user.
                 for anonymous, group in groupby(addon_group,
-                                       key=lambda x: x['anonymous']):
+                                                key=lambda x: x['anonymous']):
                     count = sum([i['data']['installs'] for i in group])
                     yield {'uuid': uuid1().hex,
                            'date': date,
