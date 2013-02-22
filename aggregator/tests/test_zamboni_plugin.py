@@ -126,7 +126,7 @@ class TestAPIReader(TestCase):
 
         reader = APIReader(None, keys='app.installs',
                            endpoint='http://' + self.endpoint)
-        values = list(reader(self.last_week, self.yesterday))
+        values = list(reader.extract(self.last_week, self.yesterday))
 
         # If we get back 60 values, it means that all the data had been used
         # and aggregated, so we're good.

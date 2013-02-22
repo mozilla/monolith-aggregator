@@ -18,7 +18,7 @@ class FileReader(Plugin):
         self._data_format = re.compile(options['data_format'])
         self._category = options['category']
 
-    def __call__(self, start_date, end_date):
+    def extract(self, start_date, end_date):
         date = start_date
         while date <= end_date:
             url = self._baseurl + date.strftime(self._filename_format)

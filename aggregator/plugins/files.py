@@ -8,6 +8,6 @@ class FileWriter(Plugin):
         self._filename = options['filename']
         self._file = open(self._filename, 'w+')
 
-    def __call__(self, batch):
+    def inject(self, batch):
         for data in batch:
             self._file.write(json_dumps(data))

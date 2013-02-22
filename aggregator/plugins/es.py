@@ -204,7 +204,7 @@ class ESWrite(Plugin):
                                         body,
                                         encode_body=False)
 
-    def __call__(self, batch):
+    def inject(self, batch):
         holder = defaultdict(list)
         today = datetime.date.today()
 

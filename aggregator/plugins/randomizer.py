@@ -11,7 +11,7 @@ class RandomGenerator(Plugin):
     def __init__(self, **options):
         self.options = options
 
-    def __call__(self, start_date, end_date):
+    def extract(self, start_date, end_date):
         platforms = self.options.get('platforms')
         addons = int(self.options.get('addons', 100))
         if platforms is None:

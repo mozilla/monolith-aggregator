@@ -339,7 +339,7 @@ class TestESWrite(TestCase, ESTestHarness):
             'foo': 'bar',
             'baz': 2,
         })
-        plugin([data])
+        plugin.inject([data])
         es_client.refresh()
         res = es_client.search({'query': {'match_all': {}}})
         source = res['hits']['hits'][0]['_source']

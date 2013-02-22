@@ -9,7 +9,8 @@ from unittest2 import TestCase
 from sqlalchemy import create_engine
 
 from aggregator.extract import extract, main
-from aggregator.plugins import plugin
+from aggregator.plugins import inject as inject_plugin
+from aggregator.plugins import extract as extract_plugin
 from aggregator.util import word2daterange
 from aggregator.engine import AlreadyDoneError
 from sqlalchemy.sql import text
@@ -19,7 +20,7 @@ _res = []
 _FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
 
 
-@plugin
+@inject_plugin
 def put_es(data, **options):
     """ElasticSearch
     """
@@ -27,7 +28,7 @@ def put_es(data, **options):
         _res.append(d)
 
 
-@plugin
+@extract_plugin
 def get_ga(start_date, end_date, **options):
     """Google Analytics
     """
@@ -35,7 +36,7 @@ def get_ga(start_date, end_date, **options):
         yield {'from': 'Google Analytics'}
 
 
-@plugin
+@extract_plugin
 def get_rest(start_date, end_date, **options):
     """Solitude
     """
@@ -43,7 +44,7 @@ def get_rest(start_date, end_date, **options):
         yield {'from': 'Solitude'}
 
 
-@plugin
+@extract_plugin
 def get_market_place(start_date, end_date, **options):
     """MarketPlace
     """

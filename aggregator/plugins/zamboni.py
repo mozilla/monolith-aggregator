@@ -100,7 +100,7 @@ class APIReader(Plugin):
         params = {'key': key, 'id__gte': min_id, 'id__lte': max_id}
         requests.delete(self.endpoint, params=params)
 
-    def __call__(self, start_date, end_date):
+    def extract(self, start_date, end_date):
         # we want to do a call for each key we have.
         for key in self.keys:
             data = self._get_data(key, start_date, end_date)

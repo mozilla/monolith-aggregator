@@ -53,12 +53,12 @@ class Engine(object):
             greenlets.join()
         return eoq
 
-    def _put_data(self, callable, data):
-        return callable(data)
+    def _put_data(self, plugin, data):
+        return plugin.inject(data)
 
     def _get_data(self, plugin, start_date, end_date):
         try:
-            for item in plugin(start_date, end_date):
+            for item in plugin.extract(start_date, end_date):
                 self.queue.put((plugin.get_id(), item))
         finally:
             self.queue.put('END')

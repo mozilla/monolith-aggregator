@@ -28,7 +28,7 @@ class SQLRead(Plugin):
                 data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
         return data
 
-    def __call__(self, start_date, end_date):
+    def extract(self, start_date, end_date):
 
         query_params = {}
         unwanted = ('database', 'parser', 'here', 'query')

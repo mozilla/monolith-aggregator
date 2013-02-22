@@ -86,7 +86,7 @@ class GoogleAnalytics(Plugin):
             name = name[len('ga:'):]
         return name
 
-    def __call__(self, start_date, end_date):
+    def extract(self, start_date, end_date):
         # we won't use GA aggregation feature here,
         # but extract day-by-day
 

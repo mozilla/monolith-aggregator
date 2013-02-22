@@ -11,5 +11,5 @@ class TestRandomGenerator(TestCase):
         end_date = datetime.datetime(year=2013, month=02, day=28)
 
         gen = RandomGenerator(addons=1)
-        self.assertEquals(len(list(gen(start_date, end_date))),
+        self.assertEquals(len(list(gen.extract(start_date, end_date))),
                           (end_date - start_date).days)
