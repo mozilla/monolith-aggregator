@@ -109,9 +109,9 @@ class Database(object):
                 date = item.pop('date', now)
                 category = item.pop('category', 'unknown')
                 session.add(Record(uid=urlsafe_uuid(date),
-                                date=date, category=category,
-                                value=json_dumps(item),
-                                source=source_id))
+                                   date=date, category=category,
+                                   value=json_dumps(item),
+                                   source=source_id))
         except Exception:
             if explicit_transaction:
                 self.rollback_transaction()
