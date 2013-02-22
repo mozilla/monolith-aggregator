@@ -65,7 +65,7 @@ def iso2datetime(data):
 
 class GoogleAnalytics(Plugin):
     def __init__(self, **options):
-        self.options = options
+        super(GoogleAnalytics, self).__init__(**options)
 
         with open(options['oauth_token']) as f:
             token = json.loads(f.read())

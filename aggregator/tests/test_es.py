@@ -357,18 +357,18 @@ class TestESWrite(TestCase, ESTestHarness):
     def test_call(self):
         plugin = self._make_one()
         es_client = self.es_process.client
-        data = {
+        data = ('source_id', {
             'category': 'downloads',
             'date': datetime.datetime(2012, 7, 4),
             'foo': 'bar',
             'baz': 2,
-        }
+        })
         plugin([data])
         es_client.refresh()
         res = es_client.search({'query': {'match_all': {}}})
         source = res['hits']['hits'][0]['_source']
         for field in ('foo', 'baz'):
-            self.assertEqual(source[field], data[field])
+            self.assertEqual(source[field], data[1][field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')
 
     def test_sum_up_app(self):
@@ -455,7 +455,7 @@ class TestESWrite(TestCase, ESTestHarness):
             {'app_uuid': '1', 'downloads_count': 5, 'users_count': 10},
             {'app_uuid': '4', 'downloads_count': 1, 'users_count': 1},
         ]
-        plugin(data)
+        plugin([('fake_id', d) for d in data])
 
         res = client.multi_get('totals', 'apps', {'ids': ['1', '2', '3', '4']})
         docs = dict([(d['_id'], d) for d in res['docs']])

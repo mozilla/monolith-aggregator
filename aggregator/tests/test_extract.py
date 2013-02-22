@@ -57,12 +57,12 @@ DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
 
 DB = 'sqlite:///' + DB_FILES[0]
 
-CREATE = text("""\
+CREATE = """\
 create table downloads
     (count INTEGER, date DATE)
 """
 
-INSERT = """\
+INSERT = text("""\
 insert into downloads (count, date)
 values (:count, :date)
 """)
@@ -110,7 +110,7 @@ class TestExtract(TestCase):
     def test_extract(self):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
-        self.assertEqual(len(_res), 6090)
+        self.assertEqual(len(_res), 6080)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -118,7 +118,7 @@ class TestExtract(TestCase):
 
         # unless we force it
         extract(self.config, start, end, force=True)
-        self.assertEqual(len(_res), 18270)
+        self.assertEqual(len(_res), 6080 * 3)
 
     def test_main(self):
         # XXX this still depends on google.com, on this call:
@@ -131,7 +131,7 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 6090)
+        self.assertEqual(len(_res), 6080)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -151,4 +151,4 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 18270)
+        self.assertEqual(len(_res), 6080 * 3)

@@ -7,7 +7,7 @@ from aggregator.plugins import Plugin
 
 class SQLRead(Plugin):
     def __init__(self, **options):
-        self.options = options
+        super(SQLRead, self).__init__(**options)
         self.sqluri = options['database']
         extras = {}
 

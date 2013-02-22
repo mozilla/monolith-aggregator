@@ -85,7 +85,8 @@ class Database(object):
     def put_batch(self, batch):
         session = self.session_factory()
         now = today()
-        for item in batch:
+        for source_id, item in batch:
+            # XXX use source_id as a key with dates for updates
             item = dict(item)
             date = item.pop('date', now)
             uid = item.pop('uid', urlsafe_uuid(date))

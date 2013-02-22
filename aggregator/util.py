@@ -1,7 +1,6 @@
 import json
 from base64 import urlsafe_b64encode
 from time import mktime
-from time import time
 import random
 import sys
 import logging

@@ -1,5 +1,4 @@
 import datetime
-from hashlib import md5
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Date, Column, Integer
@@ -48,19 +47,6 @@ class History(object):
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = self.session_factory()
 
-    def _get_digest(self, source):
-        unwanted = ('parser', 'here')
-        digest = md5()
-        items = source.options.items()
-        items.sort()
-
-        for key, value in items:
-            if key in unwanted:
-                continue
-            digest.update(value)
-
-        return digest.hexdigest()
-
     def add_entry(self, sources, start_date, end_date=None):
         if end_date is None:
             drange = (start_date,)
@@ -72,13 +58,13 @@ class History(object):
         session = self.session_factory()
         for date in drange:
             for source in sources:
-                session.add(Transaction(source=self._get_digest(source),
+                session.add(Transaction(source=source.digest(),
                                         date=date))
         session.commit()
 
     def exists(self, source, start_date, end_date):
         query = self.session.query(Transaction)
-        query = query.filter(Transaction.source == self._get_digest(source))
+        query = query.filter(Transaction.source == source.digest())
         query = query.filter(Transaction.date >= start_date)
         query = query.filter(Transaction.date <= end_date)
         return query.first() is not None

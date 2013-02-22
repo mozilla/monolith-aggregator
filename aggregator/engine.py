@@ -56,10 +56,10 @@ class Engine(object):
     def _put_data(self, callable, data):
         return callable(data)
 
-    def _get_data(self, callable, start_date, end_date):
+    def _get_data(self, plugin, start_date, end_date):
         try:
-            for item in callable(start_date, end_date):
-                self.queue.put(item)
+            for item in plugin(start_date, end_date):
+                self.queue.put((plugin.digest(), item))
         finally:
             self.queue.put('END')
 
