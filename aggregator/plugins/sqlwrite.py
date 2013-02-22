@@ -8,7 +8,7 @@ class SQLInjecter(object):
         self.db = Database(sqluri=options['database'])
 
     def inject(self, batch):
-        self.db.put_batch(batch)
+        self.db.put(batch)
 
     def start_transaction(self):
         self.db.start_transaction()

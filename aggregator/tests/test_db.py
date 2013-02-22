@@ -26,7 +26,7 @@ class TestDatabase(TestCase):
 
     def test_record_creation_defaults_to_today(self):
         before = self._today
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', another_key='value2')),
         ])
         query = self.db.session.query(Record)
@@ -34,7 +34,7 @@ class TestDatabase(TestCase):
         self.assertTrue(before <= results[0].date <= self._today)
 
     def test_record_creation_use_specified_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._last_week)),
         ])
         query = self.db.session.query(Record)
@@ -45,7 +45,7 @@ class TestDatabase(TestCase):
         self.assertRaises(ValueError, self.db.get)
 
     def test_filter_end_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._last_week)),
             ('test', dict(category='foo', key='value', date=self._today)),
         ])
@@ -54,7 +54,7 @@ class TestDatabase(TestCase):
         self.assertEquals(results[0].date, self._last_week)
 
     def test_filter_start_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._last_week)),
             ('test', dict(category='foo', key='value', date=self._yesterday)),
         ])
@@ -63,7 +63,7 @@ class TestDatabase(TestCase):
         self.assertEquals(results[0].date, self._yesterday)
 
     def test_filter_start_and_end_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._last_week)),
             ('test', dict(category='foo', key='value', date=self._yesterday)),
             ('test', dict(category='foo', key='value', date=self._today)),
@@ -73,14 +73,14 @@ class TestDatabase(TestCase):
         self.assertEquals(len(results), 2)
 
     def test_put_item_with_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._yesterday)),
         ])
         results = self.db.get(start_date=self._last_week).all()
         self.assertEquals(len(results), 1)
 
     def test_filter_category(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value')),
             ('test', dict(category='foobar', key='value')),
         ])
@@ -89,7 +89,7 @@ class TestDatabase(TestCase):
         self.assertEquals(results[0].category, 'foo')
 
     def test_filter_category_and_date(self):
-        self.db.put_batch([
+        self.db.put([
             ('test', dict(category='foo', key='value', date=self._last_week)),
             ('test', dict(category='foo', key='value', date=self._yesterday)),
             ('test', dict(category='bar', key='value', date=self._yesterday)),

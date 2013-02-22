@@ -91,7 +91,7 @@ class Database(object):
         finally:
             self._transaction = None
 
-    def put_batch(self, batch):
+    def put(self, batch):
         # XXX use source_id as a key with dates for updates
         # so we don't put dupes
         session = self._transaction
