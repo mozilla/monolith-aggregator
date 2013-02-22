@@ -1,6 +1,5 @@
 import json
 from base64 import urlsafe_b64encode
-from time import mktime
 import random
 import logging
 import fcntl
@@ -21,9 +20,10 @@ class JSONEncoder(json.JSONEncoder):
     """A JSON encoder takking care of dates"""
 
     def default(self, obj):
-        if isinstance(obj, (datetime, date)):
-            return int(mktime(obj.timetuple()))
-
+        if isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        elif isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
         return json.JSONEncoder.default(self, obj)
 
 
