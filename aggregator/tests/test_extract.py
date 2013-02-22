@@ -12,6 +12,7 @@ from aggregator.extract import extract, main
 from aggregator.plugins import plugin
 from aggregator.util import word2daterange
 from aggregator.engine import AlreadyDoneError
+from sqlalchemy.sql import text
 
 
 _res = []
@@ -56,7 +57,7 @@ DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
 
 DB = 'sqlite:///' + DB_FILES[0]
 
-CREATE = """\
+CREATE = text("""\
 create table downloads
     (count INTEGER, date DATE)
 """
@@ -64,7 +65,7 @@ create table downloads
 INSERT = """\
 insert into downloads (count, date)
 values (:count, :date)
-"""
+""")
 
 
 class TestExtract(TestCase):
