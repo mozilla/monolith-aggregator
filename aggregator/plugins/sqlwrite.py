@@ -9,3 +9,12 @@ class SQLInjecter(object):
 
     def inject(self, batch):
         self.db.put_batch(batch)
+
+    def start_transaction(self):
+        self.db.start_transaction()
+
+    def commit_transaction(self):
+        self.db.commit_transaction()
+
+    def rollback_transaction(self):
+        self.db.rollback_transaction()

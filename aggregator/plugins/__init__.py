@@ -18,6 +18,15 @@ class Plugin(object):
     def get_id(self):
         return self.options['id']
 
+    def start_transaction(self):
+        pass
+
+    def commit_transaction(self):
+        pass
+
+    def rollback_transaction(self):
+        pass
+
 
 class _FuncPlugin(Plugin):
     def extract(self, *args):

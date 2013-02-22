@@ -69,6 +69,27 @@ class Database(object):
         record.create(checkfirst=True)
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = self.session_factory()
+        self._transaction = None
+
+    #
+    # transaction management
+    #
+    def start_transaction(self):
+        if self._transaction is not None:
+            raise ValueError('A transaction is already running')
+        self._transaction = self.session_factory()
+
+    def commit_transaction(self):
+        try:
+            self._transaction.commit()
+        finally:
+            self._transaction = None
+
+    def rollback_transaction(self):
+        try:
+            self._transaction.rollback()
+        finally:
+            self._transaction = None
 
     def put(self, category="unknown", date=None, source_id="unkown", **data):
         if date is None:
@@ -83,16 +104,19 @@ class Database(object):
     def put_batch(self, batch):
         # XXX use source_id as a key with dates for updates
         # so we don't put dupes
+        session = self._transaction
+        if session is None:
+            raise ValueError('You need to be in a transaction')
 
-        session = self.session_factory()
         now = today()
         for source_id, item in batch:
             item = dict(item)
             date = item.pop('date', now)
             category = item.pop('category', 'unknown')
-            session.add(Record(uid=urlsafe_uuid(date), date=date,
-                category=category, value=json_dumps(item), source=source_id))
-        session.commit()
+            session.add(Record(uid=urlsafe_uuid(date),
+                               date=date, category=category,
+                               value=json_dumps(item),
+                               source=source_id))
 
     def get(self, category=None, start_date=None, end_date=None,
             source_id=None):

@@ -53,6 +53,22 @@ class Engine(object):
             greenlets.join()
         return eoq
 
+    #
+    # transaction managment
+    #
+    def _start_transactions(self, plugins):
+        for plugin in plugins:
+            plugin.start_transaction()
+
+    def _commit_transactions(self, plugins):
+        # XXX what happends when this fails?
+        for plugin in plugins:
+            plugin.commit_transaction()
+
+    def _rollback_transactions(self, plugins):
+        for plugin in plugins:
+            plugin.rollback_transaction()
+
     def _put_data(self, plugin, data):
         return plugin.inject(data)
 
@@ -71,22 +87,28 @@ class Engine(object):
                     raise AlreadyDoneError()
 
             logger.info('Running phase %r' % phase)
-            greenlets = Group()
 
-            # each callable will push its result in the queue
-            for source in sources:
-                greenlets.spawn(self._get_data, source, start_date,
-                                end_date)
+            self._start_transactions(targets)
+            try:
+                greenlets = Group()
+                # each callable will push its result in the queue
+                for source in sources:
+                    greenlets.spawn(self._get_data, source, start_date,
+                                    end_date)
+                # looking at the queue
+                processed = 0
+                while processed < len(sources):
+                    eoq = self._push_to_target(targets)
+                    if eoq:
+                        processed += 1
+                    gevent.sleep(0)
 
-            # looking at the queue
-            processed = 0
-            while processed < len(sources):
-                eoq = self._push_to_target(targets)
-                if eoq:
-                    processed += 1
-                gevent.sleep(0)
-
-            greenlets.join()
+                greenlets.join()
+            except Exception, e:
+                self._rollback_transactions(targets)
+                raise
+            else:
+                self._commit_transactions(targets)
 
             # if we reach this point we can consider the transaction a success
             # for these sources
