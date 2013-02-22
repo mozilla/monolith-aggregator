@@ -1,5 +1,4 @@
 from collections import defaultdict
-import datetime
 
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
@@ -203,15 +202,14 @@ class ESWrite(Plugin):
 
     def inject(self, batch):
         holder = defaultdict(list)
-        today = datetime.date.today()
 
         # sort data into index/type buckets
         for source_id, item in batch:
             # XXX use source_id as a key with dates for updates
             item = dict(item)
-            date = item.get('date', today)
+            date = item['date']
             index = self._index_name(date)
-            category = item.pop('category', 'unknown')
+            category = item.pop('category')
             holder[(index, category)].append(item)
 
         # submit one bulk request per index/type combination
