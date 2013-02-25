@@ -74,6 +74,7 @@ class TestAPIReader(TestCase):
         self.now = datetime(2013, 02, 12, 17, 34)
         self.yesterday = self.now - timedelta(days=1)
         self.last_week = self.now - timedelta(days=7)
+        self.calls = 0
         super(TestAPIReader, self).setUp(*args, **kwargs)
 
     def _get_raw_values(self, key):
@@ -85,7 +86,7 @@ class TestAPIReader(TestCase):
         random.shuffle(data)
         return data
 
-    def mock_uris(self):
+    def mock_fetch_uris(self):
         raw_values = self._get_raw_values('app.installs')
         values = iter(raw_values)
 
@@ -122,7 +123,7 @@ class TestAPIReader(TestCase):
 
     @httprettified
     def test_rest_endpoint_is_called(self):
-        self.mock_uris()
+        self.mock_fetch_uris()
 
         reader = APIReader(None, keys='app.installs',
                            endpoint='http://' + self.endpoint)
@@ -131,3 +132,29 @@ class TestAPIReader(TestCase):
         # If we get back 60 values, it means that all the data had been used
         # and aggregated, so we're good.
         self.assertEquals(len(values), 60)
+
+    @httprettified
+    def test_purge_raises_on_error(self):
+
+        self.calls = 0
+
+        def _callback(method, uri, headers):
+            self.calls += 1
+            return ""
+
+        HTTPretty.register_uri(
+            HTTPretty.DELETE,
+            re.compile(self.endpoint + ".*app.*"),
+            body=_callback,
+            status=204)
+
+        HTTPretty.register_uri(
+            HTTPretty.DELETE,
+            re.compile(self.endpoint + ".*foo.*"),
+            body=_callback,
+            status=204)
+
+        reader = APIReader(None, keys='app.installs,foo.bar',
+                           endpoint='http://' + self.endpoint)
+        reader.purge(self.last_week, self.now)
+        self.assertEquals(self.calls, 2)

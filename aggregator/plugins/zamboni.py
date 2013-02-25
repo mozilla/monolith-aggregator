@@ -92,11 +92,14 @@ class APIReader(Plugin):
         _do_query(self.endpoint, params)
         return self._retrieved_data[key]
 
-    def _delete_data(self, key):
-        min_id = min([int(i['id']) for i in self._retrieved_data[key]])
-        max_id = max([int(i['id']) for i in self._retrieved_data[key]])
-        params = {'key': key, 'id__gte': min_id, 'id__lte': max_id}
-        requests.delete(self.endpoint, params=params)
+    def purge(self, start_date, end_date):
+        for key in self.keys:
+            params = {'key': key,
+                      'recorded__gte': start_date.isoformat(),
+                      'recorded__lte': end_date.isoformat()}
+            res = requests.delete(self.endpoint, params=params,
+                                  auth=self.oauth_header)
+            res.raise_for_status()
 
     def extract(self, start_date, end_date):
         # we want to do a call for each key we have.
