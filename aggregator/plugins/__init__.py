@@ -9,11 +9,11 @@ class Plugin(object):
     def extract(self, start_date, end_date):
         raise NotImplementedError(self)
 
-    def inject(self, batch):
+    def inject(self, batch, overwrite=False):
         raise NotImplementedError(self)
 
     def purge(self, *args):
-        raise NotImplementedError(self)
+        pass
 
     def get_id(self):
         return self.options['id']
@@ -29,8 +29,8 @@ class Plugin(object):
 
 
 class _FuncPlugin(Plugin):
-    def extract(self, *args):
-        return self.func(*args)
+    def extract(self, *args, **kw):
+        return self.func(*args, **kw)
     inject = extract
 
 

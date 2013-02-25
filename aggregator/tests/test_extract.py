@@ -22,11 +22,20 @@ TODAY = datetime.date.today()
 
 
 @inject_plugin
-def put_es(data, **options):
+def put_es(data, overwrite, **options):
     """ElasticSearch
     """
-    for d in data:
-        _res.append(d)
+    size = len(data)
+    if overwrite:
+        # we'll add 25% less
+        max = int(float(size) * 0.75)
+    else:
+        max = size
+
+    for index, line in enumerate(data):
+        if index >= max:
+            break
+        _res.append(line)
 
 
 @extract_plugin
@@ -113,7 +122,7 @@ class TestExtract(TestCase):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
         count = len(_res)
-        self.assertTrue(count > 2000)
+        self.assertTrue(count > 1000, count)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -121,7 +130,9 @@ class TestExtract(TestCase):
 
         # unless we force it
         extract(self.config, start, end, force=True)
-        self.assertEqual(len(_res), count * 3)
+        # an overwrite add 25% less (see put_es() up there)
+        self.assertTrue(len(_res) < count * 3)
+        self.assertTrue(len(_res) > count * 2)
 
     def test_main(self):
         # XXX this still depends on google.com, on this call:
@@ -135,7 +146,7 @@ class TestExtract(TestCase):
             sys.argv[:] = old
 
         count = len(_res)
-        self.assertTrue(count > 1000)
+        self.assertTrue(count > 1000, count)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -155,7 +166,9 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), count * 3)
+        # an overwrite add 25% less (see put_es() up there)
+        self.assertTrue(len(_res) < count * 3)
+        self.assertTrue(len(_res) > count * 2)
 
         # purge only
         old = copy.copy(sys.argv)
@@ -166,4 +179,6 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), count * 3)
+        # an overwrite add 25% less (see put_es() up there)
+        self.assertTrue(len(_res) < count * 3)
+        self.assertTrue(len(_res) > count * 2)

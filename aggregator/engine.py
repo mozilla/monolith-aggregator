@@ -70,7 +70,7 @@ class Engine(object):
             plugin.rollback_transaction()
 
     def _put_data(self, plugin, data):
-        return plugin.inject(data)
+        return plugin.inject(data, overwrite=self.force)
 
     def _get_data(self, plugin, start_date, end_date):
         try:
@@ -119,7 +119,7 @@ class Engine(object):
             for source in sources:
                 try:
                     source.purge(start_date, end_date)
-                except Exception, e:
+                except Exception:
                     logger.error('Failed to purge %r' % source.get_id())
 
     def run(self, start_date, end_date, purge_only=False):

@@ -43,18 +43,27 @@ class Database(Transactional):
         record.metadata.bind = self.engine
         record.create(checkfirst=True)
 
-    def put(self, batch):
+    def put(self, batch, overwrite=False):
+
         with self.transaction() as session:
+            # XXX the real solution here is to implement a
+            # low-level ON DUPLICATE KEY UPDATE call
+            # but for now we'll use merge() and move to
+            # ON DUPLICATE KEY UPDATE if this becomes a
+            # bottleneck
+            if overwrite:
+                add = session.merge
+            else:
+                add = session.add
+
             for source_id, item in batch:
                 item = dict(item)
-                # remove date / type from the item dump,
-                # fail with KeyError if they aren't present
                 date = item.pop('_date')
                 type = item.pop('_type')
-                session.add(Record(id=urlsafe_uid(date),
-                                   date=date, type=type,
-                                   source_id=source_id,
-                                   value=json_dumps(item)))
+                add(Record(id=urlsafe_uid(date),
+                           date=date, type=type,
+                           source_id=source_id,
+                           value=json_dumps(item)))
 
     def get(self, start_date=None, end_date=None,
             type=None, source_id=None):
