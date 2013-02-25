@@ -23,7 +23,7 @@ Detailed Documentation
    :maxdepth: 1
 
    install
-   configuration
+   config
    mysql
    ES
    high-availability
