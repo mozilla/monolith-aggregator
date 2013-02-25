@@ -43,7 +43,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Monolith Aggregator'
+project = u'Monolith'
 copyright = u'2013, Mozilla'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -187,7 +187,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'monolith-aggregator.tex', u'Monolith Aggregator Documentation',
+  ('index', 'monolith.tex', u'Monolith Documentation',
    u'Various Authors', 'manual'),
 ]
 
@@ -217,7 +217,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'monolith-aggregator', u'Monolith Aggregator Documentation',
+    ('index', 'monolith', u'Monolith Documentation',
      [u'Various Authors'], 1)
 ]
 
@@ -231,8 +231,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'monolith-aggregator', u'Monolith Aggregator Documentation',
-   u'Various Authors', 'monolith-aggregator',
+  ('index', 'monolith', u'Monolith Documentation',
+   u'Various Authors', 'monolith',
    'One line description of project.', 'Miscellaneous'),
 ]
 
