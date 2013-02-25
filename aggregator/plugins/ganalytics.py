@@ -109,7 +109,7 @@ class GoogleAnalytics(Plugin):
 
             cols = [col['name'] for col in results['columnHeaders']]
             for entry in results['rows']:
-                data = {'date': current, 'category': 'visitors'}
+                data = {'_date': current, '_type': 'visitors'}
 
                 for index, value in enumerate(entry):
                     field = self._fix_name(cols[index])

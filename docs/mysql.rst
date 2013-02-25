@@ -7,10 +7,11 @@ rebuild various Elastic Searches indexes.
 The database stores directly JSON objects, as blobs. It has the following
 fields:
 
-- **category**: the category of data we are storing.
-- **data**: the JSON object, as a blob.
+- **id**: a unique id per row.
 - **date**: the date of the data.
+- **type**: the type of data we are storing.
 - **source_id**: a unique identifier of the source
+- **data**: the JSON object, as a blob.
 
 We have two types of interactions with the database:
 
@@ -19,7 +20,7 @@ We have two types of interactions with the database:
    feed the Elastic Search indexes.
 
 All metrics that are collected from various sources are stored into
-MySQL, in a single table that has a **category**, a **date** and
+MySQL, in a single table that has a **type**, a **date** and
 a **source_id** field. The data itself is stored as-is in a binary
 field.
 

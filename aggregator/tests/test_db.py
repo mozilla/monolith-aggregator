@@ -26,13 +26,13 @@ class TestDatabase(TestCase):
 
     def test_record_creation_no_defaults(self):
         self.assertRaises(KeyError, self.db.put,
-                          [('test', dict(category='foo', key='value'))])
+                          [('test', dict(_type='foo', key='value'))])
         self.assertRaises(KeyError, self.db.put,
-                          [('test', dict(key='value', date=self._today))])
+                          [('test', dict(key='value', _date=self._today))])
 
     def test_record_creation_use_specified_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._last_week)),
+            ('test', dict(_type='foo', key='value', _date=self._last_week)),
         ])
         query = self.db.session.query(Record)
         results = query.all()
@@ -43,8 +43,8 @@ class TestDatabase(TestCase):
 
     def test_filter_end_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._last_week)),
-            ('test', dict(category='foo', key='value', date=self._today)),
+            ('test', dict(_type='foo', key='value', _date=self._last_week)),
+            ('test', dict(_type='foo', key='value', _date=self._today)),
         ])
         results = self.db.get(end_date=self._yesterday).all()
         self.assertEquals(len(results), 1)
@@ -52,8 +52,8 @@ class TestDatabase(TestCase):
 
     def test_filter_start_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._last_week)),
-            ('test', dict(category='foo', key='value', date=self._yesterday)),
+            ('test', dict(_type='foo', key='value', _date=self._last_week)),
+            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
         ])
         results = self.db.get(start_date=self._yesterday).all()
         self.assertEquals(len(results), 1)
@@ -61,9 +61,9 @@ class TestDatabase(TestCase):
 
     def test_filter_start_and_end_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._last_week)),
-            ('test', dict(category='foo', key='value', date=self._yesterday)),
-            ('test', dict(category='foo', key='value', date=self._today)),
+            ('test', dict(_type='foo', key='value', _date=self._last_week)),
+            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
+            ('test', dict(_type='foo', key='value', _date=self._today)),
         ])
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday).all()
@@ -71,33 +71,33 @@ class TestDatabase(TestCase):
 
     def test_put_item_with_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._yesterday)),
+            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
         ])
         results = self.db.get(start_date=self._last_week).all()
         self.assertEquals(len(results), 1)
 
-    def test_filter_category(self):
+    def test_filter_type(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._yesterday)),
-            ('test', dict(category='foobar', key='value', date=self._today)),
+            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
+            ('test', dict(_type='foobar', key='value', _date=self._today)),
         ])
-        results = self.db.get(category='foo').all()
+        results = self.db.get(type='foo').all()
         self.assertEquals(len(results), 1)
-        self.assertEquals(results[0].category, 'foo')
+        self.assertEquals(results[0].type, 'foo')
 
-    def test_filter_category_and_date(self):
+    def test_filter_type_and_date(self):
         self.db.put([
-            ('test', dict(category='foo', key='value', date=self._last_week)),
-            ('test', dict(category='foo', key='value', date=self._yesterday)),
-            ('test', dict(category='bar', key='value', date=self._yesterday)),
-            ('test', dict(category='foo', key='value', date=self._today)),
-            ('test', dict(category='bar', key='value', date=self._today)),
+            ('test', dict(_type='foo', key='value', _date=self._last_week)),
+            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
+            ('test', dict(_type='bar', key='value', _date=self._yesterday)),
+            ('test', dict(_type='foo', key='value', _date=self._today)),
+            ('test', dict(_type='bar', key='value', _date=self._today)),
         ])
         results = self.db.get(start_date=self._last_week,
                               end_date=self._yesterday,
-                              category='foo').all()
+                              type='foo').all()
 
-        categories = [r.category for r in results]
+        types = [r.type for r in results]
 
         self.assertEquals(len(results), 2)
-        self.assertTrue('bar' not in categories)
+        self.assertTrue('bar' not in types)

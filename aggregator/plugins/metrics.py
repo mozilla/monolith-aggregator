@@ -16,7 +16,7 @@ class FileReader(Plugin):
         self._baseurl = metrics_config['url']
         self._filename_format = options['filename_format']
         self._data_format = re.compile(options['data_format'])
-        self._category = options['category']
+        self._type = options['type']
 
     def extract(self, start_date, end_date):
         date = start_date
@@ -31,7 +31,7 @@ class FileReader(Plugin):
 
     def _parse_data(self, content, date):
         def _get_item(data):
-            item = {'category': self._category, 'date': date}
+            item = {'_type': self._type, '_date': date}
             item.update(data.groupdict())
             return item
 

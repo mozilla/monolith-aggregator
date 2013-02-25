@@ -34,7 +34,7 @@ def get_ga(start_date, end_date, **options):
     """Google Analytics
     """
     for i in range(10):
-        yield {'category': 'google_analytics', 'date': TODAY}
+        yield {'_type': 'google_analytics', '_date': TODAY}
 
 
 @extract_plugin
@@ -42,7 +42,7 @@ def get_rest(start_date, end_date, **options):
     """Solitude
     """
     for i in range(100):
-        yield {'category': 'solitude', 'date': TODAY}
+        yield {'_type': 'solitude', '_date': TODAY}
 
 
 @extract_plugin
@@ -50,7 +50,7 @@ def get_market_place(start_date, end_date, **options):
     """MarketPlace
     """
     for i in range(2):
-        yield {'category': 'marketplace', 'date': TODAY}
+        yield {'_type': 'marketplace', '_date': TODAY}
 
 
 DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
@@ -61,12 +61,12 @@ DB = 'sqlite:///' + DB_FILES[0]
 
 CREATE = """\
 create table downloads
-    (count INTEGER, date DATE, category VARCHAR(32))
+    (_date DATE, _type VARCHAR(32), count INTEGER)
 """
 
 INSERT = text("""\
-insert into downloads (count, date, category)
-values (:count, :date, :category)
+insert into downloads (_date, _type, count)
+values (:_date, :_type, :count)
 """)
 
 
@@ -86,7 +86,7 @@ class TestExtract(TestCase):
                 date = today - datetime.timedelta(days=i)
                 for i in range(10):
                     v = random.randint(0, 1000)
-                    engine.execute(INSERT, count=v, date=date, category='sql')
+                    engine.execute(INSERT, _date=date, _type='sql', count=v)
         except Exception:
             self.tearDown()
             raise

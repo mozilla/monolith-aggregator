@@ -19,20 +19,20 @@ class Record(_Model):
         'mysql_key_block_size': '4',
     }
 
-    uid = Column(BINARY(24), primary_key=True)
+    id = Column(BINARY(24), primary_key=True)
     date = Column(Date, nullable=False)
-    category = Column(String(256), nullable=False)
+    type = Column(String(256), nullable=False)
+    source_id = Column(String(32), nullable=False)
     value = Column(Binary)
-    source = Column(String(32), nullable=False)
 
 
 record = Record.__table__
 
 PUT_QUERY = text("""\
 insert into record
-    (uid, date, category, value, source)
+    (id, date, type, source_id, value)
 values
-    (:uid, :date, :category, :value, :source)
+    (:id, :date, :type, :source_id, :value)
 """)
 
 
@@ -47,30 +47,30 @@ class Database(Transactional):
         with self.transaction() as session:
             for source_id, item in batch:
                 item = dict(item)
-                # remove date / category from the item dump,
+                # remove date / type from the item dump,
                 # fail with KeyError if they aren't present
-                date = item.pop('date')
-                category = item.pop('category')
-                session.add(Record(uid=urlsafe_uid(date),
-                                   date=date, category=category,
-                                   value=json_dumps(item),
-                                   source=source_id))
+                date = item.pop('_date')
+                type = item.pop('_type')
+                session.add(Record(id=urlsafe_uid(date),
+                                   date=date, type=type,
+                                   source_id=source_id,
+                                   value=json_dumps(item)))
 
-    def get(self, category=None, start_date=None, end_date=None,
-            source_id=None):
-        if all_((category, start_date, end_date, source_id), None):
+    def get(self, start_date=None, end_date=None,
+            type=None, source_id=None):
+        if all_((start_date, end_date, type, source_id), None):
             raise ValueError("You need to filter something")
 
         query = self.session.query(Record)
-
-        if category is not None:
-            query = query.filter(Record.category == category)
 
         if start_date is not None:
             query = query.filter(Record.date >= start_date)
 
         if end_date is not None:
             query = query.filter(Record.date <= end_date)
+
+        if type is not None:
+            query = query.filter(Record.type == type)
 
         if source_id is not None:
             query = query.filter(Record.source_id == source_id)

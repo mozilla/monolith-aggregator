@@ -189,8 +189,8 @@ class ESWrite(Plugin):
         _encode_json = self.client._encode_json
         body_bits = []
         for doc in docs:
-            id_ = doc.pop(id_field)
-            action = {'index': {'_id': id_}}
+            _id = doc.pop(id_field)
+            action = {'index': {'_id': _id}}
             body_bits.extend([_encode_json(action), _encode_json(doc)])
 
         # Need the trailing newline.
@@ -209,9 +209,9 @@ class ESWrite(Plugin):
             item = dict(item)
             date = item['date']
             index = self._index_name(date)
-            category = item.pop('category')
-            holder[(index, category)].append(item)
+            _type = item.pop('_type')
+            holder[(index, _type)].append(item)
 
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
-            self._bulk_index(key[0], key[1], docs, id_field='uid')
+            self._bulk_index(key[0], key[1], docs, id_field='_id')

@@ -30,7 +30,7 @@ class InstallsAggregator(object):
 
     key = 'app.installs'
 
-    def aggregate(self, items, category):
+    def aggregate(self, items, type):
         # sort by date, addon and then by user.
         general_sort_key = lambda x: (x['date'],
                                       x['data']['addon_id'],
@@ -47,11 +47,12 @@ class InstallsAggregator(object):
                 for anonymous, group in groupby(addon_group,
                                                 key=lambda x: x['anonymous']):
                     count = sum([i['data']['installs'] for i in group])
-                    yield {'date': date,
+                    yield {'_date': date,
+                           '_type': type,
                            'add_on': addon_id,
                            'installs_count': count,
                            'anonymous': anonymous,
-                           'category': category}
+                           }
 
 
 class APIReader(Plugin):

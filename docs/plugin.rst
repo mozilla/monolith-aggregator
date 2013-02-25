@@ -34,8 +34,8 @@ return an iterator containing lines of data.
 
 Each line is a mapping that contains the following keys:
 
-- **date**: the date of the data line - *mandatory*
-- **category**: the category of the data - *optional*
+- **_date**: the date of the data line - *mandatory*
+- **_type**: the type of the data - *mandatory*
 
 Every extra key will be stored as data.
 
@@ -54,9 +54,9 @@ Example:
                 # extract data from somewhere ...
                 data = get_data(date)
 
-                # add date and category keys
-                data['date'] = date
-                data['category'] = 'mycategory'
+                # add date and type keys
+                data['_date'] = date
+                data['_type'] = 'app_installs'
                 yield data
                 date += datetime.timedelta(days=1)
 

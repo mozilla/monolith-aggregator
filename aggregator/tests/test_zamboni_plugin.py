@@ -59,7 +59,7 @@ class TestInstallsAggregator(TestCase):
         random.shuffle(data)
 
         aggregator = InstallsAggregator()
-        yielded = aggregator.aggregate(data, category='foobar')
+        yielded = aggregator.aggregate(data, type='foobar')
         records = [i for i in yielded if i['installs_count'] > 1]
         self.assertEquals(len(records), 20)
 

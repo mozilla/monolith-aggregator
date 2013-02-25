@@ -266,7 +266,6 @@ class TestESSetup(TestCase, ESTestHarness):
             client.status('time_2013-01')['_shards']['total'], 2)
         for i in range(1, 32):
             client.index('time_2013-01', 'downloads', {
-                'category': 'daily',
                 'date': datetime.datetime(2013, 01, i),
                 'count': i % 5,
             })
@@ -332,8 +331,8 @@ class TestESWrite(TestCase, ESTestHarness):
         plugin = self._make_one()
         es_client = self.es_process.client
         data = ('source_id', {
-            'uid': 'abc123',
-            'category': 'downloads',
+            '_id': 'abc123',
+            '_type': 'downloads',
             'date': datetime.datetime(2012, 7, 4),
             'foo': 'bar',
             'baz': 2,

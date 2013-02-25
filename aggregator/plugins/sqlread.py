@@ -21,11 +21,11 @@ class SQLRead(Plugin):
         self.mysql = 'mysql' in self.engine.driver
 
     def _check(self, data):
-        if 'date' in data:
-            date = data['date']
+        if '_date' in data:
+            date = data['_date']
             if isinstance(date, basestring):
                 data = dict(data)
-                data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+                data['_date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
         return data
 
     def extract(self, start_date, end_date):
