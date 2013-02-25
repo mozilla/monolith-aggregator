@@ -134,8 +134,7 @@ class TestAPIReader(TestCase):
         self.assertEquals(len(values), 60)
 
     @httprettified
-    def test_purge_raises_on_error(self):
-
+    def test_purge_calls_delete(self):
         self.calls = 0
 
         def _callback(method, uri, headers):
@@ -158,3 +157,16 @@ class TestAPIReader(TestCase):
                            endpoint='http://' + self.endpoint)
         reader.purge(self.last_week, self.now)
         self.assertEquals(self.calls, 2)
+
+    @httprettified
+    def test_purge_raise_on_errors(self):
+        HTTPretty.register_uri(
+            HTTPretty.DELETE,
+            re.compile(self.endpoint + ".*"),
+            body="",
+            status=400)
+        reader = APIReader(None, keys='app.installs,foo.bar',
+                           endpoint='http://' + self.endpoint)
+
+        with self.assertRaises(Exception):
+            reader.purge(self.last_week, self.now)
