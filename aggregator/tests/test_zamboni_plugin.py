@@ -9,6 +9,7 @@ from aggregator.plugins.zamboni import InstallsAggregator, APIReader
 
 from httpretty import HTTPretty
 from httpretty import httprettified
+from requests import HTTPError
 
 DATA_ID = 0
 
@@ -168,5 +169,5 @@ class TestAPIReader(TestCase):
         reader = APIReader(None, keys='app.installs,foo.bar',
                            endpoint='http://' + self.endpoint)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(HTTPError):
             reader.purge(self.last_week, self.now)
