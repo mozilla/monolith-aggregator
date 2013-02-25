@@ -79,7 +79,7 @@ class Engine(object):
         finally:
             self.queue.put('END')
 
-    def run(self, start_date, end_date):
+    def _extract_inject(self, start_date, end_date):
         for phase, sources, targets in self.sequence:
             for source in sources:
                 exists = self.history.exists(source, start_date, end_date)
@@ -114,9 +114,15 @@ class Engine(object):
                 self._commit_transactions(targets)
                 self.history.commit_transaction()
 
-            # now calling the purge
+    def _purge(self, start_date, end_date):
+        for phase, sources, targets in self.sequence:
             for source in sources:
                 try:
                     source.purge(start_date, end_date)
                 except Exception, e:
                     logger.error('Failed to purge %r' % source.get_id())
+
+    def run(self, start_date, end_date, purge_only=False):
+        if not purge_only:
+            self._extract_inject(start_date, end_date)
+        self._purge(start_date, end_date)

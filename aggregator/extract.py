@@ -17,7 +17,7 @@ def _mkdate(datestring):
 
 
 def extract(config, start_date, end_date, sequence=None, batch_size=None,
-            force=False):
+            force=False, purge_only=False):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
@@ -45,7 +45,7 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
 
     # run the engine
     engine = Engine(sequence, history, batch_size=batch_size, force=force)
-    engine.run(start_date, end_date)
+    engine.run(start_date, end_date, purge_only)
 
 
 _DATES = ['today', 'yesterday', 'last-week', 'last-month',
@@ -80,6 +80,9 @@ def main():
     parser.add_argument('--force', action='store_true', default=False,
                         help='Forces a run')
 
+    parser.add_argument('--purge-only', action='store_true', default=False,
+                        help='Only run the purge of sources.')
+
     args = parser.parse_args()
 
     if args.version:
@@ -93,7 +96,7 @@ def main():
 
     configure_logger(logger, args.loglevel, args.logoutput)
     extract(args.config, start, end, args.sequence, args.batch_size,
-            args.force)
+            args.force, args.purge_only)
 
 
 if __name__ == '__main__':

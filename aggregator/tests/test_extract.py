@@ -156,3 +156,14 @@ class TestExtract(TestCase):
             sys.argv[:] = old
 
         self.assertEqual(len(_res), count * 3)
+
+        # purge only
+        old = copy.copy(sys.argv)
+        sys.argv[:] = ['python', '--force', '--purge-only', '--date',
+                       'last-month', self.config]
+        try:
+            main()
+        finally:
+            sys.argv[:] = old
+
+        self.assertEqual(len(_res), count * 3)
