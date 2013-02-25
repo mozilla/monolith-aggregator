@@ -54,7 +54,7 @@ class Sequence(object):
         return phase, sources, targets
 
     def _load_plugin(self, type_, name, options):
-        source_id = type_, name
+        source_id = type_, options['id']
 
         if source_id in self.plugins:
             return self.plugins[source_id]

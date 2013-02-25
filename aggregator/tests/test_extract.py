@@ -112,7 +112,8 @@ class TestExtract(TestCase):
     def test_extract(self):
         start, end = word2daterange('last-month')
         extract(self.config, start, end)
-        self.assertEqual(len(_res), 6080)
+        count = len(_res)
+        self.assertTrue(count > 2000)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -120,7 +121,7 @@ class TestExtract(TestCase):
 
         # unless we force it
         extract(self.config, start, end, force=True)
-        self.assertEqual(len(_res), 6080 * 3)
+        self.assertEqual(len(_res), count * 3)
 
     def test_main(self):
         # XXX this still depends on google.com, on this call:
@@ -133,7 +134,8 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 6080)
+        count = len(_res)
+        self.assertTrue(count > 1000)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -153,4 +155,4 @@ class TestExtract(TestCase):
         finally:
             sys.argv[:] = old
 
-        self.assertEqual(len(_res), 6080 * 3)
+        self.assertEqual(len(_res), count * 3)
