@@ -113,3 +113,10 @@ class Engine(object):
             else:
                 self._commit_transactions(targets)
                 self.history.commit_transaction()
+
+            # now calling the purge
+            for source in sources:
+                try:
+                    source.purge(start_date, end_date)
+                except Exception, e:
+                    logger.error('Failed to purge %r' % source.get_id())
