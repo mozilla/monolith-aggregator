@@ -1,10 +1,9 @@
-===================
-Monolith Aggregator
-===================
+================
+Mozilla Monolith
+================
 
-The **monolith-aggregator** is part of the general Monolith application, which
-is providing statistic gathering, aggregation, a web-service API and a
-dashboard.
+Mozilla Monolith is a project to provide statistic gathering, aggregation,
+a web-service API and a dashboard.
 
 The first consumer of Monolith is the `Firefox marketplace
 <https://marketplace.firefox.com/>`_. Statistics include amongst others public
