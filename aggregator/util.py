@@ -123,7 +123,8 @@ class Transactional(object):
             # XXX you need to be SUPER user to do these calls.
             self.engine.execute("SET GLOBAL innodb_file_format='Barracuda'")
             self.engine.execute("SET GLOBAL innodb_file_per_table=1")
-        self.session_factory = sessionmaker(bind=self.engine)
+        self.session_factory = sessionmaker(bind=self.engine, autocommit=False,
+                                            autoflush=False)
         self.session = self.session_factory()
         self._transaction = None
 
