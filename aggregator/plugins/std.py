@@ -1,3 +1,4 @@
+import sys
 
 
 class Out(object):
@@ -8,3 +9,12 @@ class Out(object):
     def inject(self, batch, overwrite=False):
         for item in batch:
             print(item)
+
+    def start_transaction(self):
+        pass
+
+    def commit_transaction(self):
+        sys.stdout.flush()
+
+    def rollback_transaction(self):
+        pass
