@@ -1,7 +1,7 @@
 from functools import partial
 
 import gevent
-from gevent.queue import JoinableQueue
+from gevent.queue import Queue
 from gevent.pool import Group
 
 from aggregator import logger
@@ -38,7 +38,7 @@ class Engine(object):
                  force=False, retries=3):
         self.sequence = sequence
         self.history = history
-        self.queue = JoinableQueue()
+        self.queue = Queue()
         self.phase_hook = phase_hook
         self.batch_size = batch_size
         self.force = force
@@ -60,14 +60,11 @@ class Engine(object):
 
         # collecting a batch
         while len(batch) < self.batch_size:
-            try:
-                item = self.queue.get()
-                if item == 'END':
-                    pushed += 1  # the 'END' item
-                    break
-                batch.append(item)
-            finally:
-                self.queue.task_done()
+            item = self.queue.get()
+            if item == 'END':
+                pushed += 1  # the 'END' item
+                break
+            batch.append(item)
 
         if len(batch) != 0:
             greenlets = Group()
