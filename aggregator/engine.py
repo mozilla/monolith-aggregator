@@ -12,13 +12,14 @@ class AlreadyDoneError(Exception):
 class Engine(object):
 
     def __init__(self, sequence, history, phase_hook=None, batch_size=100,
-                 force=False):
+                 force=False, retries=3):
         self.sequence = sequence
         self.history = history
         self.queue = JoinableQueue()
         self.phase_hook = phase_hook
         self.batch_size = batch_size
         self.force = force
+        self.retries = retries
 
     def _push_to_target(self, targets):
         """Get a batch of elements from the queue, and push it to the targets.
@@ -122,7 +123,23 @@ class Engine(object):
                 except Exception:
                     logger.error('Failed to purge %r' % source.get_id())
 
+    def _retry(self, func, *args, **kw):
+        tries = 0
+        retries = self.retries
+        while tries < retries:
+            try:
+                return func(*args, **kw)
+            except Exception, exc:
+                if isinstance(exc, AlreadyDoneError):
+                    raise
+                logger.exception('%s failed (%d/%d)' % (func, tries + 1,
+                                                        retries))
+                tries += 1
+        raise
+
     def run(self, start_date, end_date, purge_only=False):
         if not purge_only:
-            self._extract_inject(start_date, end_date)
-        self._purge(start_date, end_date)
+            self._retry(self._extract_inject, start_date, end_date)
+
+        self._retry(self._purge, start_date, end_date)
+        return 0

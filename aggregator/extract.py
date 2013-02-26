@@ -17,7 +17,7 @@ def _mkdate(datestring):
 
 
 def extract(config, start_date, end_date, sequence=None, batch_size=None,
-            force=False, purge_only=False):
+            force=False, purge_only=False, retries=3):
     """Reads the configuration file and does the job.
     """
     parser = ConfigParser(defaults={'here': os.path.dirname(config)})
@@ -44,8 +44,9 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
     history = History(sqluri=history_db)
 
     # run the engine
-    engine = Engine(sequence, history, batch_size=batch_size, force=force)
-    engine.run(start_date, end_date, purge_only)
+    engine = Engine(sequence, history, batch_size=batch_size, force=force,
+                    retries=retries)
+    return engine.run(start_date, end_date, purge_only)
 
 
 _DATES = ['today', 'yesterday', 'last-week', 'last-month',
@@ -79,10 +80,10 @@ def main():
                         help='The size of the batch when writing')
     parser.add_argument('--force', action='store_true', default=False,
                         help='Forces a run')
-
     parser.add_argument('--purge-only', action='store_true', default=False,
                         help='Only run the purge of sources.')
-
+    parser.add_argument('--retries', default=3, type=int,
+                        help='Number of retries')
     args = parser.parse_args()
 
     if args.version:
@@ -95,8 +96,10 @@ def main():
         start, end = args.start_date, args.end_date
 
     configure_logger(logger, args.loglevel, args.logoutput)
-    extract(args.config, start, end, args.sequence, args.batch_size,
-            args.force, args.purge_only)
+    res = extract(args.config, start, end, args.sequence, args.batch_size,
+                  args.force, args.purge_only)
+
+    sys.exit(res)
 
 
 if __name__ == '__main__':

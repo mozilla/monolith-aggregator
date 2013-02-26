@@ -38,6 +38,23 @@ def put_es(data, overwrite, **options):
         _res.append(line)
 
 
+_FAILS = 0
+
+
+@inject_plugin
+def put_es_failing(data, overwrite, **options):
+    global _FAILS
+    if _FAILS == 2:
+        # things will work fine after the 2nd call
+        _FAILS = 3
+        raise ValueError('boom')
+    elif _FAILS < 2:
+        _FAILS += 1
+
+    for line in data:
+        _res.append(line)
+
+
 @extract_plugin
 def get_ga(start_date, end_date, **options):
     """Google Analytics
@@ -83,14 +100,19 @@ class TestExtract(TestCase):
 
     def setUp(self):
         self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
+        self.config2 = os.path.join(os.path.dirname(__file__), 'config2.ini')
         _res[:] = []
 
         # let's create a DB for the tests
-        engine = create_engine(DB)
+        self.engine = engine = create_engine(DB)
         today = datetime.date.today()
 
         try:
             engine.execute(CREATE)
+        except Exception:
+            pass
+
+        try:
             for i in range(30):
                 date = today - datetime.timedelta(days=i)
                 for i in range(10):
@@ -114,6 +136,9 @@ class TestExtract(TestCase):
         HttpRequest.execute = _execute
 
     def tearDown(self):
+        self._reset()
+
+    def _reset(self):
         for file_ in DB_FILES:
             if os.path.exists(file_):
                 os.remove(file_)
@@ -140,11 +165,16 @@ class TestExtract(TestCase):
         #    return build('analytics', 'v3', http=h)
         old = copy.copy(sys.argv)
         sys.argv[:] = ['python', '--date', 'last-month', self.config]
+        exit = -1
+
         try:
             main()
+        except SystemExit, exc:
+            exit = exc.code
         finally:
             sys.argv[:] = old
 
+        self.assertEqual(exit, 0)
         count = len(_res)
         self.assertTrue(count > 1000, count)
 
@@ -163,8 +193,12 @@ class TestExtract(TestCase):
                        self.config]
         try:
             main()
+        except SystemExit, exc:
+            exit = exc.code
         finally:
             sys.argv[:] = old
+
+        self.assertEqual(exit, 0)
 
         # an overwrite add 25% less (see put_es() up there)
         self.assertTrue(len(_res) < count * 3)
@@ -176,9 +210,19 @@ class TestExtract(TestCase):
                        'last-month', self.config]
         try:
             main()
+        except SystemExit, exc:
+            exit = exc.code
         finally:
             sys.argv[:] = old
 
+        self.assertEqual(exit, 0)
         # an overwrite add 25% less (see put_es() up there)
         self.assertTrue(len(_res) < count * 3)
         self.assertTrue(len(_res) > count * 2)
+
+    def test_retry(self):
+        # retrying 3 times before failing
+        start, end = word2daterange('last-month')
+        extract(self.config2, start, end)
+        count = len(_res)
+        self.assertTrue(count > 1000, count)
