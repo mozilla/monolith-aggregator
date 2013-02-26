@@ -64,7 +64,7 @@ class GetAppInstalls(APIReader):
         # sort by date, addon and then by user.
         general_sort_key = lambda x: (x['date'],
                                       x['data']['addon_id'],
-                                      x['anonymous'])
+                                      x['data']['anonymous'])
         items = sorted(items, key=general_sort_key)
 
         # group by addon
@@ -74,8 +74,10 @@ class GetAppInstalls(APIReader):
             addons = groupby(date_group, key=lambda x: x['data']['addon_id'])
             for addon_id, addon_group in addons:
                 # for each addon, group by user.
-                for anonymous, group in groupby(addon_group,
-                                                key=lambda x: x['anonymous']):
+
+                groupby_anon = groupby(addon_group,
+                                       key=lambda x: x['data']['anonymous'])
+                for anonymous, group in groupby_anon:
                     count = sum([i['data']['installs'] for i in group])
                     yield {'_date': date,
                            '_type': type,

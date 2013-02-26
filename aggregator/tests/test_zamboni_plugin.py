@@ -29,14 +29,13 @@ class TestAPIReader(TestCase):
 
         You can pass additional data into :param data:
         """
-        def __get_data(user=None, date=None, anonymous=None, **data):
+        def __get_data(user=None, date=None, **data):
             self._data_id += 1
             return {'id': self._data_id,
                     'key': key,
-                    'user': user,
+                    'user_hash': user,
                     'data': data,
-                    'date': date,
-                    'anonymous': anonymous}
+                    'date': date}
 
         if date is None:
             date = datetime(2013, 02, 12, 17, 34)
