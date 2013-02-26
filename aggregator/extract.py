@@ -30,7 +30,7 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
         if batch_size is None:
             batch_size = 100
 
-    logger.info('size of the batches: %s', batch_size)
+    #logger.info('size of the batches: %s', batch_size)
 
     # creating the sequence
     sequence = Sequence(parser, sequence)

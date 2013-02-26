@@ -12,7 +12,7 @@ from aggregator.extract import extract, main
 from aggregator.plugins import inject as inject_plugin
 from aggregator.plugins import extract as extract_plugin
 from aggregator.util import word2daterange
-from aggregator.engine import AlreadyDoneError
+from aggregator.engine import AlreadyDoneError, RunError
 from sqlalchemy.sql import text
 
 
@@ -53,6 +53,11 @@ def put_es_failing(data, overwrite, **options):
 
     for line in data:
         _res.append(line)
+
+
+@extract_plugin
+def get_ga_fails(start_date, end_date, **options):
+    raise ValueError('boom')
 
 
 @extract_plugin
@@ -101,6 +106,8 @@ class TestExtract(TestCase):
     def setUp(self):
         self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
         self.config2 = os.path.join(os.path.dirname(__file__), 'config2.ini')
+        self.config3 = os.path.join(os.path.dirname(__file__), 'config3.ini')
+
         _res[:] = []
 
         # let's create a DB for the tests
@@ -221,8 +228,13 @@ class TestExtract(TestCase):
         self.assertTrue(len(_res) > count * 2)
 
     def test_retry(self):
-        # retrying 3 times before failing
+        # retrying 3 times before failing in the load phase.
         start, end = word2daterange('last-month')
         extract(self.config2, start, end)
         count = len(_res)
         self.assertTrue(count > 1000, count)
+
+    def test_fails(self):
+        # retrying 3 times before failing in the load phase.
+        start, end = word2daterange('last-month')
+        self.assertRaises(RunError, extract, self.config3, start, end)

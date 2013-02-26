@@ -1,5 +1,3 @@
-import sys
-from aggregator.util import json_dumps
 
 
 class Plugin(object):

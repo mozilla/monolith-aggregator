@@ -2,7 +2,7 @@ from ConfigParser import NoOptionError
 from collections import defaultdict
 
 from aggregator.resolver import resolve_name
-from aggregator import logger
+#from aggregator import logger
 
 
 class Sequence(object):
@@ -39,7 +39,7 @@ class Sequence(object):
         name = name.strip()
         if name not in self.config[type_]:
             raise ValueError('%r %s is undefined' % (name, type_))
-        logger.info('Loading %s:%s' % (type_, name))
+        #logger.info('Loading %s:%s' % (type_, name))
         return self._load_plugin(type_, name, self.config[type_][name])
 
     def _build_phase(self, phase):
