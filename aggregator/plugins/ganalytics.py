@@ -23,28 +23,6 @@ def get_service(**options):
     return build('analytics', 'v3', http=h)
 
 
-def get_profile_id(service, domain):
-    accounts = service.management().accounts().list().execute()
-    account_ids = [a['id'] for a in accounts.get('items', ())]
-    for account_id in account_ids:
-        webproperties = service.management().webproperties().list(
-            accountId=account_id).execute()
-        webproperty_ids = [p['id'] for p in webproperties.get('items', ())]
-        for webproperty_id in webproperty_ids:
-            profiles = service.management().profiles().list(
-                accountId=account_id,
-                webPropertyId=webproperty_id).execute()
-            for p in profiles.get('items', ()):
-                # sometimes GA includes "http://", sometimes it doesn't.
-                if '://' in p['websiteUrl']:
-                    name = p['websiteUrl'].partition('://')[-1]
-                else:
-                    name = p['websiteUrl']
-
-                if name == domain:
-                    return p['id']
-
-
 def _ga(name):
     name = name.strip()
     if name.startswith('ga:'):
@@ -71,7 +49,7 @@ class GoogleAnalytics(Plugin):
             token = json.loads(f.read())
 
         self.client = get_service(**token)
-        self.profile_id = _ga(get_profile_id(self.client, options['domain']))
+        self.profile_id = _ga(options['profile_id'])
         self.metrics = _gatable(options['metrics'])
         self.qmetrics = ','.join(self.metrics)
         if 'dimensions' in options:
