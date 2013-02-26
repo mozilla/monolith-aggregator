@@ -96,4 +96,5 @@ class GoogleAnalytics(Plugin):
                         value = int(value)
 
                     data[field] = value
-                    yield data
+
+                yield data
