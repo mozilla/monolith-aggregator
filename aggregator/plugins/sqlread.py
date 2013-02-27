@@ -1,4 +1,5 @@
 import datetime
+import json
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
@@ -19,13 +20,27 @@ class SQLRead(Plugin):
         self.engine = create_engine(self.sqluri, **extras)
         self.query = text(options['query'])
         self.mysql = 'mysql' in self.engine.driver
+        self.json_fields = [field.strip() for field in
+                            options.get('json_fields', '').split(',')]
 
     def _check(self, data):
-        if '_date' in data:
-            date = data['_date']
+        data = dict(data)
+
+        for field in self.json_fields:
+            if field not in data:
+                continue
+            value = data[field]
+            data.update(json.loads(value))
+            del data[field]
+
+        if self.mysql:
+            return data
+
+        if 'date' in data:
+            date = data['date']
             if isinstance(date, basestring):
-                data = dict(data)
-                data['_date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+                data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+
         return data
 
     def extract(self, start_date, end_date):
@@ -41,8 +56,4 @@ class SQLRead(Plugin):
         query_params['start_date'] = start_date
         query_params['end_date'] = end_date
         data = self.engine.execute(self.query, **query_params)
-
-        if self.mysql:
-            return data
-
         return (self._check(line) for line in data)
