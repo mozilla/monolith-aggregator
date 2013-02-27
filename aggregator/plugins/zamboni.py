@@ -1,3 +1,5 @@
+import hashlib
+
 from operator import itemgetter
 from itertools import groupby
 from urlparse import urljoin
@@ -18,14 +20,21 @@ class APIReader(Plugin):
 
     def __init__(self, parser=None, **kwargs):
         self.endpoint = kwargs['endpoint']
-        key = kwargs.get('oauth_key', None)
-        secret = kwargs.get('oauth_secret', None)
-        if key and secret:
+
+        username = kwargs.get('username', None)
+        password = kwargs.get('password', None)
+        if username and password:
+            key, secret = self._get_oauth_credentials(username, password)
             oauth_hook = OAuthHook(consumer_key=key, consumer_secret=secret,
                                    header_auth=True)
             self.client = requests.session(hooks={'pre_request': oauth_hook})
         else:
             self.client = requests.session()
+
+    def _get_oauth_credentials(self, username, password):
+        key = hashlib.sha512(password + username + 'key').hexdigest()
+        secret = hashlib.sha512(password + username + 'secret').hexdigest()
+        return key, secret
 
     def purge(self, start_date, end_date):
         params = {'key': self.type,
