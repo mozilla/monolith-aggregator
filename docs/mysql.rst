@@ -31,3 +31,13 @@ we limit the size of the table to 12M lines.
 The sharding will not impact metrics queries that are made through
 Elastic Search - but the reindexation script will have to take into
 account this sharding.
+
+
+MySQL configuration
+-------------------
+
+::
+
+    SET GLOBAL innodb_file_format='Barracuda'
+    SET GLOBAL innodb_file_per_table=1
+
