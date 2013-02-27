@@ -3,7 +3,7 @@ from itertools import groupby
 from urlparse import urljoin
 
 import requests
-from requests_oauthlib import OAuth1
+from oauth_hook import OAuthHook
 
 from aggregator.plugins import Plugin
 
@@ -18,19 +18,20 @@ class APIReader(Plugin):
 
     def __init__(self, parser=None, **kwargs):
         self.endpoint = kwargs['endpoint']
-        self.oauth_key = kwargs.get('oauth_key', None)
-        self.oauth_secret = kwargs.get('oauth_secret', None)
-        if self.oauth_key and self.oauth_secret:
-            self.oauth_header = OAuth1(self.oauth_key, self.oauth_secret)
+        key = kwargs.get('oauth_key', None)
+        secret = kwargs.get('oauth_secret', None)
+        if key and secret:
+            oauth_hook = OAuthHook(consumer_key=key, consumer_secret=secret,
+                                   header_auth=True)
+            self.client = requests.session(hooks={'pre_request': oauth_hook})
         else:
-            self.oauth_header = None
+            self.client = requests.session()
 
     def purge(self, start_date, end_date):
         params = {'key': self.type,
                   'recorded__gte': start_date.isoformat(),
                   'recorded__lte': end_date.isoformat()}
-        res = requests.delete(self.endpoint, params=params,
-                              auth=self.oauth_header)
+        res = self.client.delete(self.endpoint, params=params)
         res.raise_for_status()
 
     def extract(self, start_date, end_date):
@@ -40,8 +41,7 @@ class APIReader(Plugin):
         def _do_query(url, params=None):
             if not params:
                 params = {}
-            res = requests.get(url, params=params,
-                               auth=self.oauth_header).json()
+            res = self.client.get(url, params=params).json()
             data.extend(res['objects'])
 
             # we can have paginated elements, so we need to get them all

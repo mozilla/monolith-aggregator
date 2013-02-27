@@ -23,7 +23,7 @@ requires = [
     'oauth2client',
     'google-api-python-client',
     'requests',
-    'requests-oauthlib',
+    'requests-oauth',
 ]
 
 if PYTHON26:
