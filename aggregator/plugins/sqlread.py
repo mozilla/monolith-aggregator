@@ -36,10 +36,10 @@ class SQLRead(Plugin):
         if self.mysql:
             return data
 
-        if 'date' in data:
-            date = data['date']
+        if '_date' in data:
+            date = data['_date']
             if isinstance(date, basestring):
-                data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+                data['_date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
 
         return data
 

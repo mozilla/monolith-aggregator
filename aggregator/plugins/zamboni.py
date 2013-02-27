@@ -1,5 +1,6 @@
 import hashlib
 
+from datetime import datetime
 from operator import itemgetter
 from itertools import groupby
 from urlparse import urljoin
@@ -8,6 +9,12 @@ from requests import Request, Session
 from oauth_hook import OAuthHook
 
 from aggregator.plugins import Plugin
+
+_ISO = '%Y-%m-%dT%H:%M:%S'
+
+
+def iso2datetime(data):
+    return datetime.strptime(data, _ISO)
 
 
 class APIReader(Plugin):
@@ -99,7 +106,7 @@ class GetAppInstalls(APIReader):
                                        key=lambda x: x['data']['anonymous'])
                 for anonymous, group in groupby_anon:
                     count = sum([i['data']['installs'] for i in group])
-                    yield {'_date': date,
+                    yield {'_date': iso2datetime(date),
                            '_type': type,
                            'add_on': addon_id,
                            'installs_count': count,

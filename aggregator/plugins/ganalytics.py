@@ -34,13 +34,6 @@ def _gatable(option):
     return [_ga(item) for item in option.split(',')]
 
 
-_ISO = '%Y-%m-%dT%H:%M:%S.%f'
-
-
-def iso2datetime(data):
-    return datetime.datetime.strptime(data, _ISO)
-
-
 class GoogleAnalytics(Plugin):
     def __init__(self, **options):
         super(GoogleAnalytics, self).__init__(**options)
