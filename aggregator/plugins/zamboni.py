@@ -49,12 +49,12 @@ class APIReader(Plugin):
                   'recorded__gte': start_date.isoformat(),
                   'recorded__lte': end_date.isoformat()}
 
-        req = Request('DELETE', self.endpoint, params=params)
-        if self.oauth_hook:
-            self.oauth_hook(req)
+        #req = Request('DELETE', self.endpoint, params=params)
+        #if self.oauth_hook:
+        #    self.oauth_hook(req)
 
-        res = self.client.send(req.prepare())
-        res.raise_for_status()
+        #res = self.client.send(req.prepare())
+        #res.raise_for_status()
 
     def extract(self, start_date, end_date):
 
@@ -68,7 +68,9 @@ class APIReader(Plugin):
             if self.oauth_hook:
                 self.oauth_hook(req)
 
-            res = self.client.send(req.prepare()).json()
+            res = self.client.send(req.prepare())
+
+            res = res.json()
             data.extend(res['objects'])
 
             # we can have paginated elements, so we need to get them all
@@ -85,30 +87,30 @@ class APIReader(Plugin):
 
 class GetAppInstalls(APIReader):
 
-    type = 'app.installs'
+    type = 'install'
 
     def aggregate(self, items):
         # sort by date, addon and then by user.
-        general_sort_key = lambda x: (x['date'],
-                                      x['data']['addon_id'],
-                                      x['data']['anonymous'])
+        general_sort_key = lambda x: (x['recorded'],
+                                      x['value']['app-id'],
+                                      x['value']['anonymous'])
         items = sorted(items, key=general_sort_key)
 
         # group by addon
-        dates = groupby(items, key=itemgetter('date'))
+        dates = groupby(items, key=itemgetter('recorded'))
 
         for date, date_group in dates:
-            addons = groupby(date_group, key=lambda x: x['data']['addon_id'])
-            for addon_id, addon_group in addons:
+            addons = groupby(date_group, key=lambda x: x['value']['app-id'])
+            for app_id, addon_group in addons:
                 # for each addon, group by user.
 
                 groupby_anon = groupby(addon_group,
-                                       key=lambda x: x['data']['anonymous'])
+                                       key=lambda x: x['value']['anonymous'])
                 for anonymous, group in groupby_anon:
-                    count = sum([i['data']['installs'] for i in group])
+                    count = sum([i['value'].get('installs', 1) for i in group])
                     yield {'_date': iso2datetime(date),
                            '_type': type,
-                           'add_on': addon_id,
+                           'add_on': app_id,
                            'installs_count': count,
                            'anonymous': anonymous,
                            'type': self.type}
