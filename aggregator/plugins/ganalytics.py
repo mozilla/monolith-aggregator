@@ -1,5 +1,7 @@
 import json
 import datetime
+from collections import deque
+import time
 
 from aggregator.plugins import Plugin
 from aggregator import __version__
@@ -7,6 +9,7 @@ from aggregator import __version__
 from apiclient.discovery import build
 from oauth2client.client import OAuth2Credentials
 import httplib2
+import gevent
 
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
@@ -51,11 +54,31 @@ class GoogleAnalytics(Plugin):
         else:
             self.dimensions = ['ga:date']
             self.qdimensions = 'ga:date'
+        self.rate_limit = 9
+        self.rate_span = 1.0
+        self.frequency = deque(maxlen=self.rate_limit)
 
     def _fix_name(self, name):
         if name.startswith('ga:'):
             name = name[len('ga:'):]
         return name
+
+    def _rate_limited_get(self, **options):
+        if len(self.frequency) < self.rate_limit:
+            self.frequency.append(time.time())
+        else:
+            # making sure we rate-limit our calls
+            now = time.time()
+            ten_calls_ago = self.frequency.popleft()
+            freq = now - ten_calls_ago
+
+            if freq < self.rate_span:
+                gevent.sleep((self.rate_span - freq) + .1)
+                now = time.time()
+
+            self.frequency.append(now)
+
+        return self.client.data().ga().get(**options).execute()
 
     def extract(self, start_date, end_date):
         # we won't use GA aggregation feature here,
@@ -74,7 +97,7 @@ class GoogleAnalytics(Plugin):
                        'dimensions': self.qdimensions,
                        'metrics': self.qmetrics}
 
-            results = self.client.data().ga().get(**options).execute()
+            results = self._rate_limited_get(**options)
             if results['totalResults'] == 0:
                 continue
 
