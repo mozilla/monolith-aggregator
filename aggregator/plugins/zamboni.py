@@ -35,7 +35,6 @@ class APIReader(Plugin):
 
         if 'password-file' in kwargs:
             parser = ConfigParser()
-            from pdb import set_trace; set_trace()
             parser.read(kwargs['password-file'])
             username = parser.get('auth', 'username', None)
             password = parser.get('auth', 'password', None)
