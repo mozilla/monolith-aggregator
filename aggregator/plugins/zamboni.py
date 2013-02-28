@@ -1,5 +1,6 @@
 import hashlib
 
+from ConfigParser import ConfigParser
 from datetime import datetime
 from operator import itemgetter
 from itertools import groupby
@@ -29,15 +30,21 @@ class APIReader(Plugin):
         self.endpoint = kwargs['endpoint']
         self.options = kwargs
 
-        username = kwargs.get('username', None)
-        password = kwargs.get('password', None)
         self.client = Session()
         self.oauth_hook = None
-        if username and password:
-            key, secret = self._get_oauth_credentials(username, password)
-            self.oauth_hook = OAuthHook(consumer_key=key,
-                                        consumer_secret=secret,
-                                        header_auth=True)
+
+        if 'password-file' in kwargs:
+            parser = ConfigParser()
+            from pdb import set_trace; set_trace()
+            parser.read(kwargs['password-file'])
+            username = parser.get('auth', 'username', None)
+            password = parser.get('auth', 'password', None)
+
+            if username and password:
+                key, secret = self._get_oauth_credentials(username, password)
+                self.oauth_hook = OAuthHook(consumer_key=key,
+                                            consumer_secret=secret,
+                                            header_auth=True)
 
     def _get_oauth_credentials(self, username, password):
         key = hashlib.sha512(password + username + 'key').hexdigest()

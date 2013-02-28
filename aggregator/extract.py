@@ -20,7 +20,8 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
             force=False, purge_only=False, retries=3):
     """Reads the configuration file and does the job.
     """
-    parser = ConfigParser(defaults={'here': os.path.dirname(config)})
+    defaults = {'here': os.path.abspath(os.path.dirname(config))}
+    parser = ConfigParser(defaults=defaults)
     parser.read(config)
 
     try:
