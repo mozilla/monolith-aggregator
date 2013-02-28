@@ -109,7 +109,7 @@ class GetAppInstalls(APIReader):
                 for anonymous, group in groupby_anon:
                     count = sum([i['value'].get('installs', 1) for i in group])
                     yield {'_date': iso2datetime(date),
-                           '_type': type,
+                           '_type': self.type,
                            'add_on': app_id,
                            'installs_count': count,
                            'anonymous': anonymous,
