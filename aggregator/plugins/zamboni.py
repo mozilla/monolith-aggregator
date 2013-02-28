@@ -113,4 +113,4 @@ class GetAppInstalls(APIReader):
                            'add_on': app_id,
                            'installs_count': count,
                            'anonymous': anonymous,
-                           'type': self.type}
+                           }
