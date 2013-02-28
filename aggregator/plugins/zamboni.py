@@ -1,7 +1,7 @@
 import hashlib
 
 from ConfigParser import ConfigParser
-from datetime import datetime
+from datetime import datetime, timedelta
 from operator import itemgetter
 from itertools import groupby
 from urlparse import urljoin
@@ -51,6 +51,7 @@ class APIReader(Plugin):
         return key, secret
 
     def purge(self, start_date, end_date):
+        end_date = end_date + timedelta(days=1)
         params = {'key': self.type,
                   'recorded__gte': start_date.isoformat(),
                   'recorded__lte': end_date.isoformat()}
@@ -63,6 +64,7 @@ class APIReader(Plugin):
         res.raise_for_status()
 
     def extract(self, start_date, end_date):
+        end_date = end_date + timedelta(days=1)
 
         data = []
 
