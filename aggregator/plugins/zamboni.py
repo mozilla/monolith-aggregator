@@ -80,7 +80,7 @@ class APIReader(Plugin):
         _do_query(self.endpoint, {
             'key': self.type,
             'recorded__gte': start_date.isoformat(),
-            'recorded_lte': end_date.isoformat()})
+            'recorded__lte': end_date.isoformat()})
 
         return self.aggregate(data)
 
