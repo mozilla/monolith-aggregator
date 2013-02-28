@@ -21,11 +21,10 @@ class TestAPIReader(TestCase):
         self.now = datetime(2013, 02, 12, 17, 34)
         self.yesterday = self.now - timedelta(days=1)
         self.last_week = self.now - timedelta(days=7)
-        self.calls = 0
         super(TestAPIReader, self).setUp(*args, **kwargs)
 
-    def get_data(self, count, key, user, addon_id, date=None, **data):
-        """Returns :param count: elements for the given user and addon_id.
+    def get_data(self, count, key, user, app_id, date=None, **data):
+        """Returns :param count: elements for the given user and app_id.
 
         You can pass additional data into :param data:
         """
@@ -34,16 +33,16 @@ class TestAPIReader(TestCase):
             return {'id': self._data_id,
                     'key': key,
                     'user_hash': user,
-                    'data': data,
-                    'date': date}
+                    'value': data,
+                    'recorded': date}
 
         if date is None:
             date = datetime(2013, 02, 12, 17, 34)
 
         returned_data = []
+        data['app-id'] = app_id
         for i in range(1, count + 1):
             data_ = __get_data(user=user,
-                               addon_id=addon_id,
                                anonymous=(user == 'anonymous'),
                                date=(date + timedelta(days=i)).isoformat(),
                                **data)
@@ -60,7 +59,7 @@ class TestAPIReader(TestCase):
         return data
 
     def _mock_fetch_uris(self):
-        raw_values = self._get_raw_values('app.installs')
+        raw_values = self._get_raw_values('install')
         values = iter(raw_values)
 
         rest = islice(values, 20)
@@ -78,7 +77,7 @@ class TestAPIReader(TestCase):
             if offset == 80:
                 next_uri = None
             else:
-                query = '/?limit=20&key=app.installs&offset=%d'
+                query = '/?limit=20&key=install&offset=%d'
                 next_uri = self.resource_uri + query % offset
 
             HTTPretty.register_uri(
@@ -121,27 +120,15 @@ class TestAPIReader(TestCase):
 
     @httprettified
     def test_purge_calls_delete(self):
-        self.calls = 0
-
-        def _callback(method, uri, headers):
-            self.calls += 1
-            return ""
-
         HTTPretty.register_uri(
             HTTPretty.DELETE,
-            re.compile(self.endpoint + ".*app.*"),
-            body=_callback,
-            status=204)
-
-        HTTPretty.register_uri(
-            HTTPretty.DELETE,
-            re.compile(self.endpoint + ".*foo.*"),
-            body=_callback,
+            re.compile(self.endpoint + ".*install.*"),
+            body="",
             status=204)
 
         reader = GetAppInstalls(endpoint='http://' + self.endpoint)
         reader.purge(self.last_week, self.now)
-        self.assertEquals(self.calls, 2)
+        self.assertEquals(HTTPretty.last_request.method, 'DELETE')
 
     @httprettified
     def test_purge_raise_on_errors(self):
