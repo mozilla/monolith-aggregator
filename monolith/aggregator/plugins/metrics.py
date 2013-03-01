@@ -2,7 +2,7 @@ import datetime
 import re
 
 import requests
-from aggregator.plugins import Plugin
+from monolith.aggregator.plugins import Plugin
 
 
 class FileReader(Plugin):

@@ -8,11 +8,11 @@ import json
 from unittest2 import TestCase
 from sqlalchemy import create_engine
 
-from aggregator.extract import extract, main
-from aggregator.plugins import inject as inject_plugin
-from aggregator.plugins import extract as extract_plugin
-from aggregator.util import word2daterange
-from aggregator.engine import AlreadyDoneError, RunError
+from monolith.aggregator.extract import extract, main
+from monolith.aggregator.plugins import inject as inject_plugin
+from monolith.aggregator.plugins import extract as extract_plugin
+from monolith.aggregator.util import word2daterange
+from monolith.aggregator.engine import AlreadyDoneError, RunError
 from sqlalchemy.sql import text
 
 

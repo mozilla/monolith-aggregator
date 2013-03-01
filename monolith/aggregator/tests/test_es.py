@@ -13,7 +13,7 @@ from unittest2 import TestCase
 ES_PROCESS = None
 # find the top-level repo path and our elasticsearch install in it
 HERE = os.path.abspath(os.path.dirname(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))
+ROOT_DIR = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir, os.pardir))
 ES_DIR = os.path.join(ROOT_DIR, 'elasticsearch')
 
 
@@ -132,7 +132,7 @@ class ESProcess(object):
             env=environ
         )
         self.running = True
-        from aggregator.plugins.es import ExtendedClient
+        from monolith.aggregator.plugins.es import ExtendedClient
         self.client = ExtendedClient(self.address)
         self.wait_until_ready()
 
@@ -196,7 +196,7 @@ class TestExtendedClient(TestCase, ESTestHarness):
         self.teardown_es()
 
     def _make_one(self):
-        from aggregator.plugins import es
+        from monolith.aggregator.plugins import es
         return es.ExtendedClient(self.es_process.address)
 
     def test_create_template(self):
@@ -252,7 +252,7 @@ class TestESSetup(TestCase, ESTestHarness):
         self.teardown_es()
 
     def _make_one(self):
-        from aggregator.plugins import es
+        from monolith.aggregator.plugins import es
         client = es.ExtendedClient(self.es_process.address)
         return es.ESSetup(client)
 
@@ -319,7 +319,7 @@ class TestESWrite(TestCase, ESTestHarness):
         self.teardown_es()
 
     def _make_one(self):
-        from aggregator.plugins import es
+        from monolith.aggregator.plugins import es
         options = {'url': self.es_process.address}
         return es.ESWrite(**options)
 

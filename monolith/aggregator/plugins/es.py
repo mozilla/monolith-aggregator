@@ -3,7 +3,7 @@ from collections import defaultdict
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
 
-from aggregator.plugins import Plugin
+from monolith.aggregator.plugins import Plugin
 
 
 class ExtendedClient(ElasticSearch):

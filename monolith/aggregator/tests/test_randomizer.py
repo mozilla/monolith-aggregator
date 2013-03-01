@@ -1,7 +1,7 @@
 import datetime
 from unittest2 import TestCase
 
-from aggregator.plugins.randomizer import RandomGenerator
+from monolith.aggregator.plugins.randomizer import RandomGenerator
 
 
 class TestRandomGenerator(TestCase):

@@ -2,7 +2,7 @@ import unittest
 import os
 import time
 
-from aggregator.plugins.ganalytics import GoogleAnalytics
+from monolith.aggregator.plugins.ganalytics import GoogleAnalytics
 
 
 class FakeClient(object):

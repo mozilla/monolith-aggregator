@@ -1,4 +1,4 @@
-from aggregator.db import Database
+from monolith.aggregator.db import Database
 
 
 class SQLInjecter(object):

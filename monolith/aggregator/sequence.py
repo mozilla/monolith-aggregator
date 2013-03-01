@@ -1,8 +1,8 @@
 from ConfigParser import NoOptionError
 from collections import defaultdict
 
-from aggregator.resolver import resolve_name
-#from aggregator import logger
+from monolith.aggregator.resolver import resolve_name
+#from monolith.aggregator import logger
 
 
 class Sequence(object):

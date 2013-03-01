@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from itertools import islice
 from unittest2 import TestCase
 
-from aggregator.plugins.zamboni import GetAppInstalls
+from monolith.aggregator.plugins.zamboni import GetAppInstalls
 
 from httpretty import HTTPretty
 from httpretty import httprettified

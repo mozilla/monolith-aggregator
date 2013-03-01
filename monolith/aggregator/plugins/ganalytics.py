@@ -3,8 +3,8 @@ import datetime
 from collections import deque
 import time
 
-from aggregator.plugins import Plugin
-from aggregator import __version__
+from monolith.aggregator.plugins import Plugin
+from monolith.aggregator import __version__
 
 from apiclient.discovery import build
 from oauth2client.client import OAuth2Credentials

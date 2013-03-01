@@ -5,7 +5,7 @@ import tempfile
 from sqlalchemy import create_engine
 from unittest2 import TestCase
 
-from aggregator.db import Database, Record
+from monolith.aggregator.db import Database, Record
 
 
 class TestDatabase(TestCase):

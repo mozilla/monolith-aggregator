@@ -3,7 +3,7 @@ import json
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from aggregator.plugins import Plugin
+from monolith.aggregator.plugins import Plugin
 
 
 class SQLRead(Plugin):

@@ -4,7 +4,7 @@ import gevent
 from gevent.queue import Queue
 from gevent.pool import Group
 
-from aggregator import logger
+from monolith.aggregator import logger
 
 
 class AlreadyDoneError(Exception):

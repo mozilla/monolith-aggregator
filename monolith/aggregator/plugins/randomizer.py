@@ -2,7 +2,7 @@ import datetime
 import random
 from uuid import uuid1
 
-from aggregator.plugins import Plugin
+from monolith.aggregator.plugins import Plugin
 
 
 class RandomGenerator(Plugin):

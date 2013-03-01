@@ -4,12 +4,12 @@ from ConfigParser import ConfigParser, NoOptionError
 import sys
 from datetime import datetime
 
-from aggregator import __version__, logger
-from aggregator.util import (configure_logger, LOG_LEVELS,
-                             word2daterange)
-from aggregator.history import History
-from aggregator.sequence import Sequence
-from aggregator.engine import Engine
+from monolith.aggregator import __version__, logger
+from monolith.aggregator.util import (configure_logger, LOG_LEVELS,
+                                      word2daterange)
+from monolith.aggregator.history import History
+from monolith.aggregator.sequence import Sequence
+from monolith.aggregator.engine import Engine
 
 
 def _mkdate(datestring):

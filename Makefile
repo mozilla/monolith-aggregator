@@ -19,7 +19,7 @@ $(PYTHON):
 build: $(PYTHON) elasticsearch
 	$(INSTALL) -f https://github.com/SiteSupport/gevent/downloads gevent==$(GEVENT_VERSION)
 	$(PYTHON) setup.py develop
-	$(INSTALL) monolith-aggregator[test]
+	$(INSTALL) monolith.aggregator[test]
 
 clean:
 	rm -rf $(BUILD_DIRS)
@@ -28,7 +28,7 @@ docs:
 	cd docs && make html
 
 test: build
-	$(BIN)/nosetests -s -d -v --with-coverage --cover-package aggregator aggregator
+	$(BIN)/nosetests -s -d -v --with-coverage --cover-package monolith.aggregator monolith/aggregator
 
 elasticsearch:
 	curl -C - --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx

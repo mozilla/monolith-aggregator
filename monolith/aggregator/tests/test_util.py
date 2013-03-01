@@ -1,6 +1,7 @@
 from unittest2 import TestCase
 from datetime import date, timedelta
-from aggregator.util import all_, word2daterange
+
+from monolith.aggregator.util import all_, word2daterange
 
 
 class TestUtils(TestCase):

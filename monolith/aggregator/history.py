@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Date, Column, Integer
 
-from aggregator.util import Transactional
+from monolith.aggregator.util import Transactional
 
 
 _Model = declarative_base()

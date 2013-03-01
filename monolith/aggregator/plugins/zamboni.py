@@ -9,7 +9,7 @@ from urlparse import urljoin
 from requests import Request, Session
 from oauth_hook import OAuthHook
 
-from aggregator.plugins import Plugin
+from monolith.aggregator.plugins import Plugin
 
 _ISO = '%Y-%m-%dT%H:%M:%S'
 

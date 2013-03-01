@@ -1,7 +1,8 @@
 import os
 import sys
 from setuptools import setup, find_packages
-from aggregator import __version__
+
+from monolith.aggregator import __version__
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -38,7 +39,7 @@ test_requires = requires + [
 ]
 
 
-setup(name='monolith-aggregator',
+setup(name='monolith.aggregator',
       version=__version__,
       description='The monolith aggregator',
       long_description=README + '\n\n' + CHANGES,
@@ -54,6 +55,7 @@ setup(name='monolith-aggregator',
       url='https://github.com/mozilla/monolith-aggregator',
       license="MPLv2.0",
       packages=find_packages(),
+      namespace_packages=['monolith'],
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
@@ -62,6 +64,6 @@ setup(name='monolith-aggregator',
       extras_require={'test': test_requires},
       entry_points="""
       [console_scripts]
-      monolith-extract = aggregator.extract:main
+      monolith-extract = monolith.aggregator.extract:main
       monolith-ga-oauth = tools.auth_google_analytics:main
       """)

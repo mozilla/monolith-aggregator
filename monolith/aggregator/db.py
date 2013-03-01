@@ -3,8 +3,8 @@ from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
-from aggregator.util import json_dumps, all_, Transactional
-from aggregator.uid import urlsafe_uid
+from monolith.aggregator.util import json_dumps, all_, Transactional
+from monolith.aggregator.uid import urlsafe_uid
 
 
 _Model = declarative_base()
