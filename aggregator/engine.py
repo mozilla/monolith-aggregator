@@ -124,7 +124,7 @@ class Engine(object):
                                         start_date, end_date)
                 green.link_exception(partial(self._error, ExtractError,
                                              source))
-            
+
             # looking at the queue
             pushed = 0
 
@@ -171,15 +171,15 @@ class Engine(object):
 
     def _reset_counters(self):
         self.errors = []
-        
+
     def run(self, start_date, end_date, purge_only=False):
         self._reset_counters()
 
         if not purge_only:
             for phase in self.sequence:
                 if self.queue.qsize() > 0:
-                    raise ValueError('The queue still has %d elements' % \
-                        self.queue.qsize())
+                    raise ValueError('The queue still has %d elements' %
+                                     self.queue.qsize())
 
                 self._retry(self._run_phase, phase, start_date, end_date)
 
