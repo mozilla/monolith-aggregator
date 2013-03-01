@@ -41,7 +41,7 @@ test_requires = requires + [
 
 setup(name='monolith.aggregator',
       version=__version__,
-      description='The monolith aggregator',
+      description='Mozilla Monolith Client',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
           "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",

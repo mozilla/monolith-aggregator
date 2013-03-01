@@ -2,6 +2,11 @@
 Mozilla Monolith
 ================
 
+.. note::
+
+   monolith is still under heavy development
+
+
 Mozilla Monolith is a project to provide statistic gathering, aggregation,
 a web-service API and a dashboard.
 
