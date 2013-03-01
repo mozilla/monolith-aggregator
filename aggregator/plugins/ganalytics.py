@@ -54,7 +54,7 @@ class GoogleAnalytics(Plugin):
         else:
             self.dimensions = ['ga:date']
             self.qdimensions = 'ga:date'
-        self.rate_limit = 9
+        self.rate_limit = 5
         self.rate_span = 1.0
         self.frequency = deque(maxlen=self.rate_limit)
 
