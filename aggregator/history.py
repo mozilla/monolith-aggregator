@@ -35,7 +35,7 @@ class History(Transactional):
         transaction.metadata.bind = self.engine
         transaction.create(checkfirst=True)
 
-    def add_entry(self, sources, start_date, end_date=None):
+    def add_entry(self, sources, start_date, end_date=None, num=0):
         with self.transaction() as session:
             if end_date is None:
                 drange = (start_date,)

@@ -44,7 +44,6 @@ class Engine(object):
         self.force = force
         self.retries = retries
         self.errors = []
-        self._received = 0
 
     def _push_to_target(self, targets):
         """Get a batch of elements from the queue, and push it to the targets.
@@ -99,7 +98,6 @@ class Engine(object):
         try:
             for item in plugin.extract(start_date, end_date):
                 self.queue.put((plugin.get_id(), item))
-                self._received += 1
         finally:
             self.queue.put('END')
 
@@ -126,20 +124,20 @@ class Engine(object):
                                         start_date, end_date)
                 green.link_exception(partial(self._error, ExtractError,
                                              source))
+            
             # looking at the queue
             pushed = 0
 
-            while pushed < self._received or pushed == 0:
-                pushed += self._push_to_target(targets)
+            while len(greenlets) > 0 or self.queue.qsize() > 0:
                 gevent.sleep(0)
+                pushed += self._push_to_target(targets)
                 # let's see if we have some errors
                 if len(self.errors) > 0:
                     # yeah! we need to rollback
                     # XXX later we'll do a source-by-source rollback
                     raise RunError(self.errors)
 
-            greenlets.join()
-            self.history.add_entry(sources, start_date, end_date)
+            self.history.add_entry(sources, start_date, end_date, pushed)
         except Exception:
             self._rollback_transactions(targets)
             self.history.rollback_transaction()
@@ -163,6 +161,7 @@ class Engine(object):
             try:
                 return func(*args, **kw)
             except Exception, exc:
+                self.queue.queue.clear()
                 if isinstance(exc, AlreadyDoneError):
                     raise
                 logger.exception('%s failed (%d/%d)' % (func, tries + 1,
@@ -172,13 +171,16 @@ class Engine(object):
 
     def _reset_counters(self):
         self.errors = []
-        self._received = 0
-
+        
     def run(self, start_date, end_date, purge_only=False):
         self._reset_counters()
 
         if not purge_only:
             for phase in self.sequence:
+                if self.queue.qsize() > 0:
+                    raise ValueError('The queue still has %d elements' % \
+                        self.queue.qsize())
+
                 self._retry(self._run_phase, phase, start_date, end_date)
 
         # purging
