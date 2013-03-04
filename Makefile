@@ -31,7 +31,7 @@ test: build
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package monolith.aggregator monolith/aggregator
 
 elasticsearch:
-	curl -C - --progress-bar http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
+	curl -C - http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-$(ES_VERSION).tar.gz | tar -zx
 	mv elasticsearch-$(ES_VERSION) elasticsearch
 	chmod a+x elasticsearch/bin/elasticsearch
 	mv elasticsearch/config/elasticsearch.yml elasticsearch/config/elasticsearch.in.yml
