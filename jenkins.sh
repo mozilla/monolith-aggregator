@@ -12,7 +12,7 @@ make build
 
 echo "Starting tests..."
 
-bin/nosetests -s -d -v --with-xunit --with-coverage --cover-package aggregator aggregator
-bin/coverage xml $(find aggregator -name '*.py')
+bin/nosetests -s -d -v --with-xunit --with-coverage --cover-package monolith monolith
+bin/coverage xml $(find monolith/aggregator -name '*.py')
 
 echo "FIN"
