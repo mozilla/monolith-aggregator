@@ -2,8 +2,6 @@ import hashlib
 
 from ConfigParser import ConfigParser
 from datetime import datetime, timedelta
-from operator import itemgetter
-from itertools import groupby
 from urlparse import urljoin
 
 from requests import Request, Session
@@ -19,15 +17,11 @@ def iso2datetime(data):
 
 
 class APIReader(Plugin):
-    """This plugins calls the zamboni API and aggregate the data before
-    returning it.
-
-    It needs to be subclassed, and shouldn't be used like that.
-    Check GetAppInstalls for an example.
-    """
+    """This plugins calls the zamboni API and returns it."""
 
     def __init__(self, parser=None, **kwargs):
         self.endpoint = kwargs['endpoint']
+        self.type = kwargs['type']
         self.options = kwargs
 
         self.client = Session()
@@ -90,35 +84,16 @@ class APIReader(Plugin):
             'recorded__gte': start_date.isoformat(),
             'recorded__lte': end_date.isoformat()})
 
-        return self.aggregate(data)
-
-
-class GetAppInstalls(APIReader):
-
-    type = 'install'
-
-    def aggregate(self, items):
-        # sort by date, addon and then by user.
         general_sort_key = lambda x: (x['recorded'],
                                       x['value']['app-id'],
                                       x['value']['anonymous'])
-        items = sorted(items, key=general_sort_key)
+        data = sorted(data, key=general_sort_key)
 
-        # group by addon
-        dates = groupby(items, key=itemgetter('recorded'))
+        for item in data:
+            values = item.pop('value')
+            values['add_on'] = values.pop('app-id')
+            values['installs'] = values.pop('installs', 1)
 
-        for date, date_group in dates:
-            addons = groupby(date_group, key=lambda x: x['value']['app-id'])
-            for app_id, addon_group in addons:
-                # for each addon, group by user.
-
-                groupby_anon = groupby(addon_group,
-                                       key=lambda x: x['value']['anonymous'])
-                for anonymous, group in groupby_anon:
-                    count = sum([i['value'].get('installs', 1) for i in group])
-                    yield {'_date': iso2datetime(date),
-                           '_type': self.type,
-                           'add_on': app_id,
-                           'installs_count': count,
-                           'anonymous': anonymous,
-                           }
+            values.update({'_date': iso2datetime(item['recorded']),
+                           '_type': self.type})
+            yield values

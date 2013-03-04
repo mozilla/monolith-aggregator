@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from itertools import islice
 from unittest2 import TestCase
 
-from monolith.aggregator.plugins.zamboni import GetAppInstalls
 from monolith.aggregator.util import json_dumps
+from aggregator.plugins.zamboni import APIReader
 
 from httpretty import HTTPretty
 from httpretty import httprettified
@@ -93,30 +93,16 @@ class TestAPIReader(TestCase):
             rest = islice(values, 20)
             rest_data = list(rest)
 
-    def test_aggregation(self):
-        data = []
-        key = 'app.inndstalls'
-        data.extend(self.get_data(20, key, 'anonymous', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'alexis', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'tarek', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'alexis', 4321, installs=1))
-        random.shuffle(data)
-
-        aggregator = GetAppInstalls(endpoint='foobar')
-        yielded = aggregator.aggregate(data)
-        records = [i for i in yielded if i['installs_count'] > 1]
-        self.assertEquals(len(records), 20)
-
     @httprettified
     def test_rest_endpoint_is_called(self):
         self._mock_fetch_uris()
 
-        reader = GetAppInstalls(endpoint='http://' + self.endpoint)
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
         values = list(reader.extract(self.last_week, self.yesterday))
 
-        # If we get back 60 values, it means that all the data had been used
-        # and aggregated, so we're good.
-        self.assertEquals(len(values), 60)
+        # If we get back 80 values, it means that all the data had been read
+        # from the API
+        self.assertEquals(len(values), 80)
 
     @httprettified
     def test_purge_calls_delete(self):
@@ -126,7 +112,7 @@ class TestAPIReader(TestCase):
             body="",
             status=204)
 
-        reader = GetAppInstalls(endpoint='http://' + self.endpoint)
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
         reader.purge(self.last_week, self.now)
         self.assertEquals(HTTPretty.last_request.method, 'DELETE')
 
@@ -137,7 +123,7 @@ class TestAPIReader(TestCase):
             re.compile(self.endpoint + ".*"),
             body="",
             status=400)
-        reader = GetAppInstalls(endpoint='http://' + self.endpoint)
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
 
         with self.assertRaises(HTTPError):
             reader.purge(self.last_week, self.now)
