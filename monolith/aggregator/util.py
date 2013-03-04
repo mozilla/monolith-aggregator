@@ -8,24 +8,26 @@ import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+
+def encode_date(obj):
+    if isinstance(obj, datetime):
+        return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    elif isinstance(obj, date):
+        return obj.strftime('%Y-%m-%d')
+    raise TypeError(repr(obj) + " is not JSON serializable")
+
 
 def json_loads(obj):
     return json.loads(obj)
 
 
 def json_dumps(obj):
-    return json.dumps(obj, cls=JSONEncoder)
-
-
-class JSONEncoder(json.JSONEncoder):
-    """A JSON encoder takking care of dates"""
-
-    def default(self, obj):
-        if isinstance(obj, date):
-            return obj.strftime('%Y-%m-%d')
-        elif isinstance(obj, datetime):
-            return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')
-        return json.JSONEncoder.default(self, obj)
+    return json.dumps(obj, default=encode_date)
 
 
 def all_(iterable, value):

@@ -1,7 +1,8 @@
 from unittest2 import TestCase
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from monolith.aggregator.util import all_, word2daterange
+from monolith.aggregator.util import json_loads, json_dumps
 
 
 class TestUtils(TestCase):
@@ -34,3 +35,21 @@ class TestUtils(TestCase):
         self.assertTrue(_diff(now, last) >= 0)
         self.assertTrue(_diff(now, first) >= 7)
         self.assertTrue(_diff(last, first) == 7)
+
+
+class TestJSON(TestCase):
+
+    def test_dumps_date(self):
+        data = json_dumps({'date': date(2012, 3, 15)})
+        self.assertEqual(data, '{"date": "2012-03-15"}')
+
+    def test_dumps_datetime(self):
+        data = json_dumps({'date': datetime(2012, 3, 15, 13, 55, 10)})
+        self.assertEqual(data, '{"date": "2012-03-15T13:55:10.000000"}')
+
+    def test_dumps_error(self):
+        self.assertRaises(TypeError, json_dumps, {'foo': object()})
+
+    def test_loads_date(self):
+        data = json_loads('{"date": "2012-03-15"}')
+        self.assertEqual(data, {'date': '2012-03-15'})

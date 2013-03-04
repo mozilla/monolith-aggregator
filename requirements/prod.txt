@@ -13,4 +13,4 @@ python-gflags==2.0
 requests==1.1.0
 requests-oauth==0.4.1
 requests-oauthlib==0.3.0
-simplejson==3.0.7
+simplejson==3.1.0

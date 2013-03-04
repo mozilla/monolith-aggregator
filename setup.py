@@ -28,7 +28,10 @@ requires = [
 ]
 
 if PYTHON26:
-    requires.append('argparse')
+    requires.extend[
+        'argparse',
+        'simplejson',
+    ]
 
 test_requires = requires + [
     'coverage',
