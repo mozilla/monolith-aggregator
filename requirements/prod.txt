@@ -1,6 +1,7 @@
 -f https://github.com/SiteSupport/gevent/downloads
 PyMySQL==0.5
 SQLAlchemy==0.8.0b2
+argparse==1.2.1
 gevent==1.0rc2
 google-api-python-client==1.0
 greenlet==0.4.0
