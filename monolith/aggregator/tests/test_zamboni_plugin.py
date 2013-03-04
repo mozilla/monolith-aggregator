@@ -5,7 +5,7 @@ from itertools import islice
 from unittest2 import TestCase
 
 from monolith.aggregator.util import json_dumps
-from aggregator.plugins.zamboni import APIReader
+from monolith.aggregator.plugins.zamboni import APIReader
 
 from httpretty import HTTPretty
 from httpretty import httprettified
