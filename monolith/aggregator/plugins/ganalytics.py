@@ -1,15 +1,15 @@
-import json
 import datetime
 from collections import deque
 import time
-
-from monolith.aggregator.plugins import Plugin
-from monolith.aggregator import __version__
 
 from apiclient.discovery import build
 from oauth2client.client import OAuth2Credentials
 import httplib2
 import gevent
+
+from monolith.aggregator import __version__
+from monolith.aggregator.plugins import Plugin
+from monolith.aggregator.util import json_loads
 
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
@@ -42,7 +42,7 @@ class GoogleAnalytics(Plugin):
         super(GoogleAnalytics, self).__init__(**options)
 
         with open(options['oauth_token']) as f:
-            token = json.loads(f.read())
+            token = json_loads(f.read())
 
         self.client = get_service(**token)
         self.profile_id = _ga(options['profile_id'])

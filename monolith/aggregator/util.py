@@ -9,6 +9,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
+def json_loads(obj):
+    return json.loads(obj)
+
+
 def json_dumps(obj):
     return json.dumps(obj, cls=JSONEncoder)
 

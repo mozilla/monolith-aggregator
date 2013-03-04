@@ -1,4 +1,3 @@
-import json
 import random
 import re
 from datetime import datetime, timedelta
@@ -6,6 +5,7 @@ from itertools import islice
 from unittest2 import TestCase
 
 from monolith.aggregator.plugins.zamboni import GetAppInstalls
+from monolith.aggregator.util import json_dumps
 
 from httpretty import HTTPretty
 from httpretty import httprettified
@@ -83,7 +83,7 @@ class TestAPIReader(TestCase):
             HTTPretty.register_uri(
                 HTTPretty.GET,
                 regexp,
-                body=json.dumps({'meta': {"limit": 20,
+                body=json_dumps({'meta': {"limit": 20,
                                           "next": next_uri,
                                           "offset": 0,
                                           "previous": None,

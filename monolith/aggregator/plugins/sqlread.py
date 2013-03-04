@@ -1,9 +1,9 @@
 import datetime
-import json
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 from monolith.aggregator.plugins import Plugin
+from monolith.aggregator.util import json_loads
 
 
 class SQLRead(Plugin):
@@ -30,7 +30,7 @@ class SQLRead(Plugin):
             if field not in data:
                 continue
             value = data[field]
-            data.update(json.loads(value))
+            data.update(json_loads(value))
             del data[field]
 
         if self.mysql:

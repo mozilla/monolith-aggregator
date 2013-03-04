@@ -3,7 +3,6 @@ import os
 import random
 import copy
 import datetime
-import json
 
 from unittest2 import TestCase
 from sqlalchemy import create_engine
@@ -11,6 +10,7 @@ from sqlalchemy import create_engine
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import inject as inject_plugin
 from monolith.aggregator.plugins import extract as extract_plugin
+from monolith.aggregator.util import json_loads
 from monolith.aggregator.util import word2daterange
 from monolith.aggregator.engine import AlreadyDoneError, RunError
 from sqlalchemy.sql import text
@@ -138,7 +138,7 @@ class TestExtract(TestCase):
             with open(name) as f:
                 data = f.read()
 
-            return json.loads(data)
+            return json_loads(data)
 
         HttpRequest.execute = _execute
 
