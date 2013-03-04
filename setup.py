@@ -63,7 +63,7 @@ setup(name='monolith.aggregator',
       zip_safe=False,
       install_requires=requires,
       tests_require=test_requires,
-      test_suite="aggregator",
+      test_suite="monolith.aggregator.tests",
       extras_require={'test': test_requires},
       entry_points="""
       [console_scripts]
