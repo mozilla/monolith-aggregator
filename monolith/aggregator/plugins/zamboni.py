@@ -92,7 +92,7 @@ class APIReader(Plugin):
         for item in data:
             values = item.pop('value')
             values['add_on'] = values.pop('app-id')
-            values['installs'] = values.pop('installs', 1)
+            values['count'] = values.pop('count', 1)
 
             values.update({'_date': iso2datetime(item['recorded']),
                            '_type': self.type})
