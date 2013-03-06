@@ -112,7 +112,8 @@ class TestAPIReader(TestCase):
             body="",
             status=204)
 
-        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install',
+                           purge_data=True)
         reader.purge(self.last_week, self.now)
         self.assertEquals(HTTPretty.last_request.method, 'DELETE')
 
@@ -123,7 +124,8 @@ class TestAPIReader(TestCase):
             re.compile(self.endpoint + ".*"),
             body="",
             status=400)
-        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install',
+                           purge_data=True)
 
         with self.assertRaises(HTTPError):
             reader.purge(self.last_week, self.now)
