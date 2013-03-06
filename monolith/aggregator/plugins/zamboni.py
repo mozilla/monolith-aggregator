@@ -45,17 +45,18 @@ class APIReader(Plugin):
         return key, secret
 
     def purge(self, start_date, end_date):
-        end_date = end_date + timedelta(days=1)
-        params = {'key': self.type,
-                  'recorded__gte': start_date.isoformat(),
-                  'recorded__lte': end_date.isoformat()}
+        if self.options.get('purge_data', False):
+            end_date = end_date + timedelta(days=1)
+            params = {'key': self.type,
+                      'recorded__gte': start_date.isoformat(),
+                      'recorded__lte': end_date.isoformat()}
 
-        req = Request('DELETE', self.endpoint, params=params)
-        if self.oauth_hook:
-            self.oauth_hook(req)
+            req = Request('DELETE', self.endpoint, params=params)
+            if self.oauth_hook:
+                self.oauth_hook(req)
 
-        res = self.client.send(req.prepare())
-        res.raise_for_status()
+            res = self.client.send(req.prepare())
+            res.raise_for_status()
 
     def extract(self, start_date, end_date):
         end_date = end_date + timedelta(days=1)
