@@ -23,6 +23,7 @@ class APIReader(Plugin):
     def __init__(self, parser=None, **kwargs):
         self.endpoint = kwargs['endpoint']
         self.type = kwargs['type']
+        self.field = kwargs['field']
         self.options = kwargs
 
         self.client = Session()
@@ -98,7 +99,7 @@ class APIReader(Plugin):
         for item in data:
             values = item.pop('value')
             values['add_on'] = values.pop('app-id')
-            values['apps_installed'] = values.pop('count', 1)
+            values[self.field] = values.pop('count', 1)
 
             values.update({'_date': iso2datetime(item['recorded']),
                            '_type': self.type})

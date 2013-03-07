@@ -97,7 +97,8 @@ class TestAPIReader(TestCase):
     def test_rest_endpoint_is_called(self):
         self._mock_fetch_uris()
 
-        reader = APIReader(endpoint='http://' + self.endpoint, type='install')
+        reader = APIReader(endpoint='http://' + self.endpoint, type='install',
+                           field='foo')
         values = list(reader.extract(self.last_week, self.yesterday))
 
         # If we get back 80 values, it means that all the data had been read
@@ -113,7 +114,7 @@ class TestAPIReader(TestCase):
             status=204)
 
         reader = APIReader(endpoint='http://' + self.endpoint, type='install',
-                           purge_data=True)
+                           purge_data=True, field='foo')
         reader.purge(self.last_week, self.now)
         self.assertEquals(HTTPretty.last_request.method, 'DELETE')
 
@@ -125,7 +126,7 @@ class TestAPIReader(TestCase):
             body="",
             status=400)
         reader = APIReader(endpoint='http://' + self.endpoint, type='install',
-                           purge_data=True)
+                           purge_data=True, field='foo')
 
         with self.assertRaises(HTTPError):
             reader.purge(self.last_week, self.now)
