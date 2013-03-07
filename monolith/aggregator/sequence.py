@@ -2,7 +2,7 @@ from ConfigParser import NoOptionError
 from collections import defaultdict
 
 from monolith.aggregator.resolver import resolve_name
-#from monolith.aggregator import logger
+from monolith.aggregator import logger
 
 
 class Sequence(object):
@@ -39,7 +39,6 @@ class Sequence(object):
         name = name.strip()
         if name not in self.config[type_]:
             raise ValueError('%r %s is undefined' % (name, type_))
-        #logger.info('Loading %s:%s' % (type_, name))
         return self._load_plugin(type_, name, self.config[type_][name])
 
     def _build_phase(self, phase):
@@ -54,6 +53,7 @@ class Sequence(object):
         return phase, sources, targets
 
     def _load_plugin(self, type_, name, options):
+        logger.debug('Loading %s:%s' % (type_, name))
         source_id = type_, options['id']
 
         if source_id in self.plugins:

@@ -31,8 +31,6 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
         if batch_size is None:
             batch_size = 100
 
-    #logger.info('size of the batches: %s', batch_size)
-
     # creating the sequence
     sequence = Sequence(parser, sequence)
 
@@ -93,12 +91,19 @@ def main():
 
     if args.date is not None:
         start, end = word2daterange(args.date)
+    elif args.start_date is None:
+        start, end = word2daterange('yesterday')
     else:
         start, end = args.start_date, args.end_date
 
     configure_logger(logger, args.loglevel, args.logoutput)
     res = extract(args.config, start, end, args.sequence, args.batch_size,
                   args.force, args.purge_only)
+
+    if res == 0:
+        logger.info('SUCCESS')
+    else:
+        logger.info('ERROR')
 
     sys.exit(res)
 
