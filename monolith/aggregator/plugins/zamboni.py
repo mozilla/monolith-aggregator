@@ -1,3 +1,4 @@
+import os
 import hashlib
 
 from ConfigParser import ConfigParser
@@ -28,8 +29,12 @@ class APIReader(Plugin):
         self.oauth_hook = None
 
         if 'password-file' in kwargs:
+            passwd = kwargs['password-file']
+            if not os.path.exists(passwd):
+                raise ValueError('%r not found.' % passwd)
+
             parser = ConfigParser()
-            parser.read(kwargs['password-file'])
+            parser.read(passwd)
             username = parser.get('auth', 'username', None)
             password = parser.get('auth', 'password', None)
 
