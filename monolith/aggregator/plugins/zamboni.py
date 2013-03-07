@@ -91,15 +91,11 @@ class APIReader(Plugin):
             'recorded__gte': start_date.isoformat(),
             'recorded__lte': end_date.isoformat()})
 
-        general_sort_key = lambda x: (x['recorded'],
-                                      x['value']['app-id'],
-                                      x['value']['anonymous'])
-        data = sorted(data, key=general_sort_key)
-
         for item in data:
             values = item.pop('value')
-            values['add_on'] = values.pop('app-id')
-            values[self.field] = values.pop('count', 1)
+            if 'app-id' in values:
+                values['add_on'] = values.pop('app-id')
+            values[self.field] = values.pop('count', 2)
 
             values.update({'_date': iso2datetime(item['recorded']),
                            '_type': self.type})
