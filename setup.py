@@ -36,6 +36,7 @@ if PYTHON26:
 test_requires = requires + [
     'coverage',
     'nose',
+    'pyelastictest',
     'Sphinx',
     'unittest2',
     'HTTPretty',

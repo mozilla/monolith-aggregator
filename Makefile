@@ -28,6 +28,7 @@ docs:
 	cd docs && make html
 
 test: build
+	ES_PATH=$(HERE)/elasticsearch \
 	$(BIN)/nosetests -s -d -v --with-coverage --cover-package monolith.aggregator monolith/aggregator
 
 elasticsearch:
