@@ -7,7 +7,7 @@ class TestESSetup(IsolatedTestCase):
 
     def _make_one(self):
         from monolith.aggregator.plugins import es
-        client = es.ExtendedClient(self.es_cluster[0].address)
+        client = es.ExtendedClient(self.es_cluster.urls)
         return es.ESSetup(client)
 
     def test_configure_templates(self):
@@ -68,7 +68,7 @@ class TestESWrite(IsolatedTestCase):
 
     def _make_one(self):
         from monolith.aggregator.plugins import es
-        options = {'url': self.es_cluster[0].address}
+        options = {'url': self.es_cluster.urls}
         return es.ESWrite(**options)
 
     def test_constructor(self):
