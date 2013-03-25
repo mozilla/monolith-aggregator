@@ -15,22 +15,22 @@ with open(os.path.join(here, 'CHANGES.rst')) as f:
 PYTHON26 = sys.version_info < (2, 7)
 
 requires = [
-    'gevent',
-    'oauth2client',
-    'pyelasticsearch>=0.3',
-    'PyMySQL',
-    'python-gflags',
-    'SQLAlchemy',
-    'oauth2client',
-    'google-api-python-client',
-    'requests',
-    'requests-oauth',
+    'gevent==1.0rc2',
+    'oauth2client==1.0',
+    'pyelasticsearch==0.3',
+    'PyMySQL==0.5',
+    'python-gflags==2.0',
+    'SQLAlchemy==0.8.0b2',
+    'google-api-python-client==1.0',
+    'requests==1.1.0',
+    'requests-oauth==0.4.1',
 ]
+
 
 if PYTHON26:
     requires.extend([
-        'argparse',
-        'simplejson',
+        'argparse==1.2.1',
+        'simplejson==3.1.0',
     ])
 
 test_requires = requires + [
