@@ -8,7 +8,7 @@ greenlet==0.4.0
 httplib2==0.7.7
 oauth2client==1.0
 oauthlib==0.3.7
-pyelasticsearch==0.3
+pyelasticsearch==0.4.1
 python-gflags==2.0
 requests==1.1.0
 requests-oauth==0.4.1
