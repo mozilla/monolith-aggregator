@@ -96,8 +96,6 @@ class TestExtract(TestCase):
 
     def setUp(self):
         self._reset()
-        self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
-
         global _res
         _res = {}
 
@@ -142,32 +140,34 @@ class TestExtract(TestCase):
                 os.remove(file_)
 
     def test_extract(self):
+        config = os.path.join(os.path.dirname(__file__), 'config.ini')
         start, end = word2daterange('last-month')
-        extract(self.config, start, end)
+        extract(config, start, end)
         count = len(_res)
         self.assertTrue(count > 1000, count)
 
         # a second attempt should fail
         # because we did not use the force flag
-        self.assertRaises(AlreadyDoneError, extract, self.config, start, end)
+        self.assertRaises(AlreadyDoneError, extract, config, start, end)
 
         # unless we force it
-        extract(self.config, start, end, force=True)
+        extract(config, start, end, force=True)
         # overwrite has generated the same entries with new ids, so
         # we end up with double the entries
         self.assertEqual(count * 2, len(_res))
 
         # forcing only the load phase
-        extract(self.config, start, end, sequence='load', force=True)
+        extract(config, start, end, sequence='load', force=True)
         # loading the same data (ids) won't generate any more entries
         self.assertEqual(count * 2, len(_res))
 
     def test_main(self):
+        config = os.path.join(os.path.dirname(__file__), 'config.ini')
         # XXX this still depends on google.com, on this call:
         # aggregator/plugins/ganalytics.py:24
         #    return build('analytics', 'v3', http=h)
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--date', 'last-month', self.config]
+        sys.argv[:] = ['python', '--date', 'last-month', config]
         exit = -1
 
         try:
@@ -184,7 +184,7 @@ class TestExtract(TestCase):
         # a second attempt should fail
         # because we did not use the force flag
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--date', 'last-month', self.config]
+        sys.argv[:] = ['python', '--date', 'last-month', config]
         try:
             self.assertRaises(AlreadyDoneError, main)
         finally:
@@ -192,8 +192,7 @@ class TestExtract(TestCase):
 
         # unless we force it
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--force', '--date', 'last-month',
-                       self.config]
+        sys.argv[:] = ['python', '--force', '--date', 'last-month', config]
         try:
             main()
         except SystemExit as exc:
@@ -210,7 +209,7 @@ class TestExtract(TestCase):
         # purge only
         old = copy.copy(sys.argv)
         sys.argv[:] = ['python', '--force', '--purge-only', '--date',
-                       'last-month', self.config]
+                       'last-month', config]
         try:
             main()
         except SystemExit as exc:
