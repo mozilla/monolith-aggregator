@@ -79,8 +79,6 @@ DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
             os.path.join(os.path.dirname(__file__), 'target.db'),
             os.path.join(os.path.dirname(__file__), 'history.db'))
 
-DB = 'sqlite:///' + DB_FILES[0]
-
 CREATE = """\
 create table downloads
     (_date DATE, _type VARCHAR(32), count INTEGER)
@@ -98,25 +96,6 @@ class TestExtract(TestCase):
         self._reset()
         global _res
         _res = {}
-
-        # let's create a DB for the tests
-        self.engine = engine = create_engine(DB)
-        today = datetime.date.today()
-
-        try:
-            engine.execute(CREATE)
-        except Exception:
-            pass
-
-        try:
-            for i in range(30):
-                date = today - datetime.timedelta(days=i)
-                for i in range(10):
-                    v = random.randint(0, 1000)
-                    engine.execute(INSERT, _date=date, _type='sql', count=v)
-        except Exception:
-            self.tearDown()
-            raise
 
         from apiclient.http import HttpRequest
 
@@ -138,6 +117,17 @@ class TestExtract(TestCase):
         for file_ in DB_FILES:
             if os.path.exists(file_):
                 os.remove(file_)
+
+    def _make_sql_plugin_db(self):
+        # let's create a DB for the tests
+        self.engine = engine = create_engine('sqlite:///' + DB_FILES[0])
+        today = datetime.date.today()
+        engine.execute(CREATE)
+        for i in range(30):
+            date = today - datetime.timedelta(days=i)
+            for i in range(10):
+                v = random.randint(0, 1000)
+                engine.execute(INSERT, _date=date, _type='sql', count=v)
 
     def test_extract(self):
         config = os.path.join(os.path.dirname(__file__), 'config_extract.ini')
@@ -163,6 +153,7 @@ class TestExtract(TestCase):
 
     def test_main(self):
         config = os.path.join(os.path.dirname(__file__), 'config_main.ini')
+        self._make_sql_plugin_db()
         # XXX this still depends on google.com, on this call:
         # aggregator/plugins/ganalytics.py:24
         #    return build('analytics', 'v3', http=h)
