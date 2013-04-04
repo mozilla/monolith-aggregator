@@ -97,8 +97,6 @@ class TestExtract(TestCase):
     def setUp(self):
         self._reset()
         self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
-        self.config2 = os.path.join(os.path.dirname(__file__), 'config2.ini')
-        self.config3 = os.path.join(os.path.dirname(__file__), 'config3.ini')
 
         global _res
         _res = {}
@@ -226,12 +224,14 @@ class TestExtract(TestCase):
         self.assertEqual(count * 2, len(_res))
 
     def test_retry(self):
+        config = os.path.join(os.path.dirname(__file__), 'config_retry.ini')
         # retrying 3 times before failing in the load phase.
         start, end = word2daterange('today')
-        extract(self.config2, start, end)
+        extract(config, start, end)
         self.assertEqual(len(_res), 102)
 
     def test_fails(self):
+        config = os.path.join(os.path.dirname(__file__), 'config_fails.ini')
         # retrying 3 times before failing in the extract phase
         start, end = word2daterange('last-month')
-        self.assertRaises(RunError, extract, self.config3, start, end)
+        self.assertRaises(RunError, extract, config, start, end)
