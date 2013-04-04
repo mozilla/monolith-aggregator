@@ -62,8 +62,14 @@ class Database(Transactional):
                            value=json_dumps(item)))
 
             if overwrite:
-                for record in records:
-                    session.merge(record)
+                # test for prior data before doing complex merges
+                prior_data = session.query(Record).filter(
+                    Record.id.in_([r.id for r in records])).count()
+                if not prior_data:
+                    session.add_all(records)
+                else:
+                    for record in records:
+                        session.merge(record)
             else:
                 session.add_all(records)
 
