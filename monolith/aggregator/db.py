@@ -44,26 +44,28 @@ class Database(Transactional):
         record.create(checkfirst=True)
 
     def put(self, batch, overwrite=False):
-
         with self.transaction() as session:
             # XXX the real solution here is to implement a
             # low-level ON DUPLICATE KEY UPDATE call
             # but for now we'll use merge() and move to
             # ON DUPLICATE KEY UPDATE if this becomes a
             # bottleneck
-            if overwrite:
-                add = session.merge
-            else:
-                add = session.add
-
+            records = []
             for source_id, item in batch:
                 item = dict(item)
                 date = item.pop('_date')
                 type = item.pop('_type')
-                add(Record(id=urlsafe_uid(date),
+                records.append(
+                    Record(id=urlsafe_uid(date),
                            date=date, type=type,
                            source_id=source_id,
                            value=json_dumps(item)))
+
+            if overwrite:
+                for record in records:
+                    session.merge(record)
+            else:
+                session.add_all(records)
 
     def get(self, start_date=None, end_date=None,
             type=None, source_id=None):
