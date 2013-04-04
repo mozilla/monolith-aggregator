@@ -123,7 +123,7 @@ class TestExtract(TestCase):
         self.engine = engine = create_engine('sqlite:///' + DB_FILES[0])
         today = datetime.date.today()
         engine.execute(CREATE)
-        for i in range(30):
+        for i in range(8):
             date = today - datetime.timedelta(days=i)
             for i in range(2):
                 v = random.randint(0, 1000)
@@ -175,7 +175,7 @@ class TestExtract(TestCase):
 
         self.assertEqual(_run([config]), 0)
         count = len(_res)
-        self.assertTrue(count > 200, count)
+        self.assertTrue(count > 1000, count)
 
         # a second attempt should fail
         # because we did not use the force flag
