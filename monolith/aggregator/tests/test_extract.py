@@ -140,11 +140,11 @@ class TestExtract(TestCase):
                 os.remove(file_)
 
     def test_extract(self):
-        config = os.path.join(os.path.dirname(__file__), 'config.ini')
-        start, end = word2daterange('last-month')
+        config = os.path.join(os.path.dirname(__file__), 'config_extract.ini')
+        start, end = word2daterange('today')
         extract(config, start, end)
         count = len(_res)
-        self.assertTrue(count > 1000, count)
+        self.assertEqual(count, 102)
 
         # a second attempt should fail
         # because we did not use the force flag
@@ -162,7 +162,7 @@ class TestExtract(TestCase):
         self.assertEqual(count * 2, len(_res))
 
     def test_main(self):
-        config = os.path.join(os.path.dirname(__file__), 'config.ini')
+        config = os.path.join(os.path.dirname(__file__), 'config_main.ini')
         # XXX this still depends on google.com, on this call:
         # aggregator/plugins/ganalytics.py:24
         #    return build('analytics', 'v3', http=h)

@@ -41,8 +41,11 @@ class History(Transactional):
                 drange = (start_date,)
             else:
                 day_count = (end_date - start_date).days
-                drange = (start_date + datetime.timedelta(n)
-                          for n in range(day_count))
+                if day_count == 0:
+                    drange = [start_date]
+                else:
+                    drange = (start_date + datetime.timedelta(n)
+                              for n in range(day_count))
 
             for date in drange:
                 for source in sources:
