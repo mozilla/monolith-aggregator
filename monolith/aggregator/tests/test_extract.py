@@ -158,58 +158,37 @@ class TestExtract(TestCase):
         # aggregator/plugins/ganalytics.py:24
         #    return build('analytics', 'v3', http=h)
         arguments = ['python', '--date', 'last-month', '--log-level=WARNING']
-        old = copy.copy(sys.argv)
-        sys.argv[:] = arguments + [config]
-        exit = -1
 
-        try:
-            main()
-        except SystemExit as exc:
-            exit = exc.code
-        finally:
-            sys.argv[:] = old
+        def _run(args):
+            old = copy.copy(sys.argv)
+            sys.argv[:] = arguments + args
+            exit = -1
+            try:
+                main()
+            except AlreadyDoneError:
+                exit = -42
+            except SystemExit as exc:
+                exit = exc.code
+            finally:
+                sys.argv[:] = old
+            return exit
 
-        self.assertEqual(exit, 0)
+        self.assertEqual(_run([config]), 0)
         count = len(_res)
         self.assertTrue(count > 200, count)
 
         # a second attempt should fail
         # because we did not use the force flag
-        old = copy.copy(sys.argv)
-        sys.argv[:] = arguments + [config]
-        try:
-            self.assertRaises(AlreadyDoneError, main)
-        finally:
-            sys.argv[:] = old
+        self.assertEqual(_run([config]), -42)
 
         # unless we force it
-        old = copy.copy(sys.argv)
-        sys.argv[:] = arguments + ['--force', config]
-        try:
-            main()
-        except SystemExit as exc:
-            exit = exc.code
-        finally:
-            sys.argv[:] = old
-
-        self.assertEqual(exit, 0)
-
+        self.assertEqual(_run(['--force', config]), 0)
         # overwrite has generated the same entries with new ids, so
         # we end up with double the entries
         self.assertEqual(count * 2, len(_res))
 
         # purge only
-        old = copy.copy(sys.argv)
-        sys.argv[:] = arguments + ['--force', '--purge-only', config]
-        try:
-            main()
-        except SystemExit as exc:
-            exit = exc.code
-        finally:
-            sys.argv[:] = old
-
-        self.assertEqual(exit, 0)
-
+        self.assertEqual(_run(['--force', '--purge-only', config]), 0)
         # purging doesn't add new entries
         self.assertEqual(count * 2, len(_res))
 
