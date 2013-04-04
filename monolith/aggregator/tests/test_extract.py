@@ -16,7 +16,7 @@ from monolith.aggregator.engine import AlreadyDoneError, RunError
 from sqlalchemy.sql import text
 
 
-_res = []
+_res = {}
 _FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
 TODAY = datetime.date.today()
 
@@ -25,17 +25,8 @@ TODAY = datetime.date.today()
 def put_es(data, overwrite, **options):
     """ElasticSearch
     """
-    size = len(data)
-    if overwrite:
-        # we'll add 25% less
-        max = int(float(size) * 0.75)
-    else:
-        max = size
-
-    for index, line in enumerate(data):
-        if index >= max:
-            break
-        _res.append(line)
+    for source, line in data:
+        _res[str(line['_id'])] = line
 
 
 _FAILS = 0
@@ -51,8 +42,8 @@ def put_es_failing(data, overwrite, **options):
     elif _FAILS < 2:
         _FAILS += 1
 
-    for line in data:
-        _res.append(line)
+    for source, line in data:
+        _res[str(line['_id'])] = line
 
 
 @extract_plugin
@@ -104,11 +95,13 @@ values (:_date, :_type, :count)
 class TestExtract(TestCase):
 
     def setUp(self):
+        self._reset()
         self.config = os.path.join(os.path.dirname(__file__), 'config.ini')
         self.config2 = os.path.join(os.path.dirname(__file__), 'config2.ini')
         self.config3 = os.path.join(os.path.dirname(__file__), 'config3.ini')
 
-        _res[:] = []
+        global _res
+        _res = {}
 
         # let's create a DB for the tests
         self.engine = engine = create_engine(DB)
@@ -162,9 +155,14 @@ class TestExtract(TestCase):
 
         # unless we force it
         extract(self.config, start, end, force=True)
-        # an overwrite add 25% less (see put_es() up there)
-        self.assertTrue(len(_res) < count * 3)
-        self.assertTrue(len(_res) > count * 2)
+        # overwrite has generated the same entries with new ids, so
+        # we end up with double the entries
+        self.assertEqual(count * 2, len(_res))
+
+        # forcing only the load phase
+        extract(self.config, start, end, sequence='load', force=True)
+        # loading the same data (ids) won't generate any more entries
+        self.assertEqual(count * 2, len(_res))
 
     def test_main(self):
         # XXX this still depends on google.com, on this call:
@@ -176,7 +174,7 @@ class TestExtract(TestCase):
 
         try:
             main()
-        except SystemExit, exc:
+        except SystemExit as exc:
             exit = exc.code
         finally:
             sys.argv[:] = old
@@ -200,16 +198,16 @@ class TestExtract(TestCase):
                        self.config]
         try:
             main()
-        except SystemExit, exc:
+        except SystemExit as exc:
             exit = exc.code
         finally:
             sys.argv[:] = old
 
         self.assertEqual(exit, 0)
 
-        # an overwrite add 25% less (see put_es() up there)
-        self.assertTrue(len(_res) < count * 3)
-        self.assertTrue(len(_res) > count * 2)
+        # overwrite has generated the same entries with new ids, so
+        # we end up with double the entries
+        self.assertEqual(count * 2, len(_res))
 
         # purge only
         old = copy.copy(sys.argv)
@@ -217,15 +215,15 @@ class TestExtract(TestCase):
                        'last-month', self.config]
         try:
             main()
-        except SystemExit, exc:
+        except SystemExit as exc:
             exit = exc.code
         finally:
             sys.argv[:] = old
 
         self.assertEqual(exit, 0)
-        # an overwrite add 25% less (see put_es() up there)
-        self.assertTrue(len(_res) < count * 3)
-        self.assertTrue(len(_res) > count * 2)
+
+        # purging doesn't add new entries
+        self.assertEqual(count * 2, len(_res))
 
     def test_retry(self):
         # retrying 3 times before failing in the load phase.
