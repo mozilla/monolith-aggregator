@@ -227,10 +227,9 @@ class TestExtract(TestCase):
 
     def test_retry(self):
         # retrying 3 times before failing in the load phase.
-        start, end = word2daterange('last-month')
+        start, end = word2daterange('today')
         extract(self.config2, start, end)
-        count = len(_res)
-        self.assertTrue(count > 1000, count)
+        self.assertEqual(len(_res), 102)
 
     def test_fails(self):
         # retrying 3 times before failing in the extract phase
