@@ -157,8 +157,9 @@ class TestExtract(TestCase):
         # XXX this still depends on google.com, on this call:
         # aggregator/plugins/ganalytics.py:24
         #    return build('analytics', 'v3', http=h)
+        arguments = ['python', '--date', 'last-month', '--log-level=WARNING']
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--date', 'last-month', config]
+        sys.argv[:] = arguments + [config]
         exit = -1
 
         try:
@@ -175,7 +176,7 @@ class TestExtract(TestCase):
         # a second attempt should fail
         # because we did not use the force flag
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--date', 'last-month', config]
+        sys.argv[:] = arguments + [config]
         try:
             self.assertRaises(AlreadyDoneError, main)
         finally:
@@ -183,7 +184,7 @@ class TestExtract(TestCase):
 
         # unless we force it
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--force', '--date', 'last-month', config]
+        sys.argv[:] = arguments + ['--force', config]
         try:
             main()
         except SystemExit as exc:
@@ -199,8 +200,7 @@ class TestExtract(TestCase):
 
         # purge only
         old = copy.copy(sys.argv)
-        sys.argv[:] = ['python', '--force', '--purge-only', '--date',
-                       'last-month', config]
+        sys.argv[:] = arguments + ['--force', '--purge-only', config]
         try:
             main()
         except SystemExit as exc:
