@@ -233,6 +233,6 @@ class TestExtract(TestCase):
         self.assertTrue(count > 1000, count)
 
     def test_fails(self):
-        # retrying 3 times before failing in the load phase.
+        # retrying 3 times before failing in the extract phase
         start, end = word2daterange('last-month')
         self.assertRaises(RunError, extract, self.config3, start, end)
