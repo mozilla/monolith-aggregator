@@ -60,7 +60,7 @@ def get_ga(start_date, end_date, **options):
 
 
 @extract_plugin
-def get_rest(start_date, end_date, **options):
+def get_solitude(start_date, end_date, **options):
     """Solitude
     """
     for i in range(100):
