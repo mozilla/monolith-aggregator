@@ -125,7 +125,7 @@ class TestExtract(TestCase):
         engine.execute(CREATE)
         for i in range(30):
             date = today - datetime.timedelta(days=i)
-            for i in range(10):
+            for i in range(2):
                 v = random.randint(0, 1000)
                 engine.execute(INSERT, _date=date, _type='sql', count=v)
 
@@ -170,7 +170,7 @@ class TestExtract(TestCase):
 
         self.assertEqual(exit, 0)
         count = len(_res)
-        self.assertTrue(count > 1000, count)
+        self.assertTrue(count > 200, count)
 
         # a second attempt should fail
         # because we did not use the force flag
