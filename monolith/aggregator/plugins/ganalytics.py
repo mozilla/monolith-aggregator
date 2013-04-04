@@ -58,7 +58,10 @@ class GoogleAnalytics(Plugin):
             self.rate_limit = int(options['rate_limit'])
         else:
             self.rate_limit = 3
-        self.rate_span = 1.0
+        if 'rate_span' in options:
+            self.rate_span = float(options['rate_span'])
+        else:
+            self.rate_span = 1.0
         self.frequency = deque(maxlen=self.rate_limit)
 
     def _fix_name(self, name):
@@ -76,7 +79,7 @@ class GoogleAnalytics(Plugin):
             freq = now - ten_calls_ago
 
             if freq < self.rate_span:
-                gevent.sleep((self.rate_span - freq) + .1)
+                gevent.sleep((self.rate_span - freq) + 0.1)
                 now = time.time()
 
             self.frequency.append(now)

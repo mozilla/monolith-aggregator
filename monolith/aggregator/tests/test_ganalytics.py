@@ -19,22 +19,20 @@ class FakeClient(object):
 class TestGoogleAnalytics(unittest.TestCase):
 
     def test_rate_limiter(self):
-
-        options = {'oauth_token': os.path.join(os.path.dirname(__file__),
-                                               'auth.json'),
-                   'profile_id': 'XXX',
-                   'metrics': 'XXX',
-                   }
-
+        options = {
+            'oauth_token': os.path.join(os.path.dirname(__file__),
+                                        'auth.json'),
+            'profile_id': 'XXX',
+            'metrics': 'XXX',
+            'rate_limit': 6,
+            'rate_span': 0.2,
+        }
         ga = GoogleAnalytics(**options)
         ga.client = FakeClient()
 
-        # calling continuously for 5 seconds.
         now = time.time()
-
-        while time.time() - now < 3.:
+        while time.time() - now < 0.5:
             ga._rate_limited_get()
 
         # let's see how many call we got through
-        # 3 seconds => 30 call max !
         self.assertTrue(ga.client.calls < 30, ga.client.calls)
