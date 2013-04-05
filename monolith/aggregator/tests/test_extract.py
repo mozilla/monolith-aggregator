@@ -22,6 +22,7 @@ from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
 
 _res = {}
 TODAY = datetime.date.today()
+_FAILS = 0
 
 
 @inject_plugin
@@ -30,9 +31,6 @@ def put_es(data, overwrite, **options):
     """
     for source, line in data:
         _res[str(line['_id'])] = line
-
-
-_FAILS = 0
 
 
 @inject_plugin
@@ -82,8 +80,9 @@ class TestExtract(IsolatedTestCase):
 
     def setUp(self):
         super(TestExtract, self).setUp()
-        global _res
+        global _res, _FAILS
         _res = {}
+        _FAILS = 0
 
     def _make_config(self, base_name, **kw):
         here = os.path.dirname(__file__)
