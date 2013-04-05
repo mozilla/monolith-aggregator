@@ -21,7 +21,6 @@ from monolith.aggregator.engine import AlreadyDoneError, RunError
 from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
 
 _res = {}
-_FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
 TODAY = datetime.date.today()
 
 
