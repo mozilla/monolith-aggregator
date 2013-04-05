@@ -79,21 +79,6 @@ def get_market_place(start_date, end_date, **options):
         yield {'_type': 'marketplace', '_date': TODAY}
 
 
-DB_FILES = (os.path.join(os.path.dirname(__file__), 'source.db'),
-            os.path.join(os.path.dirname(__file__), 'target.db'),
-            os.path.join(os.path.dirname(__file__), 'history.db'))
-
-CREATE = """\
-create table downloads
-    (_date DATE, _type VARCHAR(32), count INTEGER)
-"""
-
-INSERT = text("""\
-insert into downloads (_date, _type, count)
-values (:_date, :_type, :count)
-""")
-
-
 class TestExtract(IsolatedTestCase):
 
     def setUp(self):
@@ -109,9 +94,9 @@ class TestExtract(IsolatedTestCase):
         temp_dir = tempfile.mkdtemp()
         fd, config = tempfile.mkstemp(dir=temp_dir)
         with open(base_config) as base:
-            text = base.read()
-            text = text.format(**kw)
-            os.write(fd, text)
+            config_text = base.read()
+            config_text = config_text.format(**kw)
+            os.write(fd, config_text)
         return config, temp_dir
 
     def test_fails(self):
@@ -182,10 +167,14 @@ class TestExtract(IsolatedTestCase):
         HttpRequest.execute = _execute
 
         # create a db for the tests
+        INSERT = text("insert into downloads (_date, _type, count)"
+                      "values (:_date, :_type, :count)")
+
         engine = create_engine(
             'sqlite:///' + os.path.join(temp_dir, 'source.db'))
         today = datetime.date.today()
-        engine.execute(CREATE)
+        engine.execute("create table downloads "
+                       "(_date DATE, _type VARCHAR(32), count INTEGER)")
         for i in range(8):
             date = today - datetime.timedelta(days=i)
             for i in range(2):
