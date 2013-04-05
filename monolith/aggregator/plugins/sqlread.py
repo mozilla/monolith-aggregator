@@ -38,6 +38,11 @@ class SQLRead(Plugin):
         if self.mysql:
             return data
 
+        # deal with sqlite returning buffers
+        for key, value in data.items():
+            if isinstance(value, buffer):
+                data[key] = str(value)
+
         # cope with SQLite not having a date type
         for field in ('date', '_date'):
             if field in data:
