@@ -4,10 +4,11 @@ import os
 import random
 import re
 import sys
+import tempfile
 
 from httpretty import HTTPretty
 from httpretty import httprettified
-from unittest2 import TestCase
+from pyelastictest import IsolatedTestCase
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
@@ -93,9 +94,10 @@ values (:_date, :_type, :count)
 """)
 
 
-class TestExtract(TestCase):
+class TestExtract(IsolatedTestCase):
 
     def setUp(self):
+        super(TestExtract, self).setUp()
         self._reset()
         global _res
         _res = {}
@@ -115,6 +117,7 @@ class TestExtract(TestCase):
 
     def tearDown(self):
         self._reset()
+        super(TestExtract, self).tearDown()
 
     def _reset(self):
         for file_ in DB_FILES:
@@ -133,10 +136,22 @@ class TestExtract(TestCase):
                 engine.execute(INSERT, _date=date, _type='sql', count=v)
 
     def test_extract(self):
-        config = os.path.join(os.path.dirname(__file__), 'config_extract.ini')
+        base_config = os.path.join(
+            os.path.dirname(__file__), 'config_extract.ini')
+        temp_dir = tempfile.mkdtemp()
+        fd, config = tempfile.mkstemp(dir=temp_dir)
+        with open(base_config) as base:
+            text = base.read()
+            text = text.format(es_location=self.es_cluster.urls[0])
+            os.write(fd, text)
+
+        def _count():
+            self.es_client.refresh()
+            return self.es_client.count({'match_all': {}})['count']
+
         start, end = word2daterange('today')
         extract(config, start, end)
-        count = len(_res)
+        count = _count()
         self.assertEqual(count, 102)
 
         # a second attempt should fail
@@ -147,12 +162,12 @@ class TestExtract(TestCase):
         extract(config, start, end, force=True)
         # overwrite has generated the same entries with new ids, so
         # we end up with double the entries
-        self.assertEqual(count * 2, len(_res))
+        self.assertEqual(count * 2, _count())
 
         # forcing only the load phase
         extract(config, start, end, sequence='load', force=True)
         # loading the same data (ids) won't generate any more entries
-        self.assertEqual(count * 2, len(_res))
+        self.assertEqual(count * 2, _count())
 
     @httprettified
     def test_main(self):
