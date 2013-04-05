@@ -98,7 +98,6 @@ class TestExtract(IsolatedTestCase):
 
     def setUp(self):
         super(TestExtract, self).setUp()
-        self._reset()
         global _res
         _res = {}
 
@@ -115,18 +114,10 @@ class TestExtract(IsolatedTestCase):
 
         HttpRequest.execute = _execute
 
-    def tearDown(self):
-        self._reset()
-        super(TestExtract, self).tearDown()
-
-    def _reset(self):
-        for file_ in DB_FILES:
-            if os.path.exists(file_):
-                os.remove(file_)
-
-    def _make_sql_plugin_db(self):
+    def _make_sql_plugin_db(self, temp_dir):
         # let's create a DB for the tests
-        self.engine = engine = create_engine('sqlite:///' + DB_FILES[0])
+        engine = create_engine(
+            'sqlite:///' + os.path.join(temp_dir, 'source.db'))
         today = datetime.date.today()
         engine.execute(CREATE)
         for i in range(8):
@@ -135,15 +126,21 @@ class TestExtract(IsolatedTestCase):
                 v = random.randint(0, 1000)
                 engine.execute(INSERT, _date=date, _type='sql', count=v)
 
-    def test_extract(self):
-        base_config = os.path.join(
-            os.path.dirname(__file__), 'config_extract.ini')
+    def _make_config(self, base_name, **kw):
+        here = os.path.dirname(__file__)
+        kw['es_location'] = self.es_cluster.urls[0]
+        kw['tests_path'] = here
+        base_config = os.path.join(here, base_name)
         temp_dir = tempfile.mkdtemp()
         fd, config = tempfile.mkstemp(dir=temp_dir)
         with open(base_config) as base:
             text = base.read()
-            text = text.format(es_location=self.es_cluster.urls[0])
+            text = text.format(**kw)
             os.write(fd, text)
+        return config, temp_dir
+
+    def test_extract(self):
+        config, _ = self._make_config('config_extract.ini')
 
         def _count():
             self.es_client.refresh()
@@ -171,9 +168,9 @@ class TestExtract(IsolatedTestCase):
 
     @httprettified
     def test_main(self):
-        config = os.path.join(os.path.dirname(__file__), 'config_main.ini')
+        config, temp_dir = self._make_config('config_main.ini')
         ga_rest = os.path.join(os.path.dirname(__file__), 'ga_rest.json')
-        self._make_sql_plugin_db()
+        self._make_sql_plugin_db(temp_dir)
         _mock_fetch_uris('https://addons.mozilla.dev/api/monolith/data/',
                          '/api/monolith/data/')
         with open(ga_rest, 'r') as fd:
@@ -218,14 +215,14 @@ class TestExtract(IsolatedTestCase):
         self.assertEqual(count * 2, len(_res))
 
     def test_retry(self):
-        config = os.path.join(os.path.dirname(__file__), 'config_retry.ini')
+        config, _ = self._make_config('config_retry.ini')
         # retrying 3 times before failing in the load phase.
         start, end = word2daterange('today')
         extract(config, start, end)
         self.assertEqual(len(_res), 102)
 
     def test_fails(self):
-        config = os.path.join(os.path.dirname(__file__), 'config_fails.ini')
+        config, _ = self._make_config('config_fails.ini')
         # retrying 3 times before failing in the extract phase
         start, end = word2daterange('last-month')
         self.assertRaises(RunError, extract, config, start, end)
