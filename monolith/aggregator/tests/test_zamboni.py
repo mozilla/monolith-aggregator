@@ -11,6 +11,82 @@ from httpretty import HTTPretty
 from httpretty import httprettified
 from requests import HTTPError
 
+DATA_ID = 0
+
+
+def _get_data(count, key, user, app_id, date=None, **data):
+    """Returns :param count: elements for the given user and app_id.
+
+    You can pass additional data into :param data:
+    """
+    def __get_data(user=None, date=None, **data):
+        global DATA_ID
+        DATA_ID += 1
+        return {'id': DATA_ID,
+                'key': key,
+                'user_hash': user,
+                'value': data,
+                'recorded': date}
+
+    if date is None:
+        date = datetime(2013, 02, 12, 17, 34)
+
+    returned_data = []
+    data['app-id'] = app_id
+    for i in range(1, count + 1):
+        data_ = __get_data(user=user,
+                           anonymous=(user == 'anonymous'),
+                           date=(date + timedelta(days=i)).isoformat(),
+                           **data)
+        returned_data.append(data_)
+    return returned_data
+
+
+def _get_raw_values():
+    data = []
+    data.extend(_get_data(20, 'install', 'anonymous', 1234, installs=1))
+    data.extend(_get_data(20, 'install', 'alexis', 1234, installs=1))
+    data.extend(_get_data(20, 'install', 'tarek', 1234, installs=1))
+    data.extend(_get_data(20, 'install', 'alexis', 4321, installs=1))
+    random.shuffle(data)
+    return data
+
+
+def _mock_fetch_uris(endpoint, resource_uri):
+    raw_values = _get_raw_values()
+    values = iter(raw_values)
+
+    rest = islice(values, 20)
+    rest_data = list(rest)
+    offset = 0
+    while rest_data:
+        # match every request without "offset" in it
+        if offset == 0:
+            regexp = re.compile(endpoint + "(?!.*offset)")
+        else:
+            regexp = re.compile(endpoint + ".*&offset=%d.*" % offset)
+
+        offset += 20
+
+        if offset == 80:
+            next_uri = None
+        else:
+            query = '/?limit=20&key=install&offset=%d'
+            next_uri = resource_uri + query % offset
+
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            regexp,
+            body=json_dumps({'meta': {"limit": 20,
+                                      "next": next_uri,
+                                      "offset": 0,
+                                      "previous": None,
+                                      "total_count": len(raw_values)},
+                             'objects': rest_data}))
+
+        rest = islice(values, 20)
+        rest_data = list(rest)
+
 
 class TestAPIReader(TestCase):
 
@@ -24,76 +100,6 @@ class TestAPIReader(TestCase):
         self.yesterday = self.now - timedelta(days=1)
         self.last_week = self.now - timedelta(days=7)
 
-    def get_data(self, count, key, user, app_id, date=None, **data):
-        """Returns :param count: elements for the given user and app_id.
-
-        You can pass additional data into :param data:
-        """
-        def __get_data(user=None, date=None, **data):
-            self._data_id += 1
-            return {'id': self._data_id,
-                    'key': key,
-                    'user_hash': user,
-                    'value': data,
-                    'recorded': date}
-
-        if date is None:
-            date = datetime(2013, 02, 12, 17, 34)
-
-        returned_data = []
-        data['app-id'] = app_id
-        for i in range(1, count + 1):
-            data_ = __get_data(user=user,
-                               anonymous=(user == 'anonymous'),
-                               date=(date + timedelta(days=i)).isoformat(),
-                               **data)
-            returned_data.append(data_)
-        return returned_data
-
-    def _get_raw_values(self, key):
-        data = []
-        data.extend(self.get_data(20, key, 'anonymous', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'alexis', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'tarek', 1234, installs=1))
-        data.extend(self.get_data(20, key, 'alexis', 4321, installs=1))
-        random.shuffle(data)
-        return data
-
-    def _mock_fetch_uris(self):
-        raw_values = self._get_raw_values('install')
-        values = iter(raw_values)
-
-        rest = islice(values, 20)
-        rest_data = list(rest)
-        offset = 0
-        while rest_data:
-            # match every request without "offset" in it
-            if offset == 0:
-                regexp = re.compile(self.endpoint + "(?!.*offset)")
-            else:
-                regexp = re.compile(self.endpoint + ".*&offset=%d.*" % offset)
-
-            offset += 20
-
-            if offset == 80:
-                next_uri = None
-            else:
-                query = '/?limit=20&key=install&offset=%d'
-                next_uri = self.resource_uri + query % offset
-
-            HTTPretty.register_uri(
-                HTTPretty.GET,
-                regexp,
-                body=json_dumps({'meta': {"limit": 20,
-                                          "next": next_uri,
-                                          "offset": 0,
-                                          "previous": None,
-                                          "total_count": len(raw_values)},
-                                 'objects': rest_data}))
-
-            rest = islice(values, 20)
-            rest_data = list(rest)
-
     def test_get_id(self):
         reader = APIReader(id='mkt-install-foo',
                            endpoint='http://' + self.endpoint,
@@ -102,7 +108,7 @@ class TestAPIReader(TestCase):
 
     @httprettified
     def test_rest_endpoint_is_called(self):
-        self._mock_fetch_uris()
+        _mock_fetch_uris(self.endpoint, self.resource_uri)
 
         reader = APIReader(endpoint='http://' + self.endpoint, type='install',
                            field='foo')

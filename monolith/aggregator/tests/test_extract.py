@@ -1,11 +1,15 @@
-import sys
-import os
-import random
 import copy
 import datetime
+import os
+import random
+import re
+import sys
 
+from httpretty import HTTPretty
+from httpretty import httprettified
 from unittest2 import TestCase
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import inject as inject_plugin
@@ -13,8 +17,7 @@ from monolith.aggregator.plugins import extract as extract_plugin
 from monolith.aggregator.util import json_loads
 from monolith.aggregator.util import word2daterange
 from monolith.aggregator.engine import AlreadyDoneError, RunError
-from sqlalchemy.sql import text
-
+from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
 
 _res = {}
 _FEED = os.path.join(os.path.dirname(__file__), 'feed.xml')
@@ -151,12 +154,19 @@ class TestExtract(TestCase):
         # loading the same data (ids) won't generate any more entries
         self.assertEqual(count * 2, len(_res))
 
+    @httprettified
     def test_main(self):
         config = os.path.join(os.path.dirname(__file__), 'config_main.ini')
+        ga_rest = os.path.join(os.path.dirname(__file__), 'ga_rest.json')
         self._make_sql_plugin_db()
-        # XXX this still depends on google.com, on this call:
-        # aggregator/plugins/ganalytics.py:24
-        #    return build('analytics', 'v3', http=h)
+        _mock_fetch_uris('https://addons.mozilla.dev/api/monolith/data/',
+                         '/api/monolith/data/')
+        with open(ga_rest, 'r') as fd:
+            HTTPretty.register_uri(
+                HTTPretty.GET,
+                re.compile('.*/discovery/v1/apis/analytics/.*'),
+                body=fd.read(),
+            )
         arguments = ['python', '--date', 'last-month', '--log-level=WARNING']
 
         def _run(args):
