@@ -170,3 +170,22 @@ class ESWrite(Plugin):
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
             self._bulk_index(key[0], key[1], docs, id_field='_id')
+
+    def clear(self, start_date, end_date, source_ids):
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        end_date_str = end_date.strftime('%Y-%m-%d')
+
+        query = {'filtered': {
+            'query': {'match_all': {}},
+            'filter': {
+                'range': {
+                    'date': {
+                        'gte': start_date_str,
+                        'lte': end_date_str,
+                    },
+                    '_cache': False,
+                }
+            }
+        }}
+        self.client.refresh('time_*')
+        self.client.delete_by_query('time_*', None, query)

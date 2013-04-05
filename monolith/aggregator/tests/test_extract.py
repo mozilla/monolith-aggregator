@@ -137,12 +137,12 @@ class TestExtract(IsolatedTestCase):
         extract(config, start, end, force=True)
         # overwrite has generated the same entries with new ids, so
         # we end up with double the entries
-        self.assertEqual(count * 2, _count())
+        self.assertEqual(count, _count())
 
         # forcing only the load phase
         extract(config, start, end, sequence='load', force=True)
         # loading the same data (ids) won't generate any more entries
-        self.assertEqual(count * 2, _count())
+        self.assertEqual(count, _count())
 
     @httprettified
     def test_main(self):
