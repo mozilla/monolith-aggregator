@@ -155,9 +155,7 @@ class ESWrite(Plugin):
                                         body,
                                         encode_body=False)
 
-    def inject(self, batch, overwrite=False):
-        # XXX deal with overwrite
-        #
+    def inject(self, batch):
         holder = defaultdict(list)
 
         # sort data into index/type buckets

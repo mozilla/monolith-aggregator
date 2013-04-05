@@ -92,7 +92,7 @@ class Engine(object):
             plugin.rollback_transaction()
 
     def _put_data(self, plugin, data):
-        return plugin.inject(data, overwrite=self.force)
+        return plugin.inject(data)
 
     def _get_data(self, plugin, start_date, end_date):
         try:

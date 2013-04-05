@@ -43,13 +43,8 @@ class Database(Transactional):
         record.metadata.bind = self.engine
         record.create(checkfirst=True)
 
-    def put(self, batch, overwrite=False):
+    def put(self, batch):
         with self.transaction() as session:
-            # XXX the real solution here is to implement a
-            # low-level ON DUPLICATE KEY UPDATE call
-            # but for now we'll use merge() and move to
-            # ON DUPLICATE KEY UPDATE if this becomes a
-            # bottleneck
             records = []
             for source_id, item in batch:
                 item = dict(item)
@@ -60,18 +55,7 @@ class Database(Transactional):
                            date=date, type=type,
                            source_id=source_id,
                            value=json_dumps(item)))
-
-            if overwrite:
-                # test for prior data before doing complex merges
-                prior_data = session.query(Record).filter(
-                    Record.id.in_([r.id for r in records])).count()
-                if not prior_data:
-                    session.add_all(records)
-                else:
-                    for record in records:
-                        session.merge(record)
-            else:
-                session.add_all(records)
+            session.add_all(records)
 
     def get(self, start_date=None, end_date=None,
             type=None, source_id=None):

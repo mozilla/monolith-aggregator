@@ -30,12 +30,12 @@ def fill_es(data):
 
 
 @inject_plugin
-def put_es(data, overwrite, **options):
+def put_es(data, **options):
     fill_es(data)
 
 
 @inject_plugin
-def put_es_failing(data, overwrite, **options):
+def put_es_failing(data, **options):
     global _FAILS
     _FAILS += 1
     if _FAILS < 2:

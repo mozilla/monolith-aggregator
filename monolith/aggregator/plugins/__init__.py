@@ -5,7 +5,7 @@ class Plugin(object):
     def extract(self, start_date, end_date):
         raise NotImplementedError(self)
 
-    def inject(self, batch, overwrite=False):
+    def inject(self, batch):
         raise NotImplementedError(self)
 
     def purge(self, *args):

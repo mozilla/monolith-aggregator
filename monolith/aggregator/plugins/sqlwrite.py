@@ -1,14 +1,15 @@
 from monolith.aggregator.db import Database
+from monolith.aggregator.plugins import Plugin
 
 
-class SQLInjecter(object):
-    """SQL"""
+class SQLInjecter(Plugin):
 
     def __init__(self, **options):
+        super(SQLInjecter, self).__init__(**options)
         self.db = Database(sqluri=options['database'])
 
-    def inject(self, batch, overwrite=False):
-        self.db.put(batch, overwrite)
+    def inject(self, batch):
+        self.db.put(batch)
 
     def start_transaction(self):
         self.db.start_transaction()
