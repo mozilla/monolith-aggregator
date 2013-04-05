@@ -114,6 +114,19 @@ class TestExtract(IsolatedTestCase):
             os.write(fd, text)
         return config, temp_dir
 
+    def test_fails(self):
+        config, _ = self._make_config('config_fails.ini')
+        # retrying 3 times before failing in the extract phase
+        start, end = word2daterange('last-month')
+        self.assertRaises(RunError, extract, config, start, end)
+
+    def test_retry(self):
+        config, _ = self._make_config('config_retry.ini')
+        # retrying 3 times before failing in the load phase.
+        start, end = word2daterange('today')
+        extract(config, start, end)
+        self.assertEqual(len(_res), 102)
+
     def test_extract(self):
         config, _ = self._make_config('config_extract.ini')
 
@@ -213,16 +226,3 @@ class TestExtract(IsolatedTestCase):
         self.assertEqual(_run(['--force', '--purge-only', config]), 0)
         # purging doesn't add new entries
         self.assertEqual(count * 2, len(_res))
-
-    def test_retry(self):
-        config, _ = self._make_config('config_retry.ini')
-        # retrying 3 times before failing in the load phase.
-        start, end = word2daterange('today')
-        extract(config, start, end)
-        self.assertEqual(len(_res), 102)
-
-    def test_fails(self):
-        config, _ = self._make_config('config_fails.ini')
-        # retrying 3 times before failing in the extract phase
-        start, end = word2daterange('last-month')
-        self.assertRaises(RunError, extract, config, start, end)
