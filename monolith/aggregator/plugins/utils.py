@@ -9,6 +9,8 @@ from urlparse import urljoin
 
 from requests import Request, Session
 
+from monolith.aggregator.plugins import Plugin
+
 _ISO = '%Y-%m-%dT%H:%M:%S'
 
 
@@ -16,9 +18,10 @@ def iso2datetime(data):
     return datetime.strptime(data, _ISO)
 
 
-class TastypieReader(object):
+class TastypieReader(Plugin):
 
-    def __init__(self, parser, **options):
+    def __init__(self, **options):
+        super(TastypieReader, self).__init__(**options)
         self.session = Session()
         self.create_oauth_hook(**options)
 

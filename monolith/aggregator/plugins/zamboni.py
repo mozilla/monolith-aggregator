@@ -6,12 +6,12 @@ from monolith.aggregator.plugins.utils import iso2datetime, TastypieReader
 class APIReader(TastypieReader):
     """This plugins calls the zamboni API and returns it."""
 
-    def __init__(self, parser=None, **kwargs):
-        self.endpoint = kwargs['endpoint']
-        self.type = kwargs['type']
-        self.field = kwargs['field']
-        self.options = kwargs
-        super(APIReader, self).__init__(parser, **kwargs)
+    def __init__(self, **options):
+        super(APIReader, self).__init__(**options)
+        self.endpoint = options['endpoint']
+        self.type = options['type']
+        self.field = options['field']
+        self.options = options
 
     def purge(self, start_date, end_date):
         if self.options.get('purge_data', False):

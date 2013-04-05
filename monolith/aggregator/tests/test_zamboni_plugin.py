@@ -13,7 +13,9 @@ from requests import HTTPError
 
 
 class TestAPIReader(TestCase):
+
     def setUp(self, *args, **kwargs):
+        super(TestAPIReader, self).setUp(*args, **kwargs)
         self._data_id = 0
         self.server = 'marketplace.firefox.com'
         self.resource_uri = '/api/monolith/data'
@@ -21,7 +23,6 @@ class TestAPIReader(TestCase):
         self.now = datetime(2013, 02, 12, 17, 34)
         self.yesterday = self.now - timedelta(days=1)
         self.last_week = self.now - timedelta(days=7)
-        super(TestAPIReader, self).setUp(*args, **kwargs)
 
     def get_data(self, count, key, user, app_id, date=None, **data):
         """Returns :param count: elements for the given user and app_id.
@@ -92,6 +93,12 @@ class TestAPIReader(TestCase):
 
             rest = islice(values, 20)
             rest_data = list(rest)
+
+    def test_get_id(self):
+        reader = APIReader(id='mkt-install-foo',
+                           endpoint='http://' + self.endpoint,
+                           type='install', field='foo')
+        self.assertEqual(reader.get_id(), 'mkt-install-foo')
 
     @httprettified
     def test_rest_endpoint_is_called(self):
