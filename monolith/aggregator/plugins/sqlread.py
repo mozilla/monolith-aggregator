@@ -30,6 +30,8 @@ class SQLRead(Plugin):
             if field not in data:
                 continue
             value = data[field]
+            if isinstance(value, buffer):
+                value = str(value)
             data.update(json_loads(value))
             del data[field]
 
