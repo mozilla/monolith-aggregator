@@ -1,6 +1,6 @@
 -f https://github.com/SiteSupport/gevent/downloads
 PyMySQL==0.5
-SQLAlchemy==0.8.0b2
+SQLAlchemy==0.8.0
 argparse==1.2.1
 gevent==1.0rc2
 google-api-python-client==1.0
@@ -13,4 +13,4 @@ python-gflags==2.0
 requests==1.1.0
 requests-oauth==0.4.1
 requests-oauthlib==0.3.0
-simplejson==3.1.0
+simplejson==3.1.2
