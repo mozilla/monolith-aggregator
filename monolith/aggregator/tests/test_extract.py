@@ -37,12 +37,10 @@ def put_es(data, overwrite, **options):
 @inject_plugin
 def put_es_failing(data, overwrite, **options):
     global _FAILS
-    if _FAILS == 2:
-        # things will work fine after the 2nd call
-        _FAILS = 3
+    _FAILS += 1
+    if _FAILS < 2:
         raise ValueError('boom')
-    elif _FAILS < 2:
-        _FAILS += 1
+    # things will work fine after the 2nd call
     fill_es(data)
 
 
