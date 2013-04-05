@@ -30,17 +30,9 @@ class Plugin(object):
 class _FuncPlugin(Plugin):
     def extract(self, *args, **kw):
         return self.func(*args, **kw)
-    inject = extract
 
 
 def extract(func):
-    def __func(self, *args, **kw):
-        return func(*args, **kw)
-
-    return type(func.__name__.upper(), (_FuncPlugin,), {'func': __func})
-
-
-def inject(func):
     def __func(self, *args, **kw):
         return func(*args, **kw)
 

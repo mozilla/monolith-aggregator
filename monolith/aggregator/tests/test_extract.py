@@ -13,8 +13,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 from monolith.aggregator.extract import extract, main
-from monolith.aggregator.plugins import inject as inject_plugin
 from monolith.aggregator.plugins import extract as extract_plugin
+from monolith.aggregator.plugins import Plugin
 from monolith.aggregator.util import word2daterange
 from monolith.aggregator.engine import AlreadyDoneError, RunError
 from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
@@ -24,24 +24,40 @@ TODAY = datetime.date.today()
 _FAILS = 0
 
 
-def fill_es(data):
-    for source, line in data:
-        _res[str(line['_id'])] = line
+class ESDummy(Plugin):
+
+    def fill_es(self, data):
+        global _res
+        for source, line in data:
+            _res[str(line['_id'])] = line
+
+    def clear(self, start_date, end_date, source_ids):
+        # dummy version ignores source_ids filtering
+        global _res
+        remove = []
+        for key, value in _res.items():
+            date = value['date'].date()
+            if date >= start_date and date <= end_date:
+                remove.append(key)
+        for key in remove:
+            del _res[key]
 
 
-@inject_plugin
-def put_es(data, **options):
-    fill_es(data)
+class PutESPlugin(ESDummy):
+
+    def inject(self, data, **options):
+        self.fill_es(data)
 
 
-@inject_plugin
-def put_es_failing(data, **options):
-    global _FAILS
-    _FAILS += 1
-    if _FAILS < 2:
-        raise ValueError('boom')
-    # things will work fine after the 2nd call
-    fill_es(data)
+class PutESFailPlugin(ESDummy):
+
+    def inject(self, data, **options):
+        global _FAILS
+        _FAILS += 1
+        if _FAILS < 2:
+            raise ValueError('boom')
+        # things will work fine after the 2nd call
+        self.fill_es(data)
 
 
 @extract_plugin
@@ -189,11 +205,10 @@ class TestExtract(IsolatedTestCase):
 
         # unless we force it
         self.assertEqual(_run(['--force', config]), 0)
-        # overwrite has generated the same entries with new ids, so
-        # we end up with double the entries
-        self.assertEqual(count * 2, len(_res))
+        # overwrite has removed all data and added new entries
+        self.assertEqual(count, len(_res))
 
         # purge only
         self.assertEqual(_run(['--force', '--purge-only', config]), 0)
-        # purging doesn't add new entries
-        self.assertEqual(count * 2, len(_res))
+        # purging doesn't add or remove entries
+        self.assertEqual(count, len(_res))
