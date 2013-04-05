@@ -101,31 +101,6 @@ class TestExtract(IsolatedTestCase):
         global _res
         _res = {}
 
-        from apiclient.http import HttpRequest
-
-        def _execute(self, *args, **options):
-            call = self.uri.split('/')[-1].split('?')[0]
-            name = os.path.join(os.path.dirname(__file__), '%s.json' % call)
-
-            with open(name) as f:
-                data = f.read()
-
-            return json_loads(data)
-
-        HttpRequest.execute = _execute
-
-    def _make_sql_plugin_db(self, temp_dir):
-        # let's create a DB for the tests
-        engine = create_engine(
-            'sqlite:///' + os.path.join(temp_dir, 'source.db'))
-        today = datetime.date.today()
-        engine.execute(CREATE)
-        for i in range(8):
-            date = today - datetime.timedelta(days=i)
-            for i in range(2):
-                v = random.randint(0, 1000)
-                engine.execute(INSERT, _date=date, _type='sql', count=v)
-
     def _make_config(self, base_name, **kw):
         here = os.path.dirname(__file__)
         kw['es_location'] = self.es_cluster.urls[0]
@@ -170,7 +145,6 @@ class TestExtract(IsolatedTestCase):
     def test_main(self):
         config, temp_dir = self._make_config('config_main.ini')
         ga_rest = os.path.join(os.path.dirname(__file__), 'ga_rest.json')
-        self._make_sql_plugin_db(temp_dir)
         _mock_fetch_uris('https://addons.mozilla.dev/api/monolith/data/',
                          '/api/monolith/data/')
         with open(ga_rest, 'r') as fd:
@@ -179,6 +153,32 @@ class TestExtract(IsolatedTestCase):
                 re.compile('.*/discovery/v1/apis/analytics/.*'),
                 body=fd.read(),
             )
+
+        # provide fake data for GA plugin
+        from apiclient.http import HttpRequest
+
+        def _execute(self, *args, **options):
+            call = self.uri.split('/')[-1].split('?')[0]
+            name = os.path.join(os.path.dirname(__file__), '%s.json' % call)
+
+            with open(name) as f:
+                data = f.read()
+
+            return json_loads(data)
+
+        HttpRequest.execute = _execute
+
+        # create a db for the tests
+        engine = create_engine(
+            'sqlite:///' + os.path.join(temp_dir, 'source.db'))
+        today = datetime.date.today()
+        engine.execute(CREATE)
+        for i in range(8):
+            date = today - datetime.timedelta(days=i)
+            for i in range(2):
+                v = random.randint(0, 1000)
+                engine.execute(INSERT, _date=date, _type='sql', count=v)
+
         arguments = ['python', '--date', 'last-month', '--log-level=WARNING']
 
         def _run(args):
