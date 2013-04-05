@@ -38,10 +38,12 @@ class SQLRead(Plugin):
         if self.mysql:
             return data
 
-        if '_date' in data:
-            date = data['_date']
-            if isinstance(date, basestring):
-                data['_date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
+        # cope with SQLite not having a date type
+        for field in ('date', '_date'):
+            if field in data:
+                date = data[field]
+                if isinstance(date, basestring):
+                    data[field] = datetime.datetime.strptime(date, '%Y-%m-%d')
 
         return data
 
