@@ -140,29 +140,22 @@ class TestExtract(IsolatedTestCase):
     @httprettified
     def test_main(self):
         config, temp_dir = self._make_config('config_main.ini')
-        ga_rest = os.path.join(os.path.dirname(__file__), 'ga_rest.json')
         _mock_fetch_uris('https://addons.mozilla.dev/api/monolith/data/',
                          '/api/monolith/data/')
-        with open(ga_rest, 'r') as fd:
+        here = os.path.dirname(__file__)
+        with open(os.path.join(here, 'ga_rest.json'), 'r') as fd:
             HTTPretty.register_uri(
                 HTTPretty.GET,
                 re.compile('.*/discovery/v1/apis/analytics/.*'),
                 body=fd.read(),
             )
 
-        # provide fake data for GA plugin
-        from apiclient.http import HttpRequest
-
-        def _execute(self, *args, **options):
-            call = self.uri.split('/')[-1].split('?')[0]
-            name = os.path.join(os.path.dirname(__file__), '%s.json' % call)
-
-            with open(name) as f:
-                data = f.read()
-
-            return json_loads(data)
-
-        HttpRequest.execute = _execute
+        with open(os.path.join(here, 'ga.json'), 'r') as fd:
+            HTTPretty.register_uri(
+                HTTPretty.GET,
+                re.compile('.*/analytics/v3/data/ga.*'),
+                body=fd.read(),
+            )
 
         # create a db for the tests
         INSERT = text("insert into downloads (_date, _type, count)"
