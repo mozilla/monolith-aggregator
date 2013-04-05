@@ -15,7 +15,6 @@ from sqlalchemy.sql import text
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import inject as inject_plugin
 from monolith.aggregator.plugins import extract as extract_plugin
-from monolith.aggregator.util import json_loads
 from monolith.aggregator.util import word2daterange
 from monolith.aggregator.engine import AlreadyDoneError, RunError
 from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
