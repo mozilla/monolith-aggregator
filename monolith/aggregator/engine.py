@@ -147,13 +147,17 @@ class Engine(object):
             self.history.commit_transaction()
 
     def _clear(self, start_date, end_date):
+        source_ids = set()
+        plugins = []
         for phase, sources, targets in self.sequence:
-            source_ids = [s.get_id() for s in sources]
-            for target in targets:
-                try:
-                    target.clear(start_date, end_date, source_ids)
-                except Exception:
-                    logger.error('Failed to clear %r' % target.get_id())
+            source_ids.update(set([s.get_id() for s in sources]))
+            plugins.extend(targets)
+
+        for target in plugins:
+            try:
+                target.clear(start_date, end_date, list(source_ids))
+            except Exception:
+                logger.error('Failed to clear %r' % target.get_id())
 
     def _purge(self, start_date, end_date):
         for phase, sources, targets in self.sequence:
