@@ -1,15 +1,11 @@
 from unittest2 import TestCase
 from datetime import date, datetime, timedelta
 
-from monolith.aggregator.util import all_, word2daterange
+from monolith.aggregator.util import word2daterange
 from monolith.aggregator.util import json_loads, json_dumps
 
 
 class TestUtils(TestCase):
-
-    def test_all(self):
-        self.assertFalse(all_([1, 2, 3], 1))
-        self.assertTrue(all_((1, 1, 1), 1))
 
     def test_word2daterange(self):
 

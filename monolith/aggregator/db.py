@@ -3,7 +3,7 @@ from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
-from monolith.aggregator.util import json_dumps, all_, Transactional
+from monolith.aggregator.util import json_dumps, Transactional
 from monolith.aggregator.uid import urlsafe_uid
 
 
@@ -75,9 +75,6 @@ class Database(Transactional):
 
     def get(self, start_date=None, end_date=None,
             type=None, source_id=None):
-        if all_((start_date, end_date, type, source_id), None):
-            raise ValueError("You need to filter something")
-
         query = self.session.query(Record)
 
         if start_date is not None:

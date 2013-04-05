@@ -38,9 +38,6 @@ class TestDatabase(TestCase):
         results = query.all()
         self.assertEquals(results[0].date, self._last_week)
 
-    def test_record_retrieval_need_a_filter(self):
-        self.assertRaises(ValueError, self.db.get)
-
     def test_filter_end_date(self):
         self.db.put([
             ('test', dict(_type='foo', key='value', _date=self._last_week)),

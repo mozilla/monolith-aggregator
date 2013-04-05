@@ -30,14 +30,6 @@ def json_dumps(obj):
     return json.dumps(obj, default=encode_date)
 
 
-def all_(iterable, value):
-    """like the builtin all, but compares to the value you pass"""
-    for element in iterable:
-        if element is not value:
-            return False
-    return True
-
-
 LOG_LEVELS = {
     "critical": logging.CRITICAL,
     "error": logging.ERROR,
