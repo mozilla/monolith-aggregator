@@ -24,12 +24,14 @@ TODAY = datetime.date.today()
 _FAILS = 0
 
 
-@inject_plugin
-def put_es(data, overwrite, **options):
-    """ElasticSearch
-    """
+def fill_es(data):
     for source, line in data:
         _res[str(line['_id'])] = line
+
+
+@inject_plugin
+def put_es(data, overwrite, **options):
+    fill_es(data)
 
 
 @inject_plugin
@@ -41,9 +43,7 @@ def put_es_failing(data, overwrite, **options):
         raise ValueError('boom')
     elif _FAILS < 2:
         _FAILS += 1
-
-    for source, line in data:
-        _res[str(line['_id'])] = line
+    fill_es(data)
 
 
 @extract_plugin
@@ -53,24 +53,18 @@ def get_ga_fails(start_date, end_date, **options):
 
 @extract_plugin
 def get_ga(start_date, end_date, **options):
-    """Google Analytics
-    """
     for i in range(10):
         yield {'_type': 'google_analytics', '_date': TODAY}
 
 
 @extract_plugin
 def get_solitude(start_date, end_date, **options):
-    """Solitude
-    """
     for i in range(100):
         yield {'_type': 'solitude', '_date': TODAY}
 
 
 @extract_plugin
 def get_market_place(start_date, end_date, **options):
-    """MarketPlace
-    """
     for i in range(2):
         yield {'_type': 'marketplace', '_date': TODAY}
 
