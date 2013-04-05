@@ -184,7 +184,12 @@ class ESWrite(Plugin):
                         'lte': end_date_str,
                     },
                     '_cache': False,
-                }
+                },
+                # XXX: enable this once we store the source_id
+                # 'terms': {
+                #     '_source_id': source_ids,
+                #     '_cache': False,
+                # },
             }
         }}
         self.client.refresh('time_*')
