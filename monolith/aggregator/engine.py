@@ -146,6 +146,15 @@ class Engine(object):
             self._commit_transactions(targets)
             self.history.commit_transaction()
 
+    def _clear(self, start_date, end_date):
+        for phase, sources, targets in self.sequence:
+            source_ids = [s.get_id() for s in sources]
+            for target in targets:
+                try:
+                    target.clear(start_date, end_date, source_ids)
+                except Exception:
+                    logger.error('Failed to clear %r' % target.get_id())
+
     def _purge(self, start_date, end_date):
         for phase, sources, targets in self.sequence:
             for source in sources:
@@ -176,6 +185,10 @@ class Engine(object):
         self._reset_counters()
 
         if not purge_only:
+            # overwrite / clear data
+            if self.force:
+                self._retry(self._clear, start_date, end_date)
+
             for phase in self.sequence:
                 if self.queue.qsize() > 0:
                     raise ValueError('The queue still has %d elements' %

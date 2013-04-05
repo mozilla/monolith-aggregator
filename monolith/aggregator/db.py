@@ -74,3 +74,12 @@ class Database(Transactional):
             query = query.filter(Record.source_id == source_id)
 
         return query
+
+    def clear(self, start_date, end_date, source_ids):
+        with self.transaction() as session:
+            query = session.query(Record).filter(
+                Record.source_id.in_(source_ids)).filter(
+                    Record.date >= start_date).filter(
+                        Record.date <= end_date)
+            count = query.delete(synchronize_session=False)
+        return count

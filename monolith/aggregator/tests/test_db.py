@@ -98,3 +98,18 @@ class TestDatabase(TestCase):
 
         self.assertEquals(len(results), 2)
         self.assertTrue('bar' not in types)
+
+    def test_clear(self):
+        self.db.put([
+            ('s1', dict(_type='foo', key='1', _date=self._yesterday)),
+            ('s1', dict(_type='bar', key='2', _date=self._today)),
+            ('s1', dict(_type='bar', key='3', _date=self._today)),
+            ('s2', dict(_type='baz', key='4', _date=self._today)),
+            ('s2', dict(_type='baz', key='5', _date=self._today)),
+        ])
+        removed = self.db.clear(self._yesterday, self._yesterday, ['s2'])
+        self.assertEqual(removed, 0)
+        removed = self.db.clear(self._today, self._today, ['s1'])
+        self.assertEqual(removed, 2)
+        removed = self.db.clear(self._yesterday, self._today, ['s1', 's2'])
+        self.assertEqual(removed, 3)

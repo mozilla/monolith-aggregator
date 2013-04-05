@@ -8,6 +8,9 @@ class Plugin(object):
     def inject(self, batch):
         raise NotImplementedError(self)
 
+    def clear(self, start_date, end_date, source_ids):
+        pass
+
     def purge(self, *args):
         pass
 
