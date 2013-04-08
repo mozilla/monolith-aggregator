@@ -65,14 +65,11 @@ class Database(Transactional, Plugin):
     def _check(self, data):
         data = dict(data)
 
-        for field in ('value', ):
-            if field not in data:
-                continue
-            value = data[field]
-            if isinstance(value, buffer):
-                value = str(value)
-            data.update(json_loads(value))
-            del data[field]
+        value = data['value']
+        if isinstance(value, buffer):
+            value = str(value)
+        data.update(json_loads(value))
+        del data['value']
 
         if self.mysql:
             return data
