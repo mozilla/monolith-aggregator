@@ -95,25 +95,6 @@ class Database(Transactional, Plugin):
             start_date=start_date, end_date=end_date)
         return (self._check(line) for line in data)
 
-    def get(self, start_date=None, end_date=None,
-            type=None, source_id=None):
-        with self.transaction() as session:
-            query = session.query(Record)
-
-            if start_date is not None:
-                query = query.filter(Record.date >= start_date)
-
-            if end_date is not None:
-                query = query.filter(Record.date <= end_date)
-
-            if type is not None:
-                query = query.filter(Record.type == type)
-
-            if source_id is not None:
-                query = query.filter(Record.source_id == source_id)
-
-        return query
-
     def clear(self, start_date, end_date, source_ids):
         with self.transaction() as session:
             query = session.query(Record).filter(

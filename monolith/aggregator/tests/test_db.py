@@ -36,66 +36,12 @@ class TestDatabase(TestCase):
         results = query.all()
         self.assertEquals(results[0].date, self._last_week)
 
-    def test_filter_end_date(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._last_week)),
-            ('test', dict(_type='foo', key='value', _date=self._today)),
-        ])
-        results = self.db.get(end_date=self._yesterday).all()
-        self.assertEquals(len(results), 1)
-        self.assertEquals(results[0].date, self._last_week)
-
-    def test_filter_start_date(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._last_week)),
-            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
-        ])
-        results = self.db.get(start_date=self._yesterday).all()
-        self.assertEquals(len(results), 1)
-        self.assertEquals(results[0].date, self._yesterday)
-
-    def test_filter_start_and_end_date(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._last_week)),
-            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
-            ('test', dict(_type='foo', key='value', _date=self._today)),
-        ])
-        results = self.db.get(start_date=self._last_week,
-                              end_date=self._yesterday).all()
-        self.assertEquals(len(results), 2)
-
     def test_put_item_with_date(self):
         self.db.inject([
             ('test', dict(_type='foo', key='value', _date=self._yesterday)),
         ])
-        results = self.db.get(start_date=self._last_week).all()
+        results = self.db.session.query(Record).all()
         self.assertEquals(len(results), 1)
-
-    def test_filter_type(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
-            ('test', dict(_type='foobar', key='value', _date=self._today)),
-        ])
-        results = self.db.get(type='foo').all()
-        self.assertEquals(len(results), 1)
-        self.assertEquals(results[0].type, 'foo')
-
-    def test_filter_type_and_date(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._last_week)),
-            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
-            ('test', dict(_type='bar', key='value', _date=self._yesterday)),
-            ('test', dict(_type='foo', key='value', _date=self._today)),
-            ('test', dict(_type='bar', key='value', _date=self._today)),
-        ])
-        results = self.db.get(start_date=self._last_week,
-                              end_date=self._yesterday,
-                              type='foo').all()
-
-        types = [r.type for r in results]
-
-        self.assertEquals(len(results), 2)
-        self.assertTrue('bar' not in types)
 
     def test_clear(self):
         self.db.inject([
