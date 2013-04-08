@@ -1,10 +1,13 @@
+import datetime
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import json_dumps, Transactional
+from monolith.aggregator.util import json_dumps, json_loads
+from monolith.aggregator.util import Transactional
 from monolith.aggregator.uid import urlsafe_uid
 
 _Model = declarative_base()
@@ -40,9 +43,18 @@ class Database(Transactional, Plugin):
 
     def __init__(self, **options):
         Plugin.__init__(self, **options)
-        Transactional.__init__(self, engine=None, sqluri=options['database'])
-        record_table.metadata.bind = self.engine
-        record_table.create(checkfirst=True)
+        self.sqluri = options['database']
+        Transactional.__init__(self, engine=None, sqluri=self.sqluri)
+
+        if 'query' in options:
+            # used as a read plugin
+            self.query = text(options['query'])
+            self.json_fields = [field.strip() for field in
+                                options.get('json_fields', '').split(',')]
+        else:
+            # used as a write plugin
+            record_table.metadata.bind = self.engine
+            record_table.create(checkfirst=True)
 
     def inject(self, batch):
         with self.transaction() as session:
@@ -57,6 +69,49 @@ class Database(Transactional, Plugin):
                            source_id=source_id,
                            value=json_dumps(item)))
             session.add_all(records)
+
+    def _check(self, data):
+        data = dict(data)
+
+        for field in self.json_fields:
+            if field not in data:
+                continue
+            value = data[field]
+            if isinstance(value, buffer):
+                value = str(value)
+            data.update(json_loads(value))
+            del data[field]
+
+        if self.mysql:
+            return data
+
+        # deal with sqlite returning buffers
+        for key, value in data.items():
+            if isinstance(value, buffer):
+                data[key] = str(value)
+
+        # cope with SQLite not having a date type
+        for field in ('date', '_date'):
+            if field in data:
+                date = data[field]
+                if isinstance(date, basestring):
+                    data[field] = datetime.datetime.strptime(date, '%Y-%m-%d')
+
+        return data
+
+    def extract(self, start_date, end_date):
+        query_params = {}
+        unwanted = ('database', 'parser', 'here', 'query')
+
+        for key, val in self.options.items():
+            if key in unwanted:
+                continue
+            query_params[key] = val
+
+        query_params['start_date'] = start_date
+        query_params['end_date'] = end_date
+        data = self.engine.execute(self.query, **query_params)
+        return (self._check(line) for line in data)
 
     def get(self, start_date=None, end_date=None,
             type=None, source_id=None):
