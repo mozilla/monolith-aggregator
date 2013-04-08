@@ -80,27 +80,19 @@ class Database(Transactional, Plugin):
                 data[key] = str(value)
 
         # cope with SQLite not having a date type
-        for field in ('date', '_date'):
-            if field in data:
-                date = data[field]
-                if isinstance(date, basestring):
-                    data[field] = datetime.datetime.strptime(date, '%Y-%m-%d')
+        date = data['date']
+        if isinstance(date, basestring):
+            data['date'] = datetime.datetime.strptime(date, '%Y-%m-%d')
 
         return data
 
     def extract(self, start_date, end_date):
-        query_params = {
-            'start_date': start_date,
-            'end_date': end_date,
-        }
         query = text(
             'select id AS _id, type AS _type, source_id, date, value '
             'from record where date BETWEEN :start_date and :end_date'
         )
-        if 'query' in self.options:
-            # TODO: only used in tests
-            query = text(self.options['query'])
-        data = self.engine.execute(query, **query_params)
+        data = self.engine.execute(query,
+            start_date=start_date, end_date=end_date)
         return (self._check(line) for line in data)
 
     def get(self, start_date=None, end_date=None,

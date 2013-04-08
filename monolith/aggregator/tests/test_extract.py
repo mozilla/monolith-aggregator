@@ -1,7 +1,6 @@
 import copy
 import datetime
 import os
-import random
 import re
 import sys
 import tempfile
@@ -9,8 +8,6 @@ import tempfile
 from httpretty import HTTPretty
 from httpretty import httprettified
 from pyelastictest import IsolatedTestCase
-from sqlalchemy import create_engine
-from sqlalchemy.sql import text
 
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import extract as extract_plugin
@@ -163,21 +160,6 @@ class TestExtract(IsolatedTestCase):
                 re.compile('.*/analytics/v3/data/ga.*'),
                 body=fd.read(),
             )
-
-        # create a db for the tests
-        INSERT = text("insert into downloads (_date, _type, count)"
-                      "values (:_date, :_type, :count)")
-
-        engine = create_engine(
-            'sqlite:///' + os.path.join(temp_dir, 'source.db'))
-        today = datetime.date.today()
-        engine.execute("create table downloads "
-                       "(_date DATE, _type VARCHAR(32), count INTEGER)")
-        for i in range(8):
-            date = today - datetime.timedelta(days=i)
-            for i in range(2):
-                v = random.randint(0, 1000)
-                engine.execute(INSERT, _date=date, _type='sql', count=v)
 
         arguments = ['python', '--date', 'last-month', '--log-level=WARNING']
 
