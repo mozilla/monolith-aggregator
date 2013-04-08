@@ -100,16 +100,10 @@ class Database(Transactional, Plugin):
         return data
 
     def extract(self, start_date, end_date):
-        query_params = {}
-        unwanted = ('database', 'parser', 'here', 'query')
-
-        for key, val in self.options.items():
-            if key in unwanted:
-                continue
-            query_params[key] = val
-
-        query_params['start_date'] = start_date
-        query_params['end_date'] = end_date
+        query_params = {
+            'start_date': start_date,
+            'end_date': end_date,
+        }
         data = self.engine.execute(self.query, **query_params)
         return (self._check(line) for line in data)
 
