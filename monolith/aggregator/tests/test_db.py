@@ -22,26 +22,22 @@ class TestDatabase(TestCase):
         if os.path.exists(self.filename):
             os.remove(self.filename)
 
-    def test_record_creation_no_defaults(self):
+    def test_inject_no_defaults(self):
         self.assertRaises(KeyError, self.db.inject,
                           [('test', dict(_type='foo', key='value'))])
         self.assertRaises(KeyError, self.db.inject,
                           [('test', dict(key='value', _date=self._today))])
 
-    def test_record_creation_use_specified_date(self):
+    def test_inject(self):
         self.db.inject([
             ('test', dict(_type='foo', key='value', _date=self._last_week)),
         ])
         query = self.db.session.query(Record)
         results = query.all()
         self.assertEquals(results[0].date, self._last_week)
-
-    def test_put_item_with_date(self):
-        self.db.inject([
-            ('test', dict(_type='foo', key='value', _date=self._yesterday)),
-        ])
-        results = self.db.session.query(Record).all()
-        self.assertEquals(len(results), 1)
+        self.assertEquals(results[0].type, 'foo')
+        self.assertEquals(results[0].source_id, 'test')
+        self.assertEquals(results[0].value, '{"key": "value"}')
 
     def test_clear(self):
         self.db.inject([
