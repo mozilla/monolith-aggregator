@@ -45,16 +45,8 @@ class Database(Transactional, Plugin):
         Plugin.__init__(self, **options)
         self.sqluri = options['database']
         Transactional.__init__(self, engine=None, sqluri=self.sqluri)
-
-        if 'query' in options:
-            # used as a read plugin
-            self.query = text(options['query'])
-            self.json_fields = [field.strip() for field in
-                                options.get('json_fields', '').split(',')]
-        else:
-            # used as a write plugin
-            record_table.metadata.bind = self.engine
-            record_table.create(checkfirst=True)
+        record_table.metadata.bind = self.engine
+        record_table.create(checkfirst=True)
 
     def inject(self, batch):
         with self.transaction() as session:
@@ -73,7 +65,7 @@ class Database(Transactional, Plugin):
     def _check(self, data):
         data = dict(data)
 
-        for field in self.json_fields:
+        for field in ('value', ):
             if field not in data:
                 continue
             value = data[field]
@@ -104,7 +96,11 @@ class Database(Transactional, Plugin):
             'start_date': start_date,
             'end_date': end_date,
         }
-        data = self.engine.execute(self.query, **query_params)
+        query = text('select id AS _id, type AS _type, date, value from '
+                     'record where date BETWEEN :start_date and :end_date')
+        if self.options['query']:
+            query = text(self.options['query'])
+        data = self.engine.execute(query, **query_params)
         return (self._check(line) for line in data)
 
     def get(self, start_date=None, end_date=None,

@@ -52,7 +52,6 @@ Here's a full example:
     id = sql
     use = aggregator.plugins.sqlread.SQLRead
     database = mysql+pymysql://monolith:monolith@localhost/monolith
-    query = select id AS _id, type AS _type, date, value from record where date BETWEEN :start_date and :end_date
 
     [target:sql]
     id = sql
