@@ -32,48 +32,39 @@ Here's a full example:
 
     [monolith]
     timeout = 10
-    history = pymysql://user:password@localhost/monolith
+    history = mysql+pymysql://user:password@localhost/monolith
     sequence = extract, load
 
     [phase:extract]
-    sources = google-analytics, solitude, marketplace
+    sources = ga
     targets = sql
 
     [phase:load]
     sources = sql
-    targets = elasticsearch
+    targets = es
 
-    [target:elasticsearch]
-    id = elasticsearch
-    usea= monolithic.plugins.elasticsearch
+    [target:es]
+    id = es
+    use = monolith.aggregator.plugins.es.ESWrite
     url = http://es/is/here
 
     [source:sql]
     id = sql
-    use = aggregator.plugins.sqlread.SQLRead
+    use = monolith.aggregator.db.Database
     database = mysql+pymysql://monolith:monolith@localhost/monolith
 
     [target:sql]
     id = sql
-    use = aggregator.plugins.sqlwrite.SQLInjecter
+    use = monolith.aggregator.db.Database
     database = mysql+pymysql://monolith:monolith@localhost/monolith
 
-    [source:google-analytics]
-    id = sql
-    use = monolithic.plugins.ganalytics
-    url = http://google.com/analytic
-    user = moz@moz.com
-    password = sesame
-
-    [source:solitude]
-    use = monolithic.plugins.generic_rest
-    url = http://solitude.service/get_stats
-    id = solitude
-
-    [source:marketplace]
-    id = marketplace
-    use = monolithic.plugins.market_place
-    database = pymysql://user:password@mkt/marketplace
+    [source:ga]
+    id = ga-pageviews
+    use = monolith.aggregator.plugins.ganalytics.GoogleAnalytics
+    metrics = ga:pageviews
+    dimensions = browser
+    oauth_token = %(here)s/auth.json
+    profile_id = 12345678
 
 
 **use** points to a callable that will be invoked with all the other variables
