@@ -3,9 +3,9 @@ from sqlalchemy import String, Binary, Date, Column
 from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
+from monolith.aggregator.plugins import Plugin
 from monolith.aggregator.util import json_dumps, Transactional
 from monolith.aggregator.uid import urlsafe_uid
-
 
 _Model = declarative_base()
 
@@ -26,7 +26,7 @@ class Record(_Model):
     value = Column(Binary)
 
 
-record = Record.__table__
+record_table = Record.__table__
 
 PUT_QUERY = text("""\
 insert into record
@@ -36,14 +36,15 @@ values
 """)
 
 
-class Database(Transactional):
+class Database(Transactional, Plugin):
 
-    def __init__(self, engine=None, sqluri=None, **params):
-        super(Database, self).__init__(engine, sqluri, **params)
-        record.metadata.bind = self.engine
-        record.create(checkfirst=True)
+    def __init__(self, **options):
+        Plugin.__init__(self, **options)
+        Transactional.__init__(self, engine=None, sqluri=options['database'])
+        record_table.metadata.bind = self.engine
+        record_table.create(checkfirst=True)
 
-    def put(self, batch):
+    def inject(self, batch):
         with self.transaction() as session:
             records = []
             for source_id, item in batch:
