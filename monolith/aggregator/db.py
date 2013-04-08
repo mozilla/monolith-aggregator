@@ -96,9 +96,12 @@ class Database(Transactional, Plugin):
             'start_date': start_date,
             'end_date': end_date,
         }
-        query = text('select id AS _id, type AS _type, date, value from '
-                     'record where date BETWEEN :start_date and :end_date')
-        if self.options['query']:
+        query = text(
+            'select id AS _id, type AS _type, source_id, date, value '
+            'from record where date BETWEEN :start_date and :end_date'
+        )
+        if 'query' in self.options:
+            # TODO: only used in tests
             query = text(self.options['query'])
         data = self.engine.execute(query, **query_params)
         return (self._check(line) for line in data)

@@ -77,10 +77,11 @@ class TestESWrite(IsolatedTestCase):
 
     def test_call(self):
         plugin = self._make_one()
-        data = ('source_id', {
+        data = ('sql', {
             '_id': 'abc123',
             '_type': 'downloads',
             'date': datetime.datetime(2012, 7, 4),
+            'source_id': 'zamboni',
             'foo': 'bar',
             'baz': 2,
         })
@@ -88,6 +89,6 @@ class TestESWrite(IsolatedTestCase):
         self.es_client.refresh()
         res = self.es_client.search({'query': {'match_all': {}}})
         source = res['hits']['hits'][0]['_source']
-        for field in ('foo', 'baz'):
+        for field in ('foo', 'baz', 'source_id'):
             self.assertEqual(source[field], data[1][field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')

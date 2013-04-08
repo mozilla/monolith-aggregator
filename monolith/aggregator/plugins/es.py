@@ -178,18 +178,19 @@ class ESWrite(Plugin):
         query = {'filtered': {
             'query': {'match_all': {}},
             'filter': {
-                'range': {
-                    'date': {
-                        'gte': start_date_str,
-                        'lte': end_date_str,
-                    },
-                    '_cache': False,
-                },
-                # XXX: enable this once we store the source_id
-                # 'terms': {
-                #     '_source_id': source_ids,
-                #     '_cache': False,
-                # },
+                'and': [
+                    {'range': {
+                        'date': {
+                            'gte': start_date_str,
+                            'lte': end_date_str,
+                        },
+                        '_cache': False,
+                    }},
+                    {'terms': {
+                        'source_id': source_ids,
+                        '_cache': False,
+                    }},
+                ]
             }
         }}
         self.client.refresh('time_*')
