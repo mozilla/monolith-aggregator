@@ -57,14 +57,22 @@ def get_engine(sqluri, pool_size=100, pool_recycle=60, pool_timeout=30):
     return create_engine(sqluri, **extras)
 
 
-class Transactional(object):
-    def __init__(self, engine=None, sqluri=None, **params):
-        self.engine = engine or get_engine(sqluri, **params)
+class Database(Plugin):
+
+    def __init__(self, **options):
+        Plugin.__init__(self, **options)
+        self.sqluri = options['database']
+        self.engine = get_engine(self.sqluri)
         self.mysql = 'mysql' in self.engine.driver
         self.session_factory = sessionmaker(bind=self.engine, autocommit=False,
                                             autoflush=False)
         self.session = self.session_factory()
         self._transaction = None
+
+        record_table.metadata.bind = self.engine
+        record_table.create(checkfirst=True)
+        transaction_table.metadata.bind = self.engine
+        transaction_table.create(checkfirst=True)
 
     @contextmanager
     def transaction(self):
@@ -103,18 +111,6 @@ class Transactional(object):
 
     def in_transaction(self):
         return self._transaction is not None
-
-
-class Database(Transactional, Plugin):
-
-    def __init__(self, **options):
-        Plugin.__init__(self, **options)
-        self.sqluri = options['database']
-        Transactional.__init__(self, engine=None, sqluri=self.sqluri)
-        record_table.metadata.bind = self.engine
-        record_table.create(checkfirst=True)
-        transaction_table.metadata.bind = self.engine
-        transaction_table.create(checkfirst=True)
 
     def inject(self, batch):
         with self.transaction() as session:
@@ -164,6 +160,7 @@ class Database(Transactional, Plugin):
         return (self._check(line) for line in data)
 
     def clear(self, start_date, end_date, source_ids):
+        count = 0
         with self.transaction() as session:
             query = session.query(Record).filter(
                 Record.source_id.in_(source_ids)).filter(
@@ -190,8 +187,11 @@ class Database(Transactional, Plugin):
                                             date=date))
 
     def exists(self, source, start_date, end_date):
-        query = self.session.query(Transaction)
-        query = query.filter(Transaction.source == source.get_id())
-        query = query.filter(Transaction.date >= start_date)
-        query = query.filter(Transaction.date <= end_date)
-        return query.first() is not None
+        count = 0
+        with self.transaction() as session:
+            query = session.query(Transaction)
+            query = query.filter(Transaction.source == source.get_id())
+            query = query.filter(Transaction.date >= start_date)
+            query = query.filter(Transaction.date <= end_date)
+            count = query.count()
+        return count > 0
