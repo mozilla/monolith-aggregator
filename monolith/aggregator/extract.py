@@ -36,14 +36,14 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
 
     # load the database
     try:
-        history_db = parser.get('monolith', 'history')
+        monolith_db = parser.get('monolith', 'history')
     except NoOptionError:
         raise ValueError("You need a history db option")
 
-    history = Database(database=history_db)
+    database = Database(database=monolith_db)
 
     # run the engine
-    engine = Engine(sequence, history, batch_size=batch_size, force=force,
+    engine = Engine(sequence, database, batch_size=batch_size, force=force,
                     retries=retries)
     return engine.run(start_date, end_date, purge_only)
 

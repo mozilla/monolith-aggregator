@@ -34,10 +34,10 @@ class RunError(Exception):
 
 class Engine(object):
 
-    def __init__(self, sequence, history, phase_hook=None, batch_size=100,
+    def __init__(self, sequence, database, phase_hook=None, batch_size=100,
                  force=False, retries=3):
         self.sequence = sequence
-        self.history = history
+        self.database = database
         self.queue = Queue()
         self.phase_hook = phase_hook
         self.batch_size = batch_size
@@ -110,12 +110,12 @@ class Engine(object):
         self._reset_counters()
 
         for source in sources:
-            exists = self.history.exists(source, start_date, end_date)
+            exists = self.database.exists(source, start_date, end_date)
             if exists and not self.force:
                 raise AlreadyDoneError(source.get_id(), start_date, end_date)
 
         self._start_transactions(targets)
-        self.history.start_transaction()
+        self.database.start_transaction()
         try:
             greenlets = Group()
             # each callable will push its result in the queue
@@ -137,14 +137,14 @@ class Engine(object):
                     # XXX later we'll do a source-by-source rollback
                     raise RunError(self.errors)
 
-            self.history.add_entry(sources, start_date, end_date, pushed)
+            self.database.add_entry(sources, start_date, end_date, pushed)
         except Exception:
             self._rollback_transactions(targets)
-            self.history.rollback_transaction()
+            self.database.rollback_transaction()
             raise
         else:
             self._commit_transactions(targets)
-            self.history.commit_transaction()
+            self.database.commit_transaction()
 
     def _clear(self, start_date, end_date):
         source_ids = set()
