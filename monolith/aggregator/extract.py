@@ -36,9 +36,13 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
 
     # load the database
     try:
-        monolith_db = parser.get('monolith', 'history')
-    except NoOptionError:
-        raise ValueError("You need a history db option")
+        monolith_db = parser.get('monolith', 'database')
+    except NoOptionError:  # pragma: no cover
+        # BBB support old history config name
+        try:
+            monolith_db = parser.get('monolith', 'history')
+        except NoOptionError:
+            raise ValueError("You need a database option")
 
     database = Database(database=monolith_db)
 

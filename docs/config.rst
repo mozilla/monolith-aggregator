@@ -32,7 +32,7 @@ Here's a full example:
 
     [monolith]
     timeout = 10
-    history = mysql+pymysql://user:password@localhost/monolith
+    database = mysql+pymysql://monolith:monolith@localhost/monolith
     sequence = extract, load
 
     [phase:extract]
