@@ -7,7 +7,7 @@ from datetime import datetime
 from monolith.aggregator import __version__, logger
 from monolith.aggregator.util import (configure_logger, LOG_LEVELS,
                                       word2daterange)
-from monolith.aggregator.history import History
+from monolith.aggregator.db import Database
 from monolith.aggregator.sequence import Sequence
 from monolith.aggregator.engine import Engine
 
@@ -34,13 +34,13 @@ def extract(config, start_date, end_date, sequence=None, batch_size=None,
     # creating the sequence
     sequence = Sequence(parser, sequence)
 
-    # load the history
+    # load the database
     try:
         history_db = parser.get('monolith', 'history')
     except NoOptionError:
         raise ValueError("You need a history db option")
 
-    history = History(sqluri=history_db)
+    history = Database(database=history_db)
 
     # run the engine
     engine = Engine(sequence, history, batch_size=batch_size, force=force,

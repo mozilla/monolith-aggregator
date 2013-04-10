@@ -53,6 +53,8 @@ class Database(Transactional, Plugin):
         Transactional.__init__(self, engine=None, sqluri=self.sqluri)
         record_table.metadata.bind = self.engine
         record_table.create(checkfirst=True)
+        transaction_table.metadata.bind = self.engine
+        transaction_table.create(checkfirst=True)
 
     def inject(self, batch):
         with self.transaction() as session:
@@ -109,14 +111,6 @@ class Database(Transactional, Plugin):
                         Record.date <= end_date)
             count = query.delete(synchronize_session=False)
         return count
-
-
-class History(Transactional):
-
-    def __init__(self, engine=None, sqluri=None, **params):
-        super(History, self).__init__(engine, sqluri, **params)
-        transaction_table.metadata.bind = self.engine
-        transaction_table.create(checkfirst=True)
 
     def add_entry(self, sources, start_date, end_date=None, num=0):
         with self.transaction() as session:
