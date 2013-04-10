@@ -13,10 +13,6 @@ from monolith.aggregator.uid import urlsafe_uid
 _Model = declarative_base()
 
 
-def today():
-    return datetime.datetime.utcnow().date()
-
-
 class Record(_Model):
     __tablename__ = 'record'
     __table_args__ = {
@@ -41,7 +37,7 @@ class Transaction(_Model):
     }
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date, default=today(), nullable=False)
+    date = Column(Date, nullable=False)
     source = Column(String(256), nullable=False)
 
 
