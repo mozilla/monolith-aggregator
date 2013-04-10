@@ -48,13 +48,6 @@ class Transaction(_Model):
 record_table = Record.__table__
 transaction_table = Transaction.__table__
 
-PUT_QUERY = text("""\
-insert into record
-    (id, date, type, source_id, value)
-values
-    (:id, :date, :type, :source_id, :value)
-""")
-
 
 class Database(Transactional, Plugin):
 
