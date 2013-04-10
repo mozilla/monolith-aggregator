@@ -10,7 +10,7 @@ _Model = declarative_base()
 
 
 def today():
-    return datetime.date.today()
+    return datetime.datetime.utcnow().date()
 
 
 class Transaction(_Model):
