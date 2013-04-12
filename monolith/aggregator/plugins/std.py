@@ -1,20 +1,12 @@
 import sys
+from monolith.aggregator.plugins import Plugin
 
 
-class Out(object):
+class Out(Plugin):
     """Out."""
-    def __init__(self, *args, **kw):
-        pass
-
     def inject(self, batch):
         for item in batch:
             print(item)
 
-    def start_transaction(self):
-        pass
-
     def commit_transaction(self):
         sys.stdout.flush()
-
-    def rollback_transaction(self):
-        pass
