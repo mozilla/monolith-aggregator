@@ -9,7 +9,7 @@ import gevent
 
 from monolith.aggregator import __version__
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import json_loads
+from monolith.aggregator.util import json_loads, date_range
 
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
@@ -89,12 +89,8 @@ class GoogleAnalytics(Plugin):
     def extract(self, start_date, end_date):
         # we won't use GA aggregation feature here,
         # but extract day-by-day
-
         # can this query be batched
-        delta = (end_date - start_date).days
-        drange = (start_date + datetime.timedelta(n) for n in range(delta))
-
-        for current in drange:
+        for current in date_range(start_date, end_date):
             iso = current.isoformat()
 
             options = {'ids': self.profile_id,

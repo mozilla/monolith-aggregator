@@ -97,3 +97,12 @@ def word2daterange(datestr):
         return date(year, 1, 1), date(year, 12, last_day_of_month)
 
     raise NotImplementedError(datestr)
+
+
+def date_range(start, end):
+    """Returns an iterator between two dates.
+
+    start and end are included in the iterator.
+    """
+    delta = (end - start).days + 1
+    return (start + timedelta(n) for n in range(delta))

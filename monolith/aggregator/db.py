@@ -9,7 +9,7 @@ from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
 
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import json_dumps, json_loads
+from monolith.aggregator.util import json_dumps, json_loads, date_range
 from monolith.aggregator.uid import urlsafe_uid
 
 _Model = declarative_base()
@@ -174,12 +174,7 @@ class Database(Plugin):
             if end_date is None:
                 drange = (start_date,)
             else:
-                day_count = (end_date - start_date).days
-                if day_count == 0:
-                    drange = [start_date]
-                else:
-                    drange = (start_date + datetime.timedelta(n)
-                              for n in range(day_count))
+                drange = date_range(start_date, end_date)
 
             for date in drange:
                 for source in sources:

@@ -1,7 +1,7 @@
 from unittest2 import TestCase
 from datetime import date, datetime, timedelta
 
-from monolith.aggregator.util import word2daterange
+from monolith.aggregator.util import word2daterange, date_range
 from monolith.aggregator.util import json_loads, json_dumps
 
 
@@ -31,6 +31,19 @@ class TestUtils(TestCase):
         self.assertTrue(_diff(now, last) >= 0)
         self.assertTrue(_diff(now, first) >= 7)
         self.assertTrue(_diff(last, first) == 7)
+
+    def test_date_range(self):
+        now = date.today()
+        yesterday = now - timedelta(days=1)
+        last_week = now - timedelta(days=7)
+
+        res = list(date_range(last_week, now))
+        self.assertEqual(res[0], last_week)
+        self.assertEqual(res[-1], now)
+        self.assertEqual(len(res), 8)
+
+        self.assertEqual(list(date_range(yesterday, now)), [yesterday, now])
+        self.assertEqual(list(date_range(yesterday, yesterday)), [yesterday])
 
 
 class TestJSON(TestCase):
