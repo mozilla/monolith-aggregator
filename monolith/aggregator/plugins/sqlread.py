@@ -1,3 +1,3 @@
 # BBB support
 
-from monolith.aggregator.db import Database as SQLRead
+from monolith.aggregator.db import Database as SQLRead  # NOQA

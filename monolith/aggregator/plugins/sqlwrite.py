@@ -1,3 +1,3 @@
 # BBB import
 
-from monolith.aggregator.db import Database as SQLInjecter
+from monolith.aggregator.db import Database as SQLInjecter   # NOQA

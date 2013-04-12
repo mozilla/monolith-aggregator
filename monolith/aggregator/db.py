@@ -155,8 +155,8 @@ class Database(Plugin):
             'select id AS _id, type AS _type, source_id, date, value '
             'from record where date BETWEEN :start_date and :end_date'
         )
-        data = self.engine.execute(query,
-            start_date=start_date, end_date=end_date)
+        data = self.engine.execute(query, start_date=start_date,
+                                   end_date=end_date)
         return (self._check(line) for line in data)
 
     def clear(self, start_date, end_date, source_ids):

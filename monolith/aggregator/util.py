@@ -1,14 +1,13 @@
 from calendar import monthrange
 from datetime import date, datetime, timedelta
 import fcntl
-import json
 import logging
 
 
 try:
-    import simplejson as json
+    import simplejson as json       # NOQA
 except ImportError:
-    import json
+    import json                     # NOQA
 
 
 def encode_date(obj):
