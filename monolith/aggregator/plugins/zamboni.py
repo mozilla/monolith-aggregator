@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import timedelta, date
+from collections import defaultdict
 
 from monolith.aggregator.plugins.utils import iso2datetime, TastypieReader
 
@@ -12,6 +13,8 @@ class APIReader(TastypieReader):
         self.type = options['type']
         self.field = options['field']
         self.options = options
+        self.dimensions = [dimension.strip() for dimension in
+                           options.get('dimensions', 'user-agent').split(',')]
 
     def purge(self, start_date, end_date):
         if self.options.get('purge_data', False):
@@ -31,12 +34,30 @@ class APIReader(TastypieReader):
             'recorded__gte': start_date.isoformat(),
             'recorded__lte': end_date.isoformat()})
 
+        # building counts grouped by date & dimensions
+        results = defaultdict(int)
+
         for item in data:
+            timestamp = iso2datetime(item['recorded'])
+            day = date(timestamp.year, timestamp.month, timestamp.day)
+
             values = item.pop('value')
+            # XXX why the conversion here ?
             if 'app-id' in values:
                 values['add_on'] = values.pop('app-id')
-            values[self.field] = values.pop('count', 2)
 
-            values.update({'_date': iso2datetime(item['recorded']),
-                           '_type': self.type})
-            yield values
+            key = [('_date', day)]
+            for dimension in self.dimensions:
+                if dimension in values:
+                    key.append((dimension, values[dimension]))
+            key.sort()
+            key = tuple(key)
+
+            results[key] += 1
+
+        # rendering the result
+        for key, count in results.items():
+            line = {'_type': self.type, self.field: count}
+            for field, value in key:
+                line[field] = value
+            yield line
