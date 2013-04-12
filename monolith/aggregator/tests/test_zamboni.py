@@ -114,9 +114,9 @@ class TestAPIReader(TestCase):
                            field='foo')
         values = list(reader.extract(self.last_week, self.yesterday))
 
-        # If we get back 80 values, it means that all the data had been read
+        # If we get back 20 values, it means that all the data had been read
         # from the API
-        self.assertEquals(len(values), 80)
+        self.assertEquals(len(values), 20)
 
     @httprettified
     def test_purge_calls_delete(self):
