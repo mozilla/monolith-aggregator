@@ -40,12 +40,7 @@ class APIReader(TastypieReader):
         for item in data:
             timestamp = iso2datetime(item['recorded'])
             day = date(timestamp.year, timestamp.month, timestamp.day)
-
             values = item.pop('value')
-            # XXX why the conversion here ?
-            if 'app-id' in values:
-                values['add_on'] = values.pop('app-id')
-
             key = [('_date', day)]
             for dimension in self.dimensions:
                 if dimension in values:
