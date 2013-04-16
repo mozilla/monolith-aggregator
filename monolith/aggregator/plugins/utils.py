@@ -9,6 +9,7 @@ from urlparse import urljoin
 
 from requests import Request, Session
 
+from monolith.aggregator import logger
 from monolith.aggregator.plugins import Plugin
 
 _ISO = '%Y-%m-%dT%H:%M:%S'
@@ -70,9 +71,17 @@ class TastypieReader(Plugin):
         if self.oauth_hook:
             self.oauth_hook(req)
 
-        res = self.session.send(req.prepare())
+        resp = self.session.send(req.prepare())
 
-        res = res.json()
+        if 400 <= resp.status_code <= 499:
+            logger.error('API 4xx Error: %s' % resp.json()['reason'])
+            return data
+
+        if 500 <= resp.status_code <= 599:
+            logger.error('API 5xx Error: %s' % resp.text)
+            return data
+
+        res = resp.json()
         data.extend(res['objects'])
 
         # we can have paginated elements, so we need to get them all
