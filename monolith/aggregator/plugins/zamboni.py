@@ -13,6 +13,9 @@ class APIReader(TastypieReader):
         self.options = options
         self.dimensions = [dimension.strip() for dimension in
                            options.get('dimensions', 'user-agent').split(',')]
+        self.updatable_fields = [field.strip() for field in
+                                 options.get('updatable_fields',
+                                             '').split(',')]
 
     def purge(self, start_date, end_date):
         if self.options.get('purge_data', False):
@@ -29,6 +32,9 @@ class APIReader(TastypieReader):
             if key not in fields:
                 fields[key] = value
             else:
+                if key not in self.updatable_fields:
+                    continue
+
                 if isinstance(value, (int, float)):
                     # sum
                     fields[key] += value
