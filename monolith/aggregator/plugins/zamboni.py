@@ -1,6 +1,4 @@
 from datetime import timedelta, date
-from collections import defaultdict
-
 from monolith.aggregator.plugins.utils import iso2datetime, TastypieReader
 
 

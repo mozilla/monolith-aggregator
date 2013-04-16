@@ -92,3 +92,28 @@ class TestESWrite(IsolatedTestCase):
         for field in ('foo', 'baz', 'source_id'):
             self.assertEqual(source[field], data[1][field])
         self.assertEqual(source['date'], '2012-07-04T00:00:00')
+
+    def test_call_bad_data(self):
+        plugin = self._make_one()
+
+        # injecting the anonymous field as a long
+        data = ('sql', {
+            '_id': 'abc123',
+            '_type': 'downloads',
+            'date': datetime.datetime(2012, 7, 4),
+            'source_id': 'zamboni',
+            'foo': 'bar',
+            'anonymous': 8762876287624,
+        })
+        plugin.inject([data])
+
+        #  then as a bool - that should break with a ValueError
+        data = ('sql', {
+            '_id': 'abc12344',
+            '_type': 'downloads',
+            'date': datetime.datetime(2012, 7, 4),
+            'source_id': 'zamboni',
+            'foo': 'bar',
+            'anonymous': False,
+        })
+        self.assertRaises(ValueError, plugin.inject, [data])

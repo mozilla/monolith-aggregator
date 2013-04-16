@@ -157,7 +157,6 @@ class ESWrite(Plugin):
 
     def inject(self, batch):
         holder = defaultdict(list)
-
         # sort data into index/type buckets
         for source_id, item in batch:
             # XXX use source_id as a key with dates for updates
@@ -169,7 +168,17 @@ class ESWrite(Plugin):
 
         # submit one bulk request per index/type combination
         for key, docs in holder.items():
-            self._bulk_index(key[0], key[1], docs, id_field='_id')
+            result = self._bulk_index(key[0], key[1], docs, id_field='_id')
+            for index, item in enumerate(result['items']):
+                if item['index'].get('ok'):
+                    continue
+                error = item['index'].get('error')
+                if error is not None:
+                    msg = 'Could not index %s' % str(docs[index])
+                    msg += '\nES Error:\n'
+                    msg += error
+                    msg += '\n The data may have been partially imported.'
+                    raise ValueError(msg)
 
     def clear(self, start_date, end_date, source_ids):
         start_date_str = start_date.strftime('%Y-%m-%d')
