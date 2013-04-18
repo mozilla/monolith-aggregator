@@ -68,13 +68,15 @@ class APIReader(TastypieReader):
             key.sort()
             key = tuple(key)
 
+            count = values.get('count', 1)
+
             if key not in results:
                 results[key] = values
                 results[key]['_type'] = self.type
-                results[key][self.field] = 1
+                results[key][self.field] = count
             else:
                 self._update_fields(results[key], values)
-                results[key][self.field] += 1
+                results[key][self.field] += count
 
         # rendering the result
         for line in results.values():
