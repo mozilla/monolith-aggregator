@@ -1,16 +1,16 @@
 from contextlib import contextmanager
 import datetime
 
+from sqlalchemy import Column, Date, Integer, LargeBinary, String
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import String, Binary, Date, Column, Integer
-from sqlalchemy.types import BINARY
 from sqlalchemy.sql import text
+from sqlalchemy.types import BINARY
 
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import json_dumps, json_loads, date_range
 from monolith.aggregator.uid import urlsafe_uid
+from monolith.aggregator.util import date_range, json_dumps, json_loads
 
 _Model = declarative_base()
 
@@ -28,7 +28,7 @@ class Record(_Model):
     date = Column(Date, nullable=False)
     type = Column(String(256), nullable=False)
     source_id = Column(String(32), nullable=False)
-    value = Column(Binary)
+    value = Column(LargeBinary)
 
 
 class Transaction(_Model):
