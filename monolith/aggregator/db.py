@@ -27,7 +27,7 @@ class Record(_Model):
     id = Column(BINARY(24), primary_key=True)
     date = Column(Date, nullable=False)
     type = Column(String(256), nullable=False)
-    source_id = Column(String(32), nullable=False)
+    source_id = Column(String(256), nullable=False)
     value = Column(LargeBinary)
 
 
