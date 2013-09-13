@@ -38,7 +38,7 @@ def deploy():
 
 
 @task
-def pre_update(ref=settings.UPDATE_REF):
+def pre_update(ref):
     execute(helpers.git_update, MONOLITH, ref)
 
 
