@@ -44,7 +44,7 @@ def pre_update(ref):
 
 @task
 def update():
-    execute(create_virtualenv, getattr(settings, 'DEV', False))
+    execute(create_virtualenv)
     with lcd(MONOLITH):
         local('%s setup develop' % PYTHON)
         local('%s /usr/bin/virtualenv --relocatable %s' % (PYTHON, VIRTUALENV))
