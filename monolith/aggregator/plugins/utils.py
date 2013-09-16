@@ -74,11 +74,12 @@ class TastypieReader(Plugin):
         resp = self.session.send(req.prepare())
 
         if 400 <= resp.status_code <= 499:
-            logger.error('API 4xx Error: %s' % resp.json()['reason'])
+            logger.error('API 4xx Error: %s Url: %s' %
+                         (resp.json()['reason'], url))
             return data
 
         if 500 <= resp.status_code <= 599:
-            logger.error('API 5xx Error: %s' % resp.text)
+            logger.error('API 5xx Error: %s Url: %s' % (resp.text, url))
             return data
 
         res = resp.json()
