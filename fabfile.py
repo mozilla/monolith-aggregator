@@ -34,8 +34,6 @@ def deploy():
         deploy_roles=['web'],
         package_dirs=['monolith-aggregator', 'venv'])
 
-    helpers.restart_uwsgi(getattr(settings, 'UWSGI', []))
-
 
 @task
 def pre_update(ref):
