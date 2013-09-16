@@ -2,6 +2,7 @@ from collections import defaultdict
 
 from pyelasticsearch import ElasticSearch
 from pyelasticsearch.client import es_kwargs
+from pyelasticsearch.exceptions import InvalidJsonResponseError
 
 from monolith.aggregator.plugins import Plugin
 
@@ -107,7 +108,10 @@ class ESSetup(object):
 
     def configure_templates(self):
         # setup template for time-slice index
-        res = self.client.get_template("time_1")
+        try:
+            res = self.client.get_template("time_1")
+        except InvalidJsonResponseError:
+            res = None
         if res:  # pragma: no cover
             try:
                 self.client.delete_template("time_1")
