@@ -60,21 +60,23 @@ class TastypieReader(Plugin):
         if not params:
             params = {}
 
-        resp = self.session.get(url, params=params)
+        while True:
+            resp = self.session.get(url, params=params)
 
-        if 400 <= resp.status_code <= 499:
-            logger.error('API 4xx Error: %s Url: %s' %
-                         (resp.json()['reason'], url))
-            return data
+            if 400 <= resp.status_code <= 499:
+                logger.error('API 4xx Error: %s Url: %s' %
+                             (resp.json()['reason'], url))
+                return data
 
-        if 500 <= resp.status_code <= 599:
-            logger.error('API 5xx Error: %s Url: %s' % (resp.text, url))
-            return data
+            if 500 <= resp.status_code <= 599:
+                logger.error('API 5xx Error: %s Url: %s' % (resp.text, url))
+                return data
 
-        res = resp.json()
-        data.extend(res['objects'])
+            res = resp.json()
+            data.extend(res['objects'])
 
-        # we can have paginated elements, so we need to get them all
-        if 'meta' in res and res['meta']['next']:
-            self.read_api(urljoin(url, res['meta']['next']), data=data)
-        return data
+            # we can have paginated elements, so we need to get them all
+            if 'meta' in res and res['meta']['next']:
+                url = urljoin(url, res['meta']['next'])
+            else:
+                return data
