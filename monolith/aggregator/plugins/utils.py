@@ -4,10 +4,10 @@ import hashlib
 
 from ConfigParser import ConfigParser
 from datetime import datetime
-from oauth_hook import OAuthHook
 from urlparse import urljoin
 
-from requests import Request, Session
+from requests import Session
+from requests_oauthlib import OAuth1Session
 
 from monolith.aggregator import logger
 from monolith.aggregator.plugins import Plugin
@@ -24,11 +24,9 @@ class TastypieReader(Plugin):
     def __init__(self, **options):
         super(TastypieReader, self).__init__(**options)
         self.session = Session()
-        self.create_oauth_hook(**options)
+        self.create_oauth_session(**options)
 
-    def create_oauth_hook(self, **kwargs):
-        self.oauth_hook = None
-
+    def create_oauth_session(self, **kwargs):
         if 'password-file' in kwargs:
             passwd = kwargs['password-file']
             if not os.path.exists(passwd):
@@ -43,16 +41,11 @@ class TastypieReader(Plugin):
                 key = hashlib.sha512(password + username + 'key')
                 secret = hashlib.sha512(password + username + 'secret')
 
-                self.oauth_hook = OAuthHook(consumer_key=key.hexdigest(),
-                                            consumer_secret=secret.hexdigest(),
-                                            header_auth=True)
+                self.session = OAuth1Session(key.hexdigest(),
+                                             secret.hexdigest())
 
     def delete(self, url, params):
-        req = Request('DELETE', url, params=params)
-        if self.oauth_hook:
-            self.oauth_hook(req)
-
-        return self.session.send(req.prepare())
+        return self.session.delete(url, params=params)
 
     def read_api(self, url, params=None, data=None):
         """Reads an API, follows pagination and return the resulting objects.
@@ -67,11 +60,7 @@ class TastypieReader(Plugin):
         if not params:
             params = {}
 
-        req = Request('GET', url, params=params)
-        if self.oauth_hook:
-            self.oauth_hook(req)
-
-        resp = self.session.send(req.prepare())
+        resp = self.session.get(url, params=params)
 
         if 400 <= resp.status_code <= 499:
             logger.error('API 4xx Error: %s Url: %s' %

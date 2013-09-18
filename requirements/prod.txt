@@ -11,6 +11,5 @@ oauthlib==0.6.0
 pyelasticsearch==0.5
 python-gflags==2.0
 requests==1.2.3
-requests-oauth==0.4.1
 requests-oauthlib==0.3.3
 simplejson==3.1.2
