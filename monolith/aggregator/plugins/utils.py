@@ -23,10 +23,9 @@ class TastypieReader(Plugin):
 
     def __init__(self, **options):
         super(TastypieReader, self).__init__(**options)
-        self.session = Session()
-        self.create_oauth_session(**options)
+        self.session = self.get_session(**options)
 
-    def create_oauth_session(self, **kwargs):
+    def get_session(self, **kwargs):
         if 'password-file' in kwargs:
             passwd = kwargs['password-file']
             if not os.path.exists(passwd):
@@ -41,8 +40,10 @@ class TastypieReader(Plugin):
                 key = hashlib.sha512(password + username + 'key')
                 secret = hashlib.sha512(password + username + 'secret')
 
-                self.session = OAuth1Session(key.hexdigest(),
-                                             secret.hexdigest())
+                return OAuth1Session(key.hexdigest(),
+                                     secret.hexdigest())
+
+        return Session()
 
     def delete(self, url, params):
         return self.session.delete(url, params=params)
