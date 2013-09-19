@@ -10,6 +10,7 @@ class APIReader(TastypieReader):
         self.endpoint = options['endpoint']
         self.type = options['type']
         self.field = options['field']
+        self.limit = options.get('limit', '500')
         self.options = options
         self.dimensions = [dimension.strip() for dimension in
                            options.get('dimensions', 'user-agent').split(',')]
@@ -21,6 +22,7 @@ class APIReader(TastypieReader):
         if self.options.get('purge_data', False):
             end_date = end_date + timedelta(days=1)
             params = {'key': self.type,
+                      'limit': self.limit,
                       'recorded__gte': start_date.isoformat(),
                       'recorded__lte': end_date.isoformat()}
 
@@ -47,6 +49,7 @@ class APIReader(TastypieReader):
 
         data = self.read_api(self.endpoint, {
             'key': self.type,
+            'limit': self.limit,
             'recorded__gte': start_date.isoformat(),
             'recorded__lte': end_date.isoformat()})
 
