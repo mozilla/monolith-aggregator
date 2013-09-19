@@ -4,7 +4,7 @@ import hashlib
 
 from ConfigParser import ConfigParser
 from datetime import datetime
-from urlparse import urljoin
+from urlparse import parse_qsl, urlparse
 
 from requests import Session
 from requests_oauthlib import OAuth1Session
@@ -60,6 +60,8 @@ class TastypieReader(Plugin):
         if not params:
             params = {}
 
+        orig_params = params.copy()
+
         while True:
             resp = self.session.get(url, params=params)
 
@@ -78,6 +80,9 @@ class TastypieReader(Plugin):
             # we can have paginated elements, so we need to get them all
             next_ = res['meta']['next']
             if 'meta' in res and next_:
-                url = urljoin(url, next_)
+                # Update the params to pick up the new offset.
+                params = orig_params.copy()
+                qs = urlparse(next_).query
+                params.update(dict(parse_qsl(qs)))
             else:
                 return data
