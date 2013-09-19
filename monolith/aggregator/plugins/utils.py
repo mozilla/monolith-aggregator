@@ -23,10 +23,9 @@ class TastypieReader(Plugin):
 
     def __init__(self, **options):
         super(TastypieReader, self).__init__(**options)
-        self.session = Session()
-        self.create_oauth_session(**options)
+        self.session = self._get_session(**options)
 
-    def create_oauth_session(self, **kwargs):
+    def _get_session(self, **kwargs):
         if 'password-file' in kwargs:
             passwd = kwargs['password-file']
             if not os.path.exists(passwd):
@@ -41,8 +40,9 @@ class TastypieReader(Plugin):
                 key = hashlib.sha512(password + username + 'key')
                 secret = hashlib.sha512(password + username + 'secret')
 
-                self.session = OAuth1Session(key.hexdigest(),
-                                             secret.hexdigest())
+                return OAuth1Session(key.hexdigest(), secret.hexdigest())
+        else:
+            return Session()
 
     def delete(self, url, params):
         return self.session.delete(url, params=params)
@@ -76,7 +76,8 @@ class TastypieReader(Plugin):
             data.extend(res['objects'])
 
             # we can have paginated elements, so we need to get them all
-            if 'meta' in res and res['meta']['next']:
-                url = urljoin(url, res['meta']['next'])
+            next_ = res['meta']['next']
+            if 'meta' in res and next_:
+                url = urljoin(url, next_)
             else:
                 return data

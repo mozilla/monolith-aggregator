@@ -60,11 +60,12 @@ def _mock_fetch_uris(endpoint, resource_uri):
     rest_data = list(rest)
     offset = 0
     while rest_data:
-        # match every request without "offset" in it
         if offset == 0:
-            regexp = re.compile(endpoint + "(?!.*offset)")
+            # Match every request without "offset" in it.
+            regexp_txt = "(?!.*offset)"
         else:
-            regexp = re.compile(endpoint + ".*&offset=%d.*" % offset)
+            regexp_txt = ".*&offset=%d.*" % offset
+        regexp = re.compile(endpoint + regexp_txt)
 
         offset += 20
 
