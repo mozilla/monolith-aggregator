@@ -11,6 +11,8 @@ from requests_oauthlib import OAuth1Session
 
 from monolith.aggregator import logger
 from monolith.aggregator.plugins import Plugin
+from monolith.aggregator.exception import ServerError
+
 
 _ISO = '%Y-%m-%dT%H:%M:%S'
 
@@ -72,7 +74,7 @@ class TastypieReader(Plugin):
 
             if 500 <= resp.status_code <= 599:
                 logger.error('API 5xx Error: %s Url: %s' % (resp.text, url))
-                return data
+                raise ServerError(resp.status_code)
 
             res = resp.json()
             data.extend(res['objects'])

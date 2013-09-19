@@ -5,16 +5,16 @@ import re
 import sys
 import tempfile
 
-from httpretty import HTTPretty
-from httpretty import httprettified
+from httpretty import HTTPretty, httprettified
 from pyelastictest import IsolatedTestCase
 
+from monolith.aggregator.exception import AlreadyDoneError, RunError
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import extract as extract_plugin
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import word2daterange
-from monolith.aggregator.engine import AlreadyDoneError, RunError
 from monolith.aggregator.tests.test_zamboni import _mock_fetch_uris
+from monolith.aggregator.util import word2daterange
+
 
 _res = {}
 TODAY = datetime.date.today()
