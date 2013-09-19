@@ -77,6 +77,9 @@ class Engine(object):
         finally:
             self.queue.put('END')
 
+    def _log_transaction(self, source, start_date, end_date, greenlet):
+        self.database.add_entry([source], start_date, end_date)
+
     def _error(self, exception, plugin, greenlet):
         self.errors.append((exception, plugin, greenlet))
 
@@ -85,22 +88,24 @@ class Engine(object):
         logger.info('Running phase %r' % phase)
         self._reset_counters()
 
-        for source in sources:
-            exists = self.database.exists(source, start_date, end_date)
-            if exists and not self.force:
-                raise exception.AlreadyDoneError(source.get_id(), start_date,
-                                                 end_date)
-
         self._start_transactions(targets)
         self.database.start_transaction()
         try:
             greenlets = Group()
             # each callable will push its result in the queue
             for source in sources:
+                exists = self.database.exists(source, start_date, end_date)
+                if exists and not self.force:
+                    logger.info('Already done: %s, %s to %s' % (
+                        source.get_id(), start_date, end_date))
+                    continue
+
                 green = greenlets.spawn(self._get_data, source,
                                         start_date, end_date)
-                green.link_exception(partial(self._error,
-                                             exception.ExtractError, source))
+                green.link_value(partial(self._log_transaction, source,
+                                         start_date, end_date))
+                green.link_exception(partial(self._error, ExtractError,
+                                             source))
 
             # looking at the queue
             pushed = 0
@@ -114,7 +119,6 @@ class Engine(object):
                     # XXX later we'll do a source-by-source rollback
                     raise exception.RunError(self.errors)
 
-            self.database.add_entry(sources, start_date, end_date, pushed)
         except Exception:
             self._rollback_transactions(targets)
             self.database.rollback_transaction()
@@ -152,8 +156,6 @@ class Engine(object):
                 return func(*args, **kw)
             except Exception, exc:
                 self.queue.queue.clear()
-                if isinstance(exc, exception.AlreadyDoneError):
-                    raise
                 logger.exception('%s failed (%d/%d)' % (func, tries + 1,
                                                         retries))
                 tries += 1
