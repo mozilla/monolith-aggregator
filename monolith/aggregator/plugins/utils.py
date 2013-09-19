@@ -78,8 +78,11 @@ class TastypieReader(Plugin):
             data.extend(res['objects'])
 
             # we can have paginated elements, so we need to get them all
-            next_ = res['meta']['next']
-            if 'meta' in res and next_:
+            next_ = None
+            if 'meta' in res:
+                next_ = res['meta'].get('next')
+
+            if next_:
                 # Update the params to pick up the new offset.
                 params = orig_params.copy()
                 qs = urlparse(next_).query
