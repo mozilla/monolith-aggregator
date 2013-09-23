@@ -126,9 +126,9 @@ class TestExtract(IsolatedTestCase):
         count = _count()
         self.assertEqual(count, 102)
 
-        # a second attempt should fail
-        # because we did not use the force flag
-        self.assertRaises(AlreadyDoneError, extract, config, start, end)
+        # A second attempt should not write more logs.
+        extract(config, start, end, force=True)
+        self.assertEqual(count, _count())
 
         # unless we force it
         extract(config, start, end, force=True)
@@ -169,8 +169,6 @@ class TestExtract(IsolatedTestCase):
             exit = -1
             try:
                 main()
-            except AlreadyDoneError:
-                exit = -42
             except SystemExit as exc:
                 exit = exc.code
             finally:
@@ -181,11 +179,6 @@ class TestExtract(IsolatedTestCase):
         count = len(_res)
         self.assertTrue(count > 1000, count)
 
-        # a second attempt should fail
-        # because we did not use the force flag
-        self.assertEqual(_run([config]), -42)
-
-        # unless we force it
         self.assertEqual(_run(['--force', config]), 0)
         # overwrite has removed all data and added new entries
         self.assertEqual(count, len(_res))
