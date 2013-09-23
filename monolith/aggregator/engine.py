@@ -104,8 +104,8 @@ class Engine(object):
                                         start_date, end_date)
                 green.link_value(partial(self._log_transaction, source,
                                          start_date, end_date))
-                green.link_exception(partial(self._error, ExtractError,
-                                             source))
+                green.link_exception(partial(self._error,
+                                             exception.ExtractError, source))
 
             # looking at the queue
             pushed = 0
