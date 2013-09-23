@@ -1,35 +1,10 @@
 from functools import partial
 
 import gevent
-from gevent.queue import Queue
 from gevent.pool import Group
+from gevent.queue import Queue
 
-from monolith.aggregator import logger
-
-
-class AlreadyDoneError(Exception):
-    pass
-
-
-class InjectError(Exception):
-    pass
-
-
-class ExtractError(Exception):
-    pass
-
-
-class RunError(Exception):
-    def __init__(self, errors):
-        self.errors = errors
-
-    def __str__(self):
-        msg = '%d failures\n\n' % len(self.errors)
-
-        for index, (error, plugin, greenlet) in enumerate(self.errors):
-            msg += '%d. %s in %s. error: %s' % (index + 1, error, plugin,
-                                                greenlet.exception)
-        return msg
+from monolith.aggregator import exception, logger
 
 
 class Engine(object):
@@ -69,7 +44,8 @@ class Engine(object):
             greenlets = Group()
             for plugin in targets:
                 green = greenlets.spawn(self._put_data, plugin, batch)
-                green.link_exception(partial(self._error, InjectError, plugin))
+                green.link_exception(partial(self._error,
+                                             exception.InjectError, plugin))
             greenlets.join()
             pushed += len(batch)
 
@@ -112,7 +88,8 @@ class Engine(object):
         for source in sources:
             exists = self.database.exists(source, start_date, end_date)
             if exists and not self.force:
-                raise AlreadyDoneError(source.get_id(), start_date, end_date)
+                raise exception.AlreadyDoneError(source.get_id(), start_date,
+                                                 end_date)
 
         self._start_transactions(targets)
         self.database.start_transaction()
@@ -122,8 +99,8 @@ class Engine(object):
             for source in sources:
                 green = greenlets.spawn(self._get_data, source,
                                         start_date, end_date)
-                green.link_exception(partial(self._error, ExtractError,
-                                             source))
+                green.link_exception(partial(self._error,
+                                             exception.ExtractError, source))
 
             # looking at the queue
             pushed = 0
@@ -135,7 +112,7 @@ class Engine(object):
                 if len(self.errors) > 0:
                     # yeah! we need to rollback
                     # XXX later we'll do a source-by-source rollback
-                    raise RunError(self.errors)
+                    raise exception.RunError(self.errors)
 
             self.database.add_entry(sources, start_date, end_date, pushed)
         except Exception:
@@ -175,7 +152,7 @@ class Engine(object):
                 return func(*args, **kw)
             except Exception, exc:
                 self.queue.queue.clear()
-                if isinstance(exc, AlreadyDoneError):
+                if isinstance(exc, exception.AlreadyDoneError):
                     raise
                 logger.exception('%s failed (%d/%d)' % (func, tries + 1,
                                                         retries))
