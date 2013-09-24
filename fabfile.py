@@ -26,7 +26,7 @@ def create_virtualenv():
 @task
 def deploy():
     helpers.deploy(
-        name='monolith',
+        name='monolith-aggregator',
         env=settings.ENV,
         cluster=settings.CLUSTER,
         domain=settings.DOMAIN,
