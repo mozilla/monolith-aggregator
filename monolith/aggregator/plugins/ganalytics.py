@@ -36,9 +36,9 @@ def _gatable(option):
     return [_ga(item) for item in option.split(',')]
 
 
-class GoogleAnalytics(Plugin):
+class BaseGoogleAnalytics(Plugin):
     def __init__(self, **options):
-        super(GoogleAnalytics, self).__init__(**options)
+        super(BaseGoogleAnalytics, self).__init__(**options)
 
         with open(options['oauth_token']) as f:
             token = json_loads(f.read())
@@ -85,6 +85,16 @@ class GoogleAnalytics(Plugin):
 
         return self.client.data().ga().get(**options).execute()
 
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            data = {'_date': current_date, '_type': 'visitors'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+                data[field] = value
+
+            yield data
+
     def extract(self, start_date, end_date):
         # we won't use GA aggregation feature here,
         # but extract day-by-day
@@ -96,22 +106,71 @@ class GoogleAnalytics(Plugin):
                        'start_date': iso,
                        'end_date': iso,
                        'dimensions': self.qdimensions,
-                       'metrics': self.qmetrics}
+                       'metrics': self.qmetrics,
+                       'start_index': 1,
+                       'max_results': 1000}
+
+            rows = []
 
             results = self._rate_limited_get(**options)
-            if results['totalResults'] == 0:
-                continue
+
+            while results.get('totalResults', 0) > 0:
+                rows.extend(results['rows'])
+                if results.get('nextLink'):
+                    options['start_index'] += options['max_results']
+                    results = self._rate_limited_get(**options)
+                else:
+                    break
 
             cols = [col['name'] for col in results['columnHeaders']]
-            for entry in results['rows']:
-                data = {'_date': current, '_type': 'visitors'}
+            for data in self.processor(rows, current, cols):
+                yield data
 
-                for index, value in enumerate(entry):
-                    field = self._fix_name(cols[index])
-                    # XXX see how to convert genericaly
-                    if field in ('pageviews', 'visits'):
-                        value = int(value)
 
-                    data[field] = value
+class GAPageViews(BaseGoogleAnalytics):
 
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            data = {'_date': current_date, '_type': 'visitors'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+                if field == 'pageviews':
+                    value = int(value)
+                data[field] = value
+
+            yield data
+
+
+class GAVisits(BaseGoogleAnalytics):
+
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            data = {'_date': current_date, '_type': 'visitors'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+                if field == 'visits':
+                    value = int(value)
+                data[field] = value
+
+            yield data
+
+
+class GAPerAppVisits(BaseGoogleAnalytics):
+
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            data = {'_date': current_date, '_type': 'per-app-visitors'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+
+                if field == 'customVarValue7':
+                    data['app-id'] = int(value)
+                elif field == 'visits':
+                    data['app_visits'] = int(value)
+
+            # Only log if visits count is non-zero.
+            if data.get('app_visits', 0) > 0:
                 yield data

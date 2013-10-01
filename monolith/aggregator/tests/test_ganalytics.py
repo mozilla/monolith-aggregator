@@ -2,7 +2,7 @@ import unittest
 import os
 import time
 
-from monolith.aggregator.plugins.ganalytics import GoogleAnalytics
+from monolith.aggregator.plugins.ganalytics import BaseGoogleAnalytics
 
 
 class FakeClient(object):
@@ -27,7 +27,7 @@ class TestGoogleAnalytics(unittest.TestCase):
             'rate_limit': 6,
             'rate_span': 0.2,
         }
-        ga = GoogleAnalytics(**options)
+        ga = BaseGoogleAnalytics(**options)
         ga.client = FakeClient()
 
         now = time.time()
