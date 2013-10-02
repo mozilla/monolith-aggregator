@@ -23,7 +23,6 @@ requires = [
     'SQLAlchemy',
     'google-api-python-client',
     'requests',
-    'requests-oauth',
 ]
 
 
