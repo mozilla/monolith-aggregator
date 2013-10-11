@@ -8,7 +8,7 @@ import tempfile
 from httpretty import HTTPretty, httprettified
 from pyelastictest import IsolatedTestCase
 
-from monolith.aggregator.exception import AlreadyDoneError, RunError
+from monolith.aggregator.exception import RunError
 from monolith.aggregator.extract import extract, main
 from monolith.aggregator.plugins import extract as extract_plugin
 from monolith.aggregator.plugins import Plugin
