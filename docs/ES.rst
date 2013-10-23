@@ -60,8 +60,6 @@ appreciate a large amount of static data as well.
 
 Note that you don't need to manually specify the indexes yourself, but
 Elastic Search allows you to read from `_all` or `time_*` indexes at once.
-We hide the index details in our REST API, so the client side only has to care
-about the REST endpoint like `GET /v1/time`.
 
 elasticsearch.yml
 :::::::::::::::::
