@@ -118,7 +118,7 @@ class ESSetup(object):
             except Exception:
                 pass
         time_settings = self._default_settings()
-        time_settings["template"] = "time_*"
+        time_settings["template"] = "*time_*"
         time_settings["settings"]["number_of_shards"] = 1
         time_settings["settings"]["number_of_replicas"] = 1
         self.client.create_template("time_1", time_settings)
@@ -135,12 +135,13 @@ class ESWrite(Plugin):
     def __init__(self, **options):
         self.options = options
         self.url = options['url']
+        self.prefix = options.get('prefix', '')
         self.client = ExtendedClient(self.url)
         self.setup = ESSetup(self.client)
         self.setup.configure_templates()
 
     def _index_name(self, date):
-        return 'time_%.4d-%.2d' % (date.year, date.month)
+        return '%stime_%.4d-%.2d' % (self.prefix, date.year, date.month)
 
     def _bulk_index(self, index, doc_type, docs, id_field='id'):
         # an optimized version of the bulk_index, avoiding
@@ -206,5 +207,5 @@ class ESWrite(Plugin):
                 ]
             }
         }}
-        self.client.refresh('time_*')
-        self.client.delete_by_query('time_*', None, query)
+        self.client.refresh('%stime_*' % self.prefix)
+        self.client.delete_by_query('%stime_*' % self.prefix, None, query)
