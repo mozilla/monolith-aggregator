@@ -24,7 +24,7 @@ class APIReader(TastypieReader):
             params = {'key': self.type,
                       'limit': self.limit,
                       'recorded__gte': start_date.isoformat(),
-                      'recorded__lte': end_date.isoformat()}
+                      'recorded__lt': end_date.isoformat()}
 
             res = self.delete(self.endpoint, params=params)
             res.raise_for_status()
@@ -51,7 +51,7 @@ class APIReader(TastypieReader):
             'key': self.type,
             'limit': self.limit,
             'recorded__gte': start_date.isoformat(),
-            'recorded__lte': end_date.isoformat()})
+            'recorded__lt': end_date.isoformat()})
 
         # building counts grouped by date & dimensions
         results = {}
