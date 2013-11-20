@@ -174,3 +174,47 @@ class GAPerAppVisits(BaseGoogleAnalytics):
             # Only log if visits count is non-zero.
             if data.get('app_visits', 0) > 0:
                 yield data
+
+
+class GAInstalls(BaseGoogleAnalytics):
+
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            is_install = False
+            data = {'_date': current_date, '_type': 'installs'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+
+                if (field == 'eventCategory' and
+                    value == 'Successful app install'):
+                    is_install = True
+                elif is_install and field == 'totalEvents':
+                    data['installs'] = int(value)
+
+            # Only log if install counts is non-zero (and we have data).
+            if data.get('installs', 0) > 0:
+                yield data
+
+
+class GAPerAppInstalls(BaseGoogleAnalytics):
+
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            is_install = False
+            data = {'_date': current_date, '_type': 'installs'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+
+                if (field == 'eventCategory' and
+                    value == 'Successful app install'):
+                    is_install = True
+                elif is_install and field == 'eventLabel':
+                    data['app-id'] = value.split(':')[-1]
+                elif is_install and field == 'totalEvents':
+                    data['app_installs'] = int(value)
+
+            # Only log if install counts is non-zero (and we have data).
+            if data.get('app_installs', 0) > 0:
+                yield data
