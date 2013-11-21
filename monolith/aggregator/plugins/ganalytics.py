@@ -174,3 +174,38 @@ class GAPerAppVisits(BaseGoogleAnalytics):
             # Only log if visits count is non-zero.
             if data.get('app_visits', 0) > 0:
                 yield data
+
+
+class GAAppInstalls(BaseGoogleAnalytics):
+    """
+    Handles pulling in the "Successful app install" custom event.
+
+    Configure the source to include the following::
+
+        metrics = ga:totalEvents
+        dimensions = ga:eventCategory, ga:eventLabel
+
+    This also aggregates by "eventLabel" whose value is <app name>:<app id>,
+    which allows us to get per-app install counts by filtering by app-id via
+    Monolith, or global install counts by excluding the filter.
+
+    """
+    def processor(self, rows, current_date, col_headers):
+        for entry in rows:
+            is_install = False
+            data = {'_date': current_date, '_type': 'installs'}
+
+            for index, value in enumerate(entry):
+                field = self._fix_name(col_headers[index])
+
+                if (field == 'eventCategory' and
+                    value == 'Successful app install'):
+                    is_install = True
+                elif is_install and field == 'eventLabel':
+                    data['app-id'] = value.split(':')[-1]
+                elif is_install and field == 'totalEvents':
+                    data['app_installs'] = int(value)
+
+            # Only log if install counts is non-zero (and we have data).
+            if data.get('app_installs', 0) > 0:
+                yield data
