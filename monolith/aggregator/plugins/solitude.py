@@ -68,12 +68,12 @@ class SolitudeReader(TastypieReader):
 
         if 400 <= resp.status_code <= 499:
             logger.error('API 4xx Error: {0} Url: {1}'.format(
-                (resp.json()['detail'], url)))
+                resp.json().get('detail', resp.text), url))
             return None
 
         if 500 <= resp.status_code <= 599:
             logger.error('API 5xx Error: {0} Url: {1}'.format(
-                (resp.text, url)))
+                resp.text, url))
             raise ServerError(resp.status_code)
 
         return resp.json()
