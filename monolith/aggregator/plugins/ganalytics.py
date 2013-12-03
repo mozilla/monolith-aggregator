@@ -202,7 +202,7 @@ class GAAppInstalls(BaseGoogleAnalytics):
                     value == 'Successful app install'):
                     is_install = True
                 elif is_install and field == 'eventLabel':
-                    data['app-id'] = value.split(':')[-1]
+                    data['app-id'] = int(value.split(':')[-1])
                 elif is_install and field == 'totalEvents':
                     data['app_installs'] = int(value)
 
