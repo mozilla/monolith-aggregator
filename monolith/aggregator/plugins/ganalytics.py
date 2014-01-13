@@ -53,6 +53,11 @@ class BaseGoogleAnalytics(Plugin):
         else:
             self.dimensions = ['ga:date']
             self.qdimensions = 'ga:date'
+        if 'filters' in options:
+            self.filters = _gatable(options['filters'])
+            self.qfilters = ','.join(self.filters)
+        else:
+            self.qfilters = None
         if 'rate_limit' in options:
             self.rate_limit = int(options['rate_limit'])
         else:
@@ -106,6 +111,7 @@ class BaseGoogleAnalytics(Plugin):
                        'start_date': iso,
                        'end_date': iso,
                        'dimensions': self.qdimensions,
+                       'filters': self.qfilters,
                        'metrics': self.qmetrics,
                        'start_index': 1,
                        'max_results': 1000}
@@ -183,27 +189,24 @@ class GAAppInstalls(BaseGoogleAnalytics):
     Configure the source to include the following::
 
         metrics = ga:totalEvents
-        dimensions = ga:eventCategory, ga:eventLabel
+        dimensions = ga:customVarValue7
+        filters = ga:eventCategory=~Successful App Install
 
-    This also aggregates by "eventLabel" whose value is <app name>:<app id>,
+    This also aggregates by "ga:customVarValue7" whose value is the app ID
     which allows us to get per-app install counts by filtering by app-id via
     Monolith, or global install counts by excluding the filter.
 
     """
     def processor(self, rows, current_date, col_headers):
         for entry in rows:
-            is_install = False
             data = {'_date': current_date, '_type': 'installs'}
 
             for index, value in enumerate(entry):
                 field = self._fix_name(col_headers[index])
 
-                if (field == 'eventCategory' and
-                    value == 'Successful app install'):
-                    is_install = True
-                elif is_install and field == 'eventLabel':
-                    data['app-id'] = int(value.split(':')[-1])
-                elif is_install and field == 'totalEvents':
+                if field == 'customVarValue7':
+                    data['app-id'] = int(value)
+                elif field == 'totalEvents':
                     data['app_installs'] = int(value)
 
             # Only log if install counts is non-zero (and we have data).
