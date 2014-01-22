@@ -189,10 +189,10 @@ class GAAppInstalls(BaseGoogleAnalytics):
     Configure the source to include the following::
 
         metrics = ga:totalEvents
-        dimensions = ga:customVarValue7
+        dimensions = ga:eventLabel
         filters = ga:eventCategory=~Successful App Install
 
-    This also aggregates by "ga:customVarValue7" whose value is the app ID
+    This also aggregates by "eventLabel" whose value is <app name>:<app id>,
     which allows us to get per-app install counts by filtering by app-id via
     Monolith, or global install counts by excluding the filter.
 
@@ -204,8 +204,8 @@ class GAAppInstalls(BaseGoogleAnalytics):
             for index, value in enumerate(entry):
                 field = self._fix_name(col_headers[index])
 
-                if field == 'customVarValue7':
-                    data['app-id'] = int(value)
+                if field == 'eventLabel':
+                    data['app-id'] = int(value.split(':')[-1])
                 elif field == 'totalEvents':
                     data['app_installs'] = int(value)
 
