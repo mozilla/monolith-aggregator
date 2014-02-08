@@ -14,11 +14,16 @@ from monolith.aggregator.plugins import Plugin
 from monolith.aggregator.exception import ServerError
 
 
-_ISO = '%Y-%m-%dT%H:%M:%S'
+_ISO_DATETIME = '%Y-%m-%dT%H:%M:%S'
+_ISO_DATE = '%Y-%m-%d'
 
 
 def iso2datetime(data):
-    return datetime.strptime(data, _ISO)
+    try:
+        return datetime.strptime(data, _ISO_DATETIME)
+    except ValueError:
+        # Maybe it's a date instead of a datetime.
+        return datetime.strptime(data, _ISO_DATE)
 
 
 class TastypieReader(Plugin):
