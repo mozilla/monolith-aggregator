@@ -1,4 +1,5 @@
 from collections import deque
+import datetime
 import time
 
 from apiclient.discovery import build
@@ -198,6 +199,47 @@ class GAAppInstalls(BaseGoogleAnalytics):
     Monolith, or global install counts by excluding the filter.
 
     """
+    region_dimension = 'ga:customVarValue11'
+    date_region_added = datetime.date(2014, 1, 21)
+
+    def extract(self, start_date, end_date):
+        # Override `extract` to customize dimensions based on date.
+        #
+        # We added the region dimension Jan 21 2014. Queries prior to that
+        # should exclude that dimension.
+        for current in date_range(start_date, end_date):
+            iso = current.isoformat()
+
+            dimensions = self.dimensions[:]
+            if (self.region_dimension in dimensions and
+                current < self.date_region_added):
+                dimensions.remove(self.region_dimension)
+
+            options = {'ids': self.profile_id,
+                       'start_date': iso,
+                       'end_date': iso,
+                       'dimensions': ','.join(dimensions),
+                       'filters': self.qfilters,
+                       'metrics': self.qmetrics,
+                       'start_index': 1,
+                       'max_results': 1000}
+
+            rows = []
+
+            results = self._rate_limited_get(**options)
+
+            while results.get('totalResults', 0) > 0:
+                rows.extend(results['rows'])
+                if results.get('nextLink'):
+                    options['start_index'] += options['max_results']
+                    results = self._rate_limited_get(**options)
+                else:
+                    break
+
+            cols = [col['name'] for col in results['columnHeaders']]
+            for data in self.processor(rows, current, cols):
+                yield data
+
     def processor(self, rows, current_date, col_headers):
         for entry in rows:
             data = {'_date': current_date, '_type': 'installs'}
