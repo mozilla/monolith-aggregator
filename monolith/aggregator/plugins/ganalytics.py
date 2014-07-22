@@ -175,6 +175,8 @@ class GAPerAppVisits(BaseGoogleAnalytics):
 
                 if field == 'dimension7':
                     data['app-id'] = int(value)
+                elif field == 'customVarValue7':  # Old non-UA name.
+                    data['app-id'] = int(value)
                 elif field == 'visits':
                     data['app_visits'] = int(value)
 
