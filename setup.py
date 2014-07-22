@@ -17,7 +17,7 @@ PYTHON26 = sys.version_info < (2, 7)
 requires = [
     'gevent',
     'oauth2client',
-    'pyelasticsearch',
+    'elasticsearch',
     'PyMySQL',
     'python-gflags',
     'SQLAlchemy',
