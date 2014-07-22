@@ -173,7 +173,7 @@ class GAPerAppVisits(BaseGoogleAnalytics):
             for index, value in enumerate(entry):
                 field = self._fix_name(col_headers[index])
 
-                if field == 'customVarValue7':
+                if field == 'dimension7':
                     data['app-id'] = int(value)
                 elif field == 'visits':
                     data['app_visits'] = int(value)
