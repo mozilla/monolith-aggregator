@@ -1,5 +1,5 @@
-from aggregator.plugins import Plugin
-from aggregator.util import json_dumps
+from monolith.aggregator.plugins import Plugin
+from monolith.aggregator.util import json_dumps
 
 
 class FileWriter(Plugin):
@@ -9,5 +9,5 @@ class FileWriter(Plugin):
         self._file = open(self._filename, 'w+')
 
     def inject(self, batch):
-        for data in batch:
-            self._file.write(json_dumps(data))
+        for source, data in batch:
+            self._file.write('%s\n' % json_dumps(data))
