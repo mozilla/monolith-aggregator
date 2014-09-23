@@ -201,8 +201,12 @@ class GAAppInstalls(BaseGoogleAnalytics):
     Monolith, or global install counts by excluding the filter.
 
     """
-    region_dimension = 'ga:customVarValue11'
-    date_region_added = datetime.date(2014, 1, 21)
+    # The old pre-universal analytics way.
+    region_var = 'ga:customVarValue11'
+    date_var_added = datetime.date(2014, 1, 21)
+    # The universal analytics way.
+    region_dimension = 'ga:dimension11'
+    date_dimension_added = datetime.date(2014, 7, 18)
 
     def extract(self, start_date, end_date):
         # Override `extract` to customize dimensions based on date.
@@ -213,9 +217,17 @@ class GAAppInstalls(BaseGoogleAnalytics):
             iso = current.isoformat()
 
             dimensions = self.dimensions[:]
-            if (self.region_dimension in dimensions and
-                current < self.date_region_added):
+
+            # Remove region vars and add them back based on date.
+            if self.region_var in dimensions:
+                dimensions.remove(self.region_var)
+            if self.region_dimension in dimensions:
                 dimensions.remove(self.region_dimension)
+
+            if self.date_var_added <= current < self.date_dimension_added:
+                dimensions.append(self.region_var)
+            elif self.date_dimension_added <= current:
+                dimensions.append(self.region_dimension)
 
             options = {'ids': self.profile_id,
                        'start_date': iso,
