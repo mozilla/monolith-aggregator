@@ -1,12 +1,9 @@
 from os.path import join as pjoin
-
 from fabric.api import env, execute, lcd, local, task
-
 from fabdeploytools import helpers
 import fabdeploytools.envs
-
 import deploysettings as settings
-
+import ConfigParser
 
 env.key_filename = settings.SSH_KEY
 fabdeploytools.envs.loadenv(settings.CLUSTER)
@@ -15,6 +12,9 @@ ROOT, MONOLITH = helpers.get_app_dirs(__file__)
 
 VIRTUALENV = pjoin(ROOT, 'venv')
 PYTHON = pjoin(VIRTUALENV, 'bin', 'python')
+
+config = ConfigParser.ConfigParser()
+config.readfp(open('aggregator.ini'))
 
 
 @task
