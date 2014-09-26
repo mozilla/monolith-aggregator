@@ -263,7 +263,7 @@ class GAAppInstalls(BaseGoogleAnalytics):
 
                 if field == 'eventLabel':
                     data['app-id'] = int(value.split(':')[-1])
-                elif field == 'customVarValue11':
+                elif field in ('customVarValue11', 'dimension11'):
                     data['region'] = value
                 elif field == 'totalEvents':
                     data['app_installs'] = int(value)
