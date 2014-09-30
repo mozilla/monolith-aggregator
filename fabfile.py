@@ -31,7 +31,7 @@ def deploy():
         cluster=settings.CLUSTER,
         domain=settings.DOMAIN,
         root=ROOT,
-        deploy_roles=['web'],
+        deploy_roles='local',
         package_dirs=['monolith-aggregator', 'venv'])
 
 
