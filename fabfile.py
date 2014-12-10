@@ -4,6 +4,7 @@ from fabdeploytools import helpers
 import fabdeploytools.envs
 import deploysettings as settings
 import ConfigParser
+import time
 
 env.key_filename = settings.SSH_KEY
 fabdeploytools.envs.loadenv(settings.CLUSTER)
@@ -49,30 +50,42 @@ def update():
 
 
 @task
-def reindex(startdate):
-    delete_indices(startdate)
-    delete_records(startdate)
-    index_dates(startdate)
+def reindex(startdate, enddate=None):
+    """
+    By default reindex all events from startdate to today.
+    If limiting range using enddate it must be set to the last day of a month.
+    """
+
+    from datetime import datetime, date
+
+    startdate = datetime.strptime(startdate, '%Y-%m-%d').date()
+
+    if enddate:
+        enddate = datetime.strptime(enddate, '%Y-%m-%d').date()
+    else:
+        enddate = date.today()
+
+    delete_indices(startdate, enddate)
+    delete_records(startdate, enddate)
+    index_dates(startdate, enddate)
 
 
-@task
-def delete_indices(startdate):
+def delete_indices(startdate, enddate):
     from datetime import datetime, date
 
     ES_URL = config.get('target:es', 'url')
-    ES_PREFIX = config.get('target:es', 'prefix')
+    ES_PREFIX = ''
 
-    today = date.today()
-    previous = datetime.strptime(startdate, '%Y-%m-%d')
+    if config.has_option('target:es', 'prefix'):
+        ES_PREFIX = config.get('target:es', 'prefix')
 
     # delete old indicies
-    for month in range(previous.month, today.month + 1):
+    for month in range(startdate.month, enddate.month + 1):
         local('curl -XDELETE %s/%stime_%s-%s' %
-              (ES_URL, ES_PREFIX, today.year, "%02d" % (month,)))
+              (ES_URL, ES_PREFIX, startdate.year, "%02d" % (month,)))
 
 
-@task
-def delete_records(startdate):
+def delete_records(startdate, enddate):
     from datetime import datetime, date
     from sqlalchemy import create_engine, MetaData, Table
 
@@ -80,29 +93,23 @@ def delete_records(startdate):
     engine = create_engine(db_uri, echo=False)
     metadata = MetaData()
 
-    today = date.today()
-
     record = Table('record', metadata, autoload=True, autoload_with=engine)
     transaction = Table('monolith_transaction', metadata,
                         autoload=True, autoload_with=engine)
 
-    delete_record = record.delete(record.c.date.between(startdate, today))
-    delete_transaction = transaction.delete(transaction.c.date.between(startdate, today))
+    delete_record = record.delete(record.c.date.between(startdate, enddate))
+    delete_transaction = transaction.delete(transaction.c.date.between(startdate, enddate))
     engine.execute(delete_record)
     engine.execute(delete_transaction)
 
 
-@task
-def index_dates(startdate):
+def index_dates(startdate, enddate=None):
     from datetime import date, datetime, timedelta
 
-    today = date.today()
-    previous = datetime.strptime(startdate, '%Y-%m-%d').date()
-
-    delta = today - previous
+    delta = enddate - startdate
 
     for i in range(delta.days + 1):
-        rundate = previous + timedelta(days=i)
+        rundate = startdate + timedelta(days=i)
         with lcd(MONOLITH):
             local('%s ../venv/bin/monolith-extract aggregator.ini '
                   '--log-level debug --start-date %s '
