@@ -1,3 +1,4 @@
 recursive-include configs *.ini
 recursive-include docs *.rst *.png *.graffle *.txt
 recursive-include tools *.py
+include *.rst
