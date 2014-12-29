@@ -1,7 +1,9 @@
 language: python
 python:
 - '2.7'
-install: pip install -r requirements.txt
+install:
+- pip install -r requirements/test.txt
+- pip install -r requirements/prod.txt
 script: true
 deploy:
   provider: pypi
