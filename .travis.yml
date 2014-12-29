@@ -1,0 +1,13 @@
+language: python
+python:
+- '2.7'
+install: pip install -r requirements.txt
+script: true
+deploy:
+  provider: pypi
+  user: marketplacedevsinternal
+  password:
+    secure: Qdckky0S3buNdWlTjStfw5cR44SE0bbUdu5HjNV3SvOUY8KWPtQ77nSVF32YkW1GL0TkhrxXm0S0G/tWYM0rqonA/hWISDlJuYHjmSQt3r8PL/c0AjuDI47jNDawxpMOl34lGhrZ6mAVy0x+Ws46DV/5jGvtFo0SM5xD0lNJmw0=
+  on:
+    all_branches: true
+    tags: true
