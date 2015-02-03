@@ -50,6 +50,26 @@ def update():
 
 
 @task
+def build():
+    execute(create_virtualenv)
+    with lcd(MONOLITH):
+        local('%s setup.py develop --no-deps' % PYTHON)
+        local('%s /usr/bin/virtualenv --relocatable %s' % (PYTHON, VIRTUALENV))
+
+
+@task
+def deploy_jenkins():
+    rpm = helpers.build_rpm(name='monolith-aggregator',
+                            env=settings.ENV,
+                            cluster=settings.CLUSTER,
+                            domain=settings.DOMAIN,
+                            package_dirs=['monolith-aggregator', 'venv'],
+                            root=ROOT)
+
+    rpm.local_install()
+
+
+@task
 def reindex(startdate, enddate=None):
     """
     By default reindex all events from startdate to today.
