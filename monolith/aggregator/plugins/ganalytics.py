@@ -1,15 +1,15 @@
-from collections import deque
 import datetime
 import time
+from collections import deque
 
+import gevent
+import httplib2
 from apiclient.discovery import build
 from oauth2client.client import OAuth2Credentials
-import httplib2
-import gevent
 
-from monolith.aggregator import __version__
+from monolith.aggregator import __version__, logger
 from monolith.aggregator.plugins import Plugin
-from monolith.aggregator.util import json_loads, date_range
+from monolith.aggregator.util import date_range, json_loads
 
 
 SOURCE_APP_NAME = 'monolith-aggregator-v%s' % __version__
@@ -262,7 +262,11 @@ class GAAppInstalls(BaseGoogleAnalytics):
                 field = self._fix_name(col_headers[index])
 
                 if field == 'eventLabel':
-                    data['app-id'] = int(value.split(':')[-1])
+                    try:
+                        data['app-id'] = int(value.split(':')[-1])
+                    except ValueError:
+                        logger.warn('Unparseable event label: %s' % value)
+                        continue
                 elif field in ('customVarValue11', 'dimension11'):
                     data['region'] = value
                 elif field == 'totalEvents':
