@@ -173,12 +173,16 @@ class GAPerAppVisits(BaseGoogleAnalytics):
             for index, value in enumerate(entry):
                 field = self._fix_name(col_headers[index])
 
-                if field == 'dimension7':
-                    data['app-id'] = int(value)
-                elif field == 'customVarValue7':  # Old non-UA name.
-                    data['app-id'] = int(value)
-                elif field == 'visits':
-                    data['app_visits'] = int(value)
+                try:
+                    if field == 'dimension7':
+                        data['app-id'] = int(value)
+                    elif field == 'customVarValue7':  # Old non-UA name.
+                        data['app-id'] = int(value)
+                    elif field == 'visits':
+                        data['app_visits'] = int(value)
+                except ValueError as e:
+                    logger.warn('Unparsable value: %s for field: %s. %s' % (
+                        value, field, e))
 
             # Only log if visits count is non-zero.
             if data.get('app_visits', 0) > 0:
