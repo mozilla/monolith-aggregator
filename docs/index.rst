@@ -10,7 +10,7 @@ the SQL Database.
 The script also indexes all the content in Elastic Search, which
 can be used to do time-series queries on the data.
 
-The SQL database is the *single source of truthe* of Monolith.
+The SQL database is the *single source of truth* of Monolith.
 The Elastic Search can be recreated at anytime for any date range,
 using the SQL database.
 
