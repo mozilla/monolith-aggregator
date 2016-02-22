@@ -1,6 +1,6 @@
 from datetime import timedelta, date
+from monolith.aggregator import logger
 from monolith.aggregator.plugins.utils import iso2datetime, TastypieReader
-
 
 class APIReader(TastypieReader):
     """This plugins calls the zamboni API and returns it."""
@@ -46,13 +46,16 @@ class APIReader(TastypieReader):
 
     def extract(self, start_date, end_date):
         end_date = end_date + timedelta(days=1)
-
-        data = self.read_api(self.endpoint, {
+        params = {
             'key': self.type,
             'limit': self.limit,
             'start': start_date.isoformat(),
-            'end': end_date.isoformat()})
+            'end': end_date.isoformat()
+        }
+        data = self.read_api(self.endpoint, params)
 
+        logger.debug("Received from %s %s -- %s" % (self.endpoint, params,
+                                                    data))
         # building counts grouped by date & dimensions
         results = {}
 
@@ -84,3 +87,4 @@ class APIReader(TastypieReader):
         # rendering the result
         for line in results.values():
             yield line
+        logger.debug("%s completed" % (self.type,))
